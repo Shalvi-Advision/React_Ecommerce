@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Loading from '../components/Loading';
+import Carousel from '../components/Carousel';
 
 const HomePage = () => {
   const [products, setProducts] = useState([]);
@@ -137,22 +138,8 @@ const HomePage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-800 text-white rounded-lg p-8 mb-8">
-        <div className="max-w-2xl">
-          <h1 className="text-4xl font-bold mb-4">
-            Welcome to E-Shop
-          </h1>
-          <p className="text-xl mb-6">
-            Discover amazing products at great prices. Shop now and enjoy fast delivery!
-          </p>
-          <Link to="#products">
-            <Button variant="secondary" size="large">
-              Start Shopping
-            </Button>
-          </Link>
-        </div>
-      </div>
+      {/* Hero Carousel */}
+      <Carousel />
 
       {/* Search and Filters */}
       <div className="mb-8" id="products">
