@@ -1,95 +1,155 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import Button from './Button';
+import { fetchCategories } from '../api/productsApi';
+import {
+  MapPinIcon,
+  BellIcon,
+  ShoppingCartIcon,
+  Bars3Icon,
+  MagnifyingGlassIcon,
+  ChevronDownIcon,
+} from '@heroicons/react/24/outline';
 
 const Header = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const { totalItems } = useCart();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Local UI state
+  const [search, setSearch] = useState(searchParams.get('q') || '');
+  const [categories, setCategories] = useState([]);
+  const currentCategory = useMemo(() => searchParams.get('category') || 'all', [searchParams]);
+
+  useEffect(() => {
+    // Load categories for the category bar
+    const load = async () => {
+      try {
+        const cats = await fetchCategories();
+        setCategories(['all', ...cats]);
+      } catch (e) {
+        setCategories(['all']);
+      }
+    };
+    load();
+  }, []);
 
   const handleLogout = async () => {
     await logout();
     navigate('/');
   };
 
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    const params = {};
+    if (search && search.trim()) params.q = search.trim();
+    if (currentCategory && currentCategory !== 'all') params.category = currentCategory;
+    setSearchParams(params);
+    navigate({ pathname: '/', search: `?${new URLSearchParams(params).toString()}` });
+  };
+
+  const goToCategory = (cat) => {
+    const params = {};
+    if (search && search.trim()) params.q = search.trim();
+    if (cat && cat !== 'all') params.category = cat;
+    setSearchParams(params);
+    navigate({ pathname: '/', search: `?${new URLSearchParams(params).toString()}` });
+  };
+
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
+    <header className="bg-white border-b border-gray-200">
+      {/* Top bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link to="/" className="text-2xl font-bold text-primary-600">
-            E-Shop
-          </Link>
-
-          {/* Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            <Link
-              to="/"
-              className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium transition-colors"
-            >
-              Home
+        <div className="flex items-center justify-between py-3 gap-4">
+          {/* Left: Logo + Location */}
+          <div className="flex items-center gap-4 min-w-[200px]">
+            <Link to="/" className="text-2xl font-extrabold text-primary-600 tracking-tight">
+              E-Shop
             </Link>
-            <Link
-              to="/products"
-              className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium transition-colors"
-            >
-              Products
-            </Link>
-          </nav>
+            <button className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:border-primary-300">
+              <MapPinIcon className="w-5 h-5 text-primary-600" />
+              <span className="text-sm font-medium">400003</span>
+              <ChevronDownIcon className="w-4 h-4 text-gray-500" />
+              <span className="ml-1 hidden lg:inline text-gray-500">Mumbai</span>
+            </button>
+          </div>
 
-          {/* Right side */}
-          <div className="flex items-center space-x-4">
-            {/* Search */}
-            <div className="hidden sm:block">
-              <input
-                type="text"
-                placeholder="Search products..."
-                className="w-64 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
+          {/* Middle: Delivery info (on md+) */}
+          <div className="hidden lg:flex items-center gap-2 text-sm text-gray-600 whitespace-nowrap">
+            <span className="w-2 h-2 rounded-full bg-primary-500 inline-block"></span>
+            <span>
+              Earliest <span className="text-primary-600 font-medium">Home Delivery</span> available
+            </span>
+            <span className="mx-2">•</span>
+            <span className="font-medium">Tomorrow 06:00 PM - 08:00 PM</span>
+          </div>
+
+          {/* Search */}
+          <form onSubmit={handleSearchSubmit} className="flex-1 max-w-2xl w-full">
+            <div className="flex">
+              <div className="flex items-center gap-2 flex-1 border border-gray-300 rounded-l-lg px-3 focus-within:ring-2 focus-within:ring-primary-500">
+                <MagnifyingGlassIcon className="w-5 h-5 text-gray-500" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search for products"
+                  className="w-full py-2 outline-none text-gray-800 placeholder-gray-400"
+                />
+              </div>
+              <button type="submit" className="bg-primary-600 hover:bg-primary-700 text-white px-4 rounded-r-lg font-medium">
+                SEARCH
+              </button>
             </div>
+          </form>
 
-            {/* Cart */}
-            <Link to="/cart" className="relative">
-              <svg className="w-6 h-6 text-gray-700 hover:text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5H19M7 13l-1.1 5M7 13h10m0 0v8a2 2 0 01-2 2H9a2 2 0 01-2-2v-8z" />
-              </svg>
+          {/* Right: Actions */}
+          <div className="flex items-center gap-4 min-w-[180px] justify-end">
+            <Link to="/login" className="hidden md:flex items-center text-gray-700 hover:text-primary-700 text-sm font-medium">
+              <span>Sign In / Register</span>
+            </Link>
+            <button className="hidden sm:inline-flex p-2 rounded-full hover:bg-gray-100">
+              <BellIcon className="w-6 h-6 text-primary-600" />
+            </button>
+            <Link to="/cart" className="relative inline-flex p-2 rounded-full hover:bg-gray-100">
+              <ShoppingCartIcon className="w-6 h-6 text-primary-600" />
               {totalItems > 0 && (
-                <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
                   {totalItems}
                 </span>
               )}
             </Link>
+          </div>
+        </div>
+      </div>
 
-            {/* Auth */}
-            {isAuthenticated ? (
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-700">
-                  Hello, {user?.name || user?.email}
-                </span>
-                <Button
-                  variant="outline"
-                  size="small"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-2">
-                <Link to="/login">
-                  <Button variant="outline" size="small">
-                    Login
-                  </Button>
-                </Link>
-                <Link to="/register">
-                  <Button variant="primary" size="small">
-                    Sign Up
-                  </Button>
-                </Link>
-              </div>
-            )}
+      {/* Category bar */}
+      <div className="border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-6 h-12 overflow-x-auto">
+            <button
+              className="inline-flex items-center gap-2 text-gray-800 hover:text-primary-700 font-medium whitespace-nowrap"
+              onClick={() => goToCategory('all')}
+            >
+              <Bars3Icon className="w-5 h-5" />
+              All Categories
+            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => goToCategory(cat)}
+                className={`text-sm whitespace-nowrap pb-0.5 border-b-2 transition-colors ${
+                  (currentCategory === cat) || (currentCategory === 'all' && cat === 'all')
+                    ? 'border-primary-600 text-primary-700'
+                    : 'border-transparent text-gray-700 hover:text-primary-700'
+                }`}
+              >
+                {cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}
+              </button>
+            ))}
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { fetchProducts, fetchCategories } from '../api/productsApi';
 import { useCart } from '../context/CartContext';
 import Card from '../components/Card';
@@ -9,8 +9,9 @@ import Loading from '../components/Loading';
 const HomePage = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { addItem } = useCart();
@@ -22,6 +23,37 @@ const HomePage = () => {
   useEffect(() => {
     loadProducts();
   }, [selectedCategory]);
+
+  // React to URL search params changes (q, category)
+  useEffect(() => {
+    const q = searchParams.get('q') || '';
+    const cat = searchParams.get('category') || 'all';
+    setSearchQuery(q);
+    setSelectedCategory(cat);
+
+    const apply = async () => {
+      try {
+        setLoading(true);
+        if (q && q.trim()) {
+          const allProducts = await fetchProducts({ limit: 100, ...(cat !== 'all' ? { category: cat } : {}) });
+          const filtered = allProducts.filter(p =>
+            p.title.toLowerCase().includes(q.toLowerCase()) ||
+            p.description.toLowerCase().includes(q.toLowerCase())
+          );
+          setProducts(filtered);
+        } else {
+          const params = cat === 'all' ? {} : { category: cat };
+          const productsData = await fetchProducts(params);
+          setProducts(productsData);
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    apply();
+  }, [searchParams]);
 
   const loadInitialData = async () => {
     try {
@@ -68,6 +100,11 @@ const HomePage = () => {
         product.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setProducts(filteredProducts);
+      // Reflect query in URL
+      const params = {};
+      if (searchQuery.trim()) params.q = searchQuery.trim();
+      if (selectedCategory && selectedCategory !== 'all') params.category = selectedCategory;
+      setSearchParams(params);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -139,7 +176,14 @@ const HomePage = () => {
           {/* Category Filter */}
           <select
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedCategory(value);
+              const params = {};
+              if (searchQuery.trim()) params.q = searchQuery.trim();
+              if (value && value !== 'all') params.category = value;
+              setSearchParams(params);
+            }}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             {categories.map(category => (
