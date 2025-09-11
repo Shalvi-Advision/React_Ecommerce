@@ -116,6 +116,7 @@ jobs:
         server-dir: /domains/ecomsetup.manchar.in/public_html/
         protocol: ftp
         port: 21
+        log-level: minimal
         exclude: |
           **/.git*
           **/.git*/**
@@ -133,9 +134,9 @@ jobs:
       if: failure()
       uses: wlixcc/SFTP-Deploy-Action@v1.2.4
       with:
-        server: ${{ secrets.DIRECTADMIN_SFTP_SERVER }}
-        username: ${{ secrets.DIRECTADMIN_SFTP_USERNAME }}
-        password: ${{ secrets.DIRECTADMIN_SFTP_PASSWORD }}
+        server: ${{ secrets.DIRECTADMIN_FTP_SERVER }}
+        username: ${{ secrets.DIRECTADMIN_FTP_USERNAME }}
+        password: ${{ secrets.DIRECTADMIN_FTP_PASSWORD }}
         local_path: './build/*'
         remote_path: '/domains/ecomsetup.manchar.in/public_html/'
         sftp_only: true
