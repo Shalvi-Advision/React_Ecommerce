@@ -106,8 +106,10 @@ jobs:
         # Create a basic .htpasswd for admin areas if needed
         # echo "admin:\$2y\$10\$..." > build/.htpasswd
         
-    - name: Create remote directory
+    - name: Install lftp and create remote directory
       run: |
+        sudo apt-get update
+        sudo apt-get install -y lftp
         lftp -c "
         set ftp:ssl-allow no;
         open ftp://${{ secrets.DIRECTADMIN_FTP_USERNAME }}:${{ secrets.DIRECTADMIN_FTP_PASSWORD }}@${{ secrets.DIRECTADMIN_FTP_SERVER }};
@@ -142,17 +144,13 @@ jobs:
           **/env.example
           **/*.md
         
-    - name: Deploy via SFTP (Alternative)
+    - name: Create SFTP directory and deploy
       if: failure()
-      uses: wlixcc/SFTP-Deploy-Action@v1.2.4
-      with:
-        server: ${{ secrets.DIRECTADMIN_FTP_SERVER }}
-        username: ${{ secrets.DIRECTADMIN_FTP_USERNAME }}
-        password: ${{ secrets.DIRECTADMIN_FTP_PASSWORD }}
-        local_path: './build/'
-        remote_path: '/domains/ecomsetup.manchar.in/public_html'
-        sftp_only: true
-        delete_remote_files: true
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y sshpass
+        sshpass -p "${{ secrets.DIRECTADMIN_FTP_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.DIRECTADMIN_FTP_USERNAME }}@${{ secrets.DIRECTADMIN_FTP_SERVER }} "mkdir -p /domains/ecomsetup.manchar.in/public_html"
+        sshpass -p "${{ secrets.DIRECTADMIN_FTP_PASSWORD }}" scp -r -o StrictHostKeyChecking=no ./build/* ${{ secrets.DIRECTADMIN_FTP_USERNAME }}@${{ secrets.DIRECTADMIN_FTP_SERVER }}:/domains/ecomsetup.manchar.in/public_html/
         
     - name: Verify DirectAdmin Deployment
       run: |
