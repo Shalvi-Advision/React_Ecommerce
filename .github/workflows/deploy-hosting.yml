@@ -1,10 +1,11 @@
-name: Deploy to Hosting Control Panel
+name: Deploy to Hosting Control Panel (DISABLED - Using DirectAdmin)
 
 on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+  # Disabled - using deploy-directadmin.yml instead
+  # push:
+  #   branches: [ main, master ]
+  # pull_request:
+  #   branches: [ main, master ]
 
 jobs:
   test:
