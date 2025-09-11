@@ -106,17 +106,19 @@ jobs:
         # Create a basic .htpasswd for admin areas if needed
         # echo "admin:\$2y\$10\$..." > build/.htpasswd
         
-    - name: Install lftp and create remote directory
+    - name: Install lftp and test connection
       run: |
         sudo apt-get update
         sudo apt-get install -y lftp
-        lftp -c "
+        echo "Testing FTP connection..."
+        timeout 30 lftp -c "
         set ftp:ssl-allow no;
+        set net:timeout 10;
+        set net:reconnect-interval-base 5;
         open ftp://${{ secrets.DIRECTADMIN_FTP_USERNAME }}:${{ secrets.DIRECTADMIN_FTP_PASSWORD }}@${{ secrets.DIRECTADMIN_FTP_SERVER }};
-        cd /domains/ecomsetup.manchar.in/;
-        mkdir -p public_html;
+        ls;
         quit
-        "
+        " || echo "FTP connection test failed, will try deployment anyway"
         
     - name: Deploy via FTP to DirectAdmin
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
@@ -129,8 +131,9 @@ jobs:
         protocol: ftp
         port: 21
         log-level: minimal
-        timeout: 60000
+        timeout: 120000
         dangerous-clean-slate: true
+        dry-run: false
         exclude: |
           **/.git*
           **/.git*/**
