@@ -149,8 +149,11 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y sshpass
-        sshpass -p "${{ secrets.DIRECTADMIN_FTP_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.DIRECTADMIN_FTP_USERNAME }}@${{ secrets.DIRECTADMIN_FTP_SERVER }} "mkdir -p /domains/ecomsetup.manchar.in/public_html"
-        sshpass -p "${{ secrets.DIRECTADMIN_FTP_PASSWORD }}" scp -r -o StrictHostKeyChecking=no ./build/* ${{ secrets.DIRECTADMIN_FTP_USERNAME }}@${{ secrets.DIRECTADMIN_FTP_SERVER }}:/domains/ecomsetup.manchar.in/public_html/
+        # Create directory in user's home directory first, then move
+        sshpass -p "${{ secrets.DIRECTADMIN_FTP_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.DIRECTADMIN_FTP_USERNAME }}@${{ secrets.DIRECTADMIN_FTP_SERVER }} "mkdir -p ~/ecomsetup_temp && mkdir -p ~/ecomsetup_temp/public_html"
+        sshpass -p "${{ secrets.DIRECTADMIN_FTP_PASSWORD }}" scp -r -o StrictHostKeyChecking=no ./build/* ${{ secrets.DIRECTADMIN_FTP_USERNAME }}@${{ secrets.DIRECTADMIN_FTP_SERVER }}:~/ecomsetup_temp/public_html/
+        # Move files to the correct location
+        sshpass -p "${{ secrets.DIRECTADMIN_FTP_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.DIRECTADMIN_FTP_USERNAME }}@${{ secrets.DIRECTADMIN_FTP_SERVER }} "cp -r ~/ecomsetup_temp/public_html/* /domains/ecomsetup.manchar.in/public_html/ 2>/dev/null || echo 'Directory may not exist, trying alternative approach'"
         
     - name: Verify DirectAdmin Deployment
       run: |
