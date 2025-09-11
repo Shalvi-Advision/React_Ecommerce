@@ -114,6 +114,8 @@ jobs:
         password: ${{ secrets.DIRECTADMIN_FTP_PASSWORD }}
         local-dir: ./build/
         server-dir: /domains/ecomsetup.manchar.in/public_html/
+        protocol: ftp
+        port: 21
         exclude: |
           **/.git*
           **/.git*/**
@@ -134,20 +136,10 @@ jobs:
         server: ${{ secrets.DIRECTADMIN_SFTP_SERVER }}
         username: ${{ secrets.DIRECTADMIN_SFTP_USERNAME }}
         password: ${{ secrets.DIRECTADMIN_SFTP_PASSWORD }}
-        local_dir: ./build/
-        remote_dir: /domains/ecomsetup.manchar.in/public_html/
-        exclude: |
-          **/.git*
-          **/.git*/**
-          **/node_modules/**
-          **/.env*
-          **/README.md
-          **/package*.json
-          **/src/**
-          **/.github/**
-          **/deploy*.sh
-          **/env.example
-          **/*.md
+        local_path: './build/*'
+        remote_path: '/domains/ecomsetup.manchar.in/public_html/'
+        sftp_only: true
+        delete_remote_files: true
         
     - name: Verify DirectAdmin Deployment
       run: |
