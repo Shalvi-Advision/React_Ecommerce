@@ -58,9 +58,9 @@ const HomePage = () => {
   return (
     <div>
       {/* Hero Carousel */}
-      <div className="bg-gradient-to-br from-gray-50 to-gray-100 py-4">
-        <div className="container mx-auto px-4">
-          <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+      <div className="bg-gradient-to-br from-gray-50 to-gray-100 py-4 sm:py-8 lg:py-12">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg border border-gray-100">
             <Carousel />
           </div>
         </div>
@@ -73,12 +73,12 @@ const HomePage = () => {
       <SeasonalCategories />
 
       {/* Products Section */}
-      <div className="bg-gradient-to-br from-gray-50 to-gray-100 py-4" id="products">
-        <div className="container mx-auto px-4">
-          <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Fresh Products</h2>
-              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+      <div className="bg-gradient-to-br from-gray-50 to-gray-100 py-8 sm:py-12 lg:py-16" id="products">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg border border-gray-100">
+            <div className="text-center mb-8 sm:mb-10 lg:mb-12">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Fresh Products</h2>
+              <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto px-4">
                 Discover our wide range of fresh groceries, household items, and daily essentials
               </p>
             </div>

@@ -12,6 +12,7 @@ import {
   Bars3Icon,
   MagnifyingGlassIcon,
   ChevronDownIcon,
+  UserIcon,
 } from '@heroicons/react/24/outline';
 
 const Header = () => {
@@ -24,6 +25,7 @@ const Header = () => {
   const [search, setSearch] = useState(searchParams.get('q') || '');
   const [categories, setCategories] = useState([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const currentCategory = useMemo(() => searchParams.get('category') || 'all', [searchParams]);
 
   useEffect(() => {
@@ -38,6 +40,18 @@ const Header = () => {
     };
     load();
   }, []);
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isUserMenuOpen && !event.target.closest('.user-menu-container')) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isUserMenuOpen]);
 
   const handleLogout = async () => {
     await logout();
@@ -112,7 +126,8 @@ const Header = () => {
           </form>
 
           {/* Right: Actions */}
-          <div className="flex items-center gap-4 min-w-[180px] justify-end">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-[120px] sm:min-w-[180px] justify-end">
+            {/* Desktop Auth Links */}
             {isAuthenticated ? (
               // Authenticated user actions
               <>
@@ -132,18 +147,75 @@ const Header = () => {
             ) : (
               // Unauthenticated user actions
               <>
-                <Link to="/register" className="hidden md:flex items-center text-gray-700 hover:text-primary-700 text-sm font-medium">
-                  <span>Register</span>
-                </Link>
-                <Link to="/login" className="hidden md:flex items-center text-gray-700 hover:text-primary-700 text-sm font-medium">
-                  <span>Login</span>
-                </Link>
+                <div className="hidden md:flex items-center gap-2">
+                  <Link to="/register" className="text-gray-700 hover:text-primary-700 text-sm font-medium">
+                    <span>Register</span>
+                  </Link>
+                  <Link to="/login" className="text-gray-700 hover:text-primary-700 text-sm font-medium">
+                    <span>Login</span>
+                  </Link>
+                </div>
                 <button className="hidden sm:inline-flex p-2 rounded-full hover:bg-gray-100 md:hidden">
                   <BellIcon className="w-6 h-6 text-primary-600" />
                 </button>
               </>
             )}
-            <Link to="/cart" className="relative inline-flex p-2 rounded-full hover:bg-gray-100">
+
+            {/* Mobile User Menu */}
+            <div className="relative user-menu-container md:hidden">
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="inline-flex p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                aria-label="User menu"
+              >
+                <UserIcon className="w-6 h-6 text-primary-600" />
+              </button>
+
+              {/* Mobile User Dropdown Menu */}
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 sm:w-52 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 max-w-[calc(100vw-2rem)]">
+                  {isAuthenticated ? (
+                    // Authenticated mobile menu
+                    <>
+                      <div className="px-4 py-2 border-b border-gray-200">
+                        <p className="text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
+                        <p className="text-xs text-gray-500">Welcome back!</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setIsUserMenuOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
+                      >
+                        Logout
+                      </button>
+                    </>
+                  ) : (
+                    // Unauthenticated mobile menu
+                    <>
+                      <Link
+                        to="/login"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
+                      >
+                        Login
+                      </Link>
+                      <Link
+                        to="/register"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
+                      >
+                        Register
+                      </Link>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Cart Icon */}
+            <Link to="/cart" className="relative inline-flex p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500">
               <ShoppingCartIcon className="w-6 h-6 text-primary-600" />
               {totalItems > 0 && (
                 <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">

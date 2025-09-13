@@ -32,7 +32,7 @@ const ProductCard = ({ product, onAddToCart }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100" style={{ width: '280px', height: '420px' }}>
+    <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 w-full max-w-sm mx-auto" style={{ minHeight: '420px' }}>
       {/* Image Container */}
       <div className="relative bg-gradient-to-br from-orange-50 to-orange-100 h-40 flex items-center justify-center p-6">
         <Link to={`/product/${product.id}`} className="block w-full h-full flex items-center justify-center">
