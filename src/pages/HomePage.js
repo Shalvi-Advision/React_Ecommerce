@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getProducts } from '../api/productsApi';
 import { useCart } from '../context/CartContext';
+import { useCartDrawer } from '../context/CartDrawerContext';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Loading from '../components/Loading';
@@ -20,6 +21,7 @@ const HomePage = () => {
   const [isOffline, setIsOffline] = useState(false);
   const [isDataFromCache, setIsDataFromCache] = useState(false);
   const { addItem } = useCart();
+  const { openDrawer } = useCartDrawer();
 
   useEffect(() => {
     loadProducts(currentPage);
@@ -87,6 +89,8 @@ const HomePage = () => {
 
   const handleAddToCart = (product) => {
     addItem(product);
+    // Open cart drawer when item is added
+    openDrawer();
   };
 
   const handleNextPage = () => {
@@ -258,6 +262,7 @@ const HomePage = () => {
           </div>
         </div>
       </div>
+
     </div>
   );
 };

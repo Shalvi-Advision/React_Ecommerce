@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useCartDrawer } from '../context/CartDrawerContext';
+import { useResponsive } from '../hooks/useResponsive';
 import Button from './Button';
 import CategoriesDrawer from './CategoriesDrawer';
 import { fetchCategories } from '../api/productsApi';
@@ -18,6 +20,8 @@ import {
 const Header = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const { totalItems } = useCart();
+  const { openDrawer } = useCartDrawer();
+  const { isMobile, isTablet, isDesktop } = useResponsive();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -26,6 +30,7 @@ const Header = () => {
   const [categories, setCategories] = useState([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
   const currentCategory = useMemo(() => searchParams.get('category') || 'all', [searchParams]);
 
   useEffect(() => {
@@ -33,9 +38,32 @@ const Header = () => {
     const load = async () => {
       try {
         const cats = await fetchCategories();
-        setCategories(['all', ...cats]);
+        // Combine API categories with additional hardcoded categories
+        const additionalCategories = [
+          'household items',
+          'grocery and staples', 
+          'personal care',
+          'baby care',
+          'beverages',
+          'instant food',
+          'bakery/dairy',
+          'biscuits/snacks'
+        ];
+        setCategories(['all', ...cats, ...additionalCategories]);
       } catch (e) {
-        setCategories(['all']);
+        // If API fails, use hardcoded categories
+        const fallbackCategories = [
+          'all',
+          'household items',
+          'grocery and staples', 
+          'personal care',
+          'baby care',
+          'beverages',
+          'instant food',
+          'bakery/dairy',
+          'biscuits/snacks'
+        ];
+        setCategories(fallbackCategories);
       }
     };
     load();
@@ -47,11 +75,14 @@ const Header = () => {
       if (isUserMenuOpen && !event.target.closest('.user-menu-container')) {
         setIsUserMenuOpen(false);
       }
+      if (isAccountDropdownOpen && !event.target.closest('.account-dropdown-container')) {
+        setIsAccountDropdownOpen(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isUserMenuOpen]);
+  }, [isUserMenuOpen, isAccountDropdownOpen]);
 
   const handleLogout = async () => {
     await logout();
@@ -80,31 +111,68 @@ const Header = () => {
     setIsDrawerOpen(true);
   };
 
+  const handleAccountDropdownToggle = () => {
+    setIsAccountDropdownOpen(!isAccountDropdownOpen);
+  };
+
+  const handleAccountMenuClick = (action) => {
+    switch (action) {
+      case 'profile':
+        navigate('/profile');
+        break;
+      case 'address':
+        navigate('/address');
+        break;
+      case 'cards':
+        navigate('/saved-cards');
+        break;
+      case 'orders':
+        navigate('/orders');
+        break;
+      case 'saved-list':
+        navigate('/saved-list');
+        break;
+      case 'subscribed-list':
+        navigate('/subscribed-list');
+        break;
+      case 'logout':
+        handleLogout();
+        break;
+      default:
+        break;
+    }
+    setIsAccountDropdownOpen(false);
+  };
+
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
       {/* Top bar */}
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between py-3 gap-4">
+        <div className={`flex items-center justify-between py-3 ${isMobile ? 'gap-2' : 'gap-4'}`}>
           {/* Left: Logo + Location */}
-          <div className="flex items-center gap-4 min-w-[200px]">
-            <Link to="/" className="text-2xl font-extrabold text-primary-600 tracking-tight">
+          <div className={`flex items-center ${isMobile ? 'gap-2 min-w-[120px]' : isTablet ? 'gap-3 min-w-[160px]' : 'gap-4 min-w-[200px]'}`}>
+            <Link to="/" className={`${isMobile ? 'text-xl' : 'text-2xl'} font-extrabold text-primary-600 tracking-tight`}>
               E-Shop
             </Link>
-            <button className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:border-primary-300">
-              <MapPinIcon className="w-5 h-5 text-primary-600" />
-              <span className="text-sm font-medium">400003</span>
-              <ChevronDownIcon className="w-4 h-4 text-gray-500" />
-              <span className="ml-1 hidden lg:inline text-gray-500">Mumbai</span>
-            </button>
+            {isDesktop && (
+              <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:border-primary-300">
+                <MapPinIcon className="w-5 h-5 text-primary-600" />
+                <span className="text-sm font-medium">400003</span>
+                <ChevronDownIcon className="w-4 h-4 text-gray-500" />
+                <span className="ml-1 text-gray-500">Mumbai</span>
+              </button>
+            )}
           </div>
 
-          {/* Middle: Delivery info (on md+) */}
-          <div className="hidden lg:flex items-center gap-2 text-sm text-gray-600 whitespace-nowrap">
-            <span className="w-2 h-2 rounded-full bg-primary-500 inline-block"></span>
-            <span>
-              Earliest <span className="text-primary-600 font-medium">Home Delivery</span> available
-            </span>
-          </div>
+          {/* Middle: Delivery info (on desktop+) */}
+          {isDesktop && (
+            <div className="flex items-center gap-2 text-sm text-gray-600 whitespace-nowrap">
+              <span className="w-2 h-2 rounded-full bg-primary-500 inline-block"></span>
+              <span>
+                Earliest <span className="text-primary-600 font-medium">Home Delivery</span> available
+              </span>
+            </div>
+          )}
 
           {/* Search */}
           <form onSubmit={handleSearchSubmit} className="flex-1 max-w-4xl w-full">
@@ -126,43 +194,127 @@ const Header = () => {
           </form>
 
           {/* Right: Actions */}
-          <div className="flex items-center gap-2 sm:gap-4 min-w-[120px] sm:min-w-[180px] justify-end">
+          <div className={`flex items-center gap-2 justify-end ${isMobile ? 'min-w-[80px]' : isTablet ? 'min-w-[120px]' : 'min-w-[180px]'}`}>
             {/* Desktop Auth Links */}
             {isAuthenticated ? (
               // Authenticated user actions
               <>
-                <div className="hidden md:flex items-center gap-2">
-                  <span className="text-sm text-gray-700">Welcome, {user?.name || 'User'}</span>
-                  <button
-                    onClick={handleLogout}
-                    className="text-gray-700 hover:text-primary-700 text-sm font-medium"
-                  >
-                    Logout
+                {isDesktop && (
+                  <div className="relative account-dropdown-container">
+                    <button
+                      onClick={handleAccountDropdownToggle}
+                      className="flex items-center gap-2 text-gray-700 hover:text-primary-700 text-sm font-medium p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="text-right">
+                        <div className="text-xs text-gray-500">Hello {user?.name || 'User'}</div>
+                        <div className="font-semibold">My Account</div>
+                      </div>
+                      <ChevronDownIcon className={`w-4 h-4 transition-transform ${isAccountDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {/* Account Dropdown Menu */}
+                    {isAccountDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                        {/* Account Details Section */}
+                        <div className="px-4 py-2">
+                          <div className="text-xs text-gray-500 font-medium mb-2">Account Details</div>
+                          <button
+                            onClick={() => handleAccountMenuClick('profile')}
+                            className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          >
+                            My Profile
+                          </button>
+                          <button
+                            onClick={() => handleAccountMenuClick('address')}
+                            className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          >
+                            My Address
+                          </button>
+                          <button
+                            onClick={() => handleAccountMenuClick('cards')}
+                            className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          >
+                            My Saved Cards
+                          </button>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="border-t border-gray-200 my-2"></div>
+
+                        {/* Lists and Orders Section */}
+                        <div className="px-4 py-2">
+                          <button
+                            onClick={() => handleAccountMenuClick('orders')}
+                            className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          >
+                            Ready List
+                          </button>
+                          <button
+                            onClick={() => handleAccountMenuClick('orders')}
+                            className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          >
+                            My Orders
+                          </button>
+                          <button
+                            onClick={() => handleAccountMenuClick('saved-list')}
+                            className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          >
+                            My Saved List
+                          </button>
+                          <button
+                            onClick={() => handleAccountMenuClick('subscribed-list')}
+                            className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          >
+                            My Subscribed List
+                          </button>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="border-t border-gray-200 my-2"></div>
+
+                        {/* Logout Section */}
+                        <div className="px-4 py-2">
+                          <button
+                            onClick={() => handleAccountMenuClick('logout')}
+                            className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          >
+                            Logout
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {isMobile && (
+                  <button className="inline-flex p-2 rounded-full hover:bg-gray-100">
+                    <BellIcon className="w-6 h-6 text-primary-600" />
                   </button>
-                </div>
-                <button className="hidden sm:inline-flex p-2 rounded-full hover:bg-gray-100 md:hidden">
-                  <BellIcon className="w-6 h-6 text-primary-600" />
-                </button>
+                )}
               </>
             ) : (
               // Unauthenticated user actions
               <>
-                <div className="hidden md:flex items-center gap-2">
-                  <Link to="/register" className="text-gray-700 hover:text-primary-700 text-sm font-medium">
-                    <span>Register</span>
-                  </Link>
-                  <Link to="/login" className="text-gray-700 hover:text-primary-700 text-sm font-medium">
-                    <span>Login</span>
-                  </Link>
-                </div>
-                <button className="hidden sm:inline-flex p-2 rounded-full hover:bg-gray-100 md:hidden">
-                  <BellIcon className="w-6 h-6 text-primary-600" />
-                </button>
+                {isDesktop && (
+                  <div className="flex items-center gap-2">
+                    <Link to="/register" className="text-gray-700 hover:text-primary-700 text-sm font-medium">
+                      <span>Register</span>
+                    </Link>
+                    <Link to="/login" className="text-gray-700 hover:text-primary-700 text-sm font-medium">
+                      <span>Login</span>
+                    </Link>
+                  </div>
+                )}
+                {isMobile && (
+                  <button className="inline-flex p-2 rounded-full hover:bg-gray-100">
+                    <BellIcon className="w-6 h-6 text-primary-600" />
+                  </button>
+                )}
               </>
             )}
 
-            {/* Mobile User Menu */}
-            <div className="relative user-menu-container md:hidden">
+            {/* Mobile/Tablet User Menu */}
+            {(isMobile || isTablet) && (
+              <div className="relative user-menu-container">
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="inline-flex p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -173,23 +325,105 @@ const Header = () => {
 
               {/* Mobile User Dropdown Menu */}
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 sm:w-52 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 max-w-[calc(100vw-2rem)]">
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 max-w-[calc(100vw-2rem)]">
                   {isAuthenticated ? (
                     // Authenticated mobile menu
                     <>
                       <div className="px-4 py-2 border-b border-gray-200">
-                        <p className="text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
-                        <p className="text-xs text-gray-500">Welcome back!</p>
+                        <p className="text-xs text-gray-500">Hello {user?.name || 'User'}</p>
+                        <p className="text-sm font-semibold text-gray-900">My Account</p>
                       </div>
-                      <button
-                        onClick={() => {
-                          handleLogout();
-                          setIsUserMenuOpen(false);
-                        }}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
-                      >
-                        Logout
-                      </button>
+                      
+                      {/* Account Details Section */}
+                      <div className="px-4 py-2">
+                        <div className="text-xs text-gray-500 font-medium mb-2">Account Details</div>
+                        <button
+                          onClick={() => {
+                            handleAccountMenuClick('profile');
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                        >
+                          My Profile
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleAccountMenuClick('address');
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                        >
+                          My Address
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleAccountMenuClick('cards');
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                        >
+                          My Saved Cards
+                        </button>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="border-t border-gray-200 my-2"></div>
+
+                      {/* Lists and Orders Section */}
+                      <div className="px-4 py-2">
+                        <button
+                          onClick={() => {
+                            handleAccountMenuClick('orders');
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                        >
+                          Ready List
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleAccountMenuClick('orders');
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                        >
+                          My Orders
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleAccountMenuClick('saved-list');
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                        >
+                          My Saved List
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleAccountMenuClick('subscribed-list');
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                        >
+                          My Subscribed List
+                        </button>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="border-t border-gray-200 my-2"></div>
+
+                      {/* Logout Section */}
+                      <div className="px-4 py-2">
+                        <button
+                          onClick={() => {
+                            handleAccountMenuClick('logout');
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                        >
+                          Logout
+                        </button>
+                      </div>
                     </>
                   ) : (
                     // Unauthenticated mobile menu
@@ -213,42 +447,46 @@ const Header = () => {
                 </div>
               )}
             </div>
+            )}
 
             {/* Cart Icon */}
-            <Link to="/cart" className="relative inline-flex p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500">
+            <button 
+              onClick={openDrawer}
+              className="relative inline-flex p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
               <ShoppingCartIcon className="w-6 h-6 text-primary-600" />
               {totalItems > 0 && (
                 <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
                   {totalItems}
                 </span>
               )}
-            </Link>
+            </button>
           </div>
         </div>
       </div>
 
       {/* Category bar */}
-      <div className="border-t border-gray-200">
+      <div className="border-t border-gray-200 bg-white">
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-6 h-12 overflow-x-auto">
             <button
-              className="inline-flex items-center gap-2 text-gray-800 hover:text-primary-700 font-medium whitespace-nowrap"
+              className="inline-flex items-center gap-2 text-gray-800 hover:text-primary-700 font-medium whitespace-nowrap text-sm"
               onClick={handleAllCategoriesClick}
             >
               <Bars3Icon className="w-5 h-5" />
               All Categories
             </button>
-            {categories.map((cat) => (
+            {categories.slice(1).map((cat) => (
               <button
                 key={cat}
                 onClick={() => goToCategory(cat)}
-                className={`text-sm whitespace-nowrap pb-0.5 border-b-2 transition-colors ${
+                className={`text-sm whitespace-nowrap pb-0.5 border-b-2 transition-colors font-medium ${
                   (currentCategory === cat) || (currentCategory === 'all' && cat === 'all')
                     ? 'border-primary-600 text-primary-700'
                     : 'border-transparent text-gray-700 hover:text-primary-700'
                 }`}
               >
-                {cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}
+                {cat.charAt(0).toUpperCase() + cat.slice(1)}
               </button>
             ))}
           </div>

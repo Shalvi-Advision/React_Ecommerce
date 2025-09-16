@@ -220,6 +220,19 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: authActions.CLEAR_SUCCESS_MESSAGE });
   };
 
+  const updateUser = async (userData) => {
+    try {
+      // In a real app, you would make an API call here
+      // For now, we'll just update the local state
+      dispatch({
+        type: authActions.LOGIN_SUCCESS,
+        payload: { user: { ...state.user, ...userData }, token: state.token },
+      });
+      return { success: true };
+    } catch (error) {
+      throw new Error('Failed to update user profile');
+    }
+  };
 
   const value = {
     user: state.user,
@@ -231,6 +244,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    updateUser,
     clearError,
     setSuccessMessage,
     clearSuccessMessage,
