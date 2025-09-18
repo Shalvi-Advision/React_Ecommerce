@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { CartDrawerProvider, useCartDrawer } from './context/CartDrawerContext';
+import { OrderProvider } from './context/OrderContext';
 
 // Import page components
 import HomePage from './pages/HomePage';
@@ -17,6 +18,8 @@ import SavedCardsPage from './pages/SavedCardsPage';
 import ReadyListPage from './pages/ReadyListPage';
 import OrdersPage from './pages/OrdersPage';
 import SavedListPage from './pages/SavedListPage';
+import CategoryPage from './pages/CategoryPage';
+import TestCategoryPage from './pages/TestCategoryPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Import components
@@ -55,6 +58,9 @@ function AppContent() {
             <Route path="/ready-list" element={<ReadyListPage />} />
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/saved-list" element={<SavedListPage />} />
+            <Route path="/category/:categoryName" element={<CategoryPage />} />
+            <Route path="/category" element={<CategoryPage />} />
+            <Route path="/test-category" element={<TestCategoryPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>
@@ -111,7 +117,9 @@ function App() {
     <AuthProvider>
       <CartProvider>
         <CartDrawerProvider>
-          <AppContent />
+          <OrderProvider>
+            <AppContent />
+          </OrderProvider>
         </CartDrawerProvider>
       </CartProvider>
     </AuthProvider>

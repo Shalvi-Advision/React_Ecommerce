@@ -112,27 +112,48 @@ const initialCartState = {
 // Cart Provider Component
 export const CartProvider = ({ children }) => {
   const [state, dispatch] = useReducer(cartReducer, initialCartState);
+  const [currentUserId, setCurrentUserId] = React.useState(null);
 
-  // Load cart from localStorage on mount (only if no existing cart data)
+  // Get current user from localStorage
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
+    const user = localStorage.getItem('user');
+    if (user) {
       try {
-        const cartData = JSON.parse(savedCart);
-        // Only load from localStorage if it has items (user has previously added items)
-        if (cartData.items && cartData.items.length > 0) {
-          dispatch({ type: cartActions.LOAD_CART, payload: cartData });
-        }
+        const userData = JSON.parse(user);
+        setCurrentUserId(userData.id);
       } catch (error) {
-        console.error('Error loading cart from localStorage:', error);
+        console.error('Error parsing user data:', error);
       }
     }
   }, []);
 
-  // Save cart to localStorage whenever it changes
+  // Load cart from localStorage on mount and when user changes
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(state));
-  }, [state]);
+    if (currentUserId) {
+      const savedCart = localStorage.getItem(`cart_${currentUserId}`);
+      if (savedCart) {
+        try {
+          const cartData = JSON.parse(savedCart);
+          dispatch({ type: cartActions.LOAD_CART, payload: cartData });
+        } catch (error) {
+          console.error('Error loading cart from localStorage:', error);
+        }
+      } else {
+        // If no saved cart for this user, start with empty cart
+        dispatch({ type: cartActions.LOAD_CART, payload: { items: [] } });
+      }
+    } else {
+      // If no user, start with empty cart
+      dispatch({ type: cartActions.LOAD_CART, payload: { items: [] } });
+    }
+  }, [currentUserId]);
+
+  // Save cart to localStorage whenever it changes and we have a user
+  useEffect(() => {
+    if (currentUserId) {
+      localStorage.setItem(`cart_${currentUserId}`, JSON.stringify(state));
+    }
+  }, [state, currentUserId]);
 
   // Cart actions
   const addItem = (product, quantity = 1) => {
@@ -163,6 +184,13 @@ export const CartProvider = ({ children }) => {
     dispatch({ type: cartActions.CLEAR_CART });
   };
 
+  const clearUserCart = () => {
+    if (currentUserId) {
+      localStorage.removeItem(`cart_${currentUserId}`);
+    }
+    dispatch({ type: cartActions.CLEAR_CART });
+  };
+
   const resetToDummyData = () => {
     dispatch({ type: cartActions.LOAD_CART, payload: { items: dummyItems } });
   };
@@ -179,6 +207,7 @@ export const CartProvider = ({ children }) => {
     removeItem,
     updateQuantity,
     clearCart,
+    clearUserCart,
     resetToDummyData,
   };
 

@@ -193,12 +193,40 @@ export const AuthProvider = ({ children }) => {
       // Clear stored token using our PWA-compatible storage
       clearStoredToken();
 
+      // Clear user-specific data from localStorage
+      const user = localStorage.getItem('user');
+      if (user) {
+        try {
+          const userData = JSON.parse(user);
+          const userId = userData.id;
+          // Clear user-specific cart and orders
+          localStorage.removeItem(`cart_${userId}`);
+          localStorage.removeItem(`orders_${userId}`);
+        } catch (error) {
+          console.error('Error clearing user data:', error);
+        }
+      }
+
       dispatch({ type: authActions.LOGOUT });
       return { success: true };
     } catch (error) {
       console.error('Logout error:', error);
       // Even if API call fails, clear stored token
       clearStoredToken();
+      
+      // Clear user-specific data from localStorage even if API fails
+      const user = localStorage.getItem('user');
+      if (user) {
+        try {
+          const userData = JSON.parse(user);
+          const userId = userData.id;
+          localStorage.removeItem(`cart_${userId}`);
+          localStorage.removeItem(`orders_${userId}`);
+        } catch (error) {
+          console.error('Error clearing user data:', error);
+        }
+      }
+      
       dispatch({ type: authActions.LOGOUT });
       return { success: false, error: error.message };
     }
