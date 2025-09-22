@@ -1,5 +1,6 @@
 // Products API service functions
 import { APP_CONSTANTS } from '../constants';
+import groceryData from '../groceryData.json';
 
 const API_BASE_URL = APP_CONSTANTS.API_BASE_URL;
 
@@ -49,15 +50,68 @@ const convertObjectId = (id) => {
 const processProductData = (product) => {
   if (!product || typeof product !== 'object') return product;
 
+  // Calculate discount percentage
+  const mrp = convertToNumber(product.product_mrp, 0);
+  const ourPrice = convertToNumber(product.our_price, 0);
+  const discountPercentage = mrp > 0 ? Math.round(((mrp - ourPrice) / mrp) * 100) : 0;
+
   return {
     ...product,
     _id: convertObjectId(product._id),
-    product_mrp: convertToNumber(product.product_mrp, 0),
-    our_price: convertToNumber(product.our_price, 0),
-    discount_percentage: convertToNumber(product.discount_percentage, 0),
-    store_quantity: convertToNumber(product.store_quantity, 0),
+    product_name: product.product_name || '',
+    product_description: product.product_description || '',
+    product_mrp: mrp,
+    our_price: ourPrice,
+    discount_percentage: discountPercentage,
+    store_quantity: convertToNumber(product.store_quantity, 50), // Default stock
     max_quantity_allowed: convertToNumber(product.max_quantity_allowed, 10),
-    package_size: convertToNumber(product.package_size, 0),
+    package_size: product.package_size ? `${product.package_size} ${product.package_unit || 'GM'}` : '1 GM',
+    category: product.category || 'General',
+    brand: product.brand_name || product.brand || 'Unknown',
+    image_url: product.pcode_img || product.image_url || '/images/placeholder-product.jpg',
+    is_active: product.pcode_status === 'Y',
+    created_at: product.created_at || new Date().toISOString(),
+    updated_at: product.updated_at || new Date().toISOString()
+  };
+};
+
+// Convert grocery data to API format
+const convertGroceryDataToApiFormat = (groceryProducts, page = 1, limit = 20) => {
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedProducts = groceryProducts.slice(startIndex, endIndex);
+  
+  const convertedProducts = paginatedProducts.map((product, index) => ({
+    _id: product.id.toString(),
+    product_name: product.name,
+    product_description: product.description || `${product.name} - ${product.brand}`,
+    product_mrp: product.mrp || product.price * 1.2, // Add 20% markup for MRP
+    our_price: product.price,
+    discount_percentage: product.discount || Math.round(((product.mrp || product.price * 1.2) - product.price) / (product.mrp || product.price * 1.2) * 100),
+    store_quantity: product.stock || Math.floor(Math.random() * 50) + 10, // Random stock between 10-60
+    max_quantity_allowed: 10,
+    package_size: product.package_size || '1 kg',
+    category: product.subcategory || 'General',
+    brand: product.brand,
+    image_url: product.image || '/images/placeholder-product.jpg',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }));
+
+  const totalProducts = groceryProducts.length;
+  const totalPages = Math.ceil(totalProducts / limit);
+
+  return {
+    products: convertedProducts,
+    pagination: {
+      page: page,
+      limit: limit,
+      total_products: totalProducts,
+      total_pages: totalPages,
+      has_next: page < totalPages,
+      has_prev: page > 1
+    }
   };
 };
 
@@ -168,13 +222,35 @@ const isOnline = () => {
   return navigator.onLine;
 };
 
+// Utility function to make API calls with timeout
+const fetchWithTimeout = async (url, options = {}, timeout = 10000) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout');
+    }
+    throw error;
+  }
+};
+
 /**
  * Fetch products with pagination support and offline caching
  * @param {Object} params - Query parameters
  * @param {number} params.page - Page number (default: 1)
  * @param {number} params.limit - Items per page (default: 20)
- * @param {string} params.sort_by - Sort field (default: 'createdAt')
- * @param {string} params.sort_order - Sort order 'asc' or 'desc' (default: 'desc')
+ * @param {string} params.dept_id - Department ID (default: "2")
+ * @param {string} params.category_id - Category ID (default: "72")
+ * @param {string} params.sub_category_id - Sub-category ID (default: "391")
  * @returns {Promise<Object>} - API response with products and pagination
  */
 export const getProducts = async (params = {}) => {
@@ -182,19 +258,13 @@ export const getProducts = async (params = {}) => {
     const {
       page = 1,
       limit = 20,
-      sort_by = 'createdAt',
-      sort_order = 'desc'
+      dept_id = "2",
+      category_id = "72",
+      sub_category_id = "391"
     } = params;
 
-    const queryParams = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-      sort_by,
-      sort_order
-    });
-
-    const url = `${API_BASE_URL}/products?${queryParams.toString()}`;
-    const cacheKey = `products_${page}_${limit}_${sort_by}_${sort_order}`;
+    const url = `${API_BASE_URL}/products/get_active_products_list`;
+    const cacheKey = `products_${page}_${limit}_${dept_id}_${category_id}_${sub_category_id}`;
 
     // Clear expired cache entries periodically
     if (Math.random() < 0.1) { // 10% chance to clear expired cache
@@ -204,7 +274,24 @@ export const getProducts = async (params = {}) => {
     // If online, try to fetch from network first
     if (isOnline()) {
       try {
-        const response = await fetch(url);
+        const requestBody = {
+          dept_id,
+          category_id,
+          sub_category_id,
+          store_code: process.env.REACT_APP_STORE_CODE || "your_store_code",
+          project_code: process.env.REACT_APP_PROJECT_CODE || "your_project_code",
+          page,
+          limit
+        };
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody)
+        });
+
         if (!response.ok) {
           throw new Error(`Failed to fetch products: ${response.statusText}`);
         }
@@ -218,8 +305,22 @@ export const getProducts = async (params = {}) => {
 
         // Process and convert MongoDB types in product data
         const processedData = {
-          ...data.data,
-          products: data.data.products?.map(processProductData) || []
+          products: data.data?.map(processProductData) || [],
+          pagination: data.pagination ? {
+            page: data.pagination.current_page || page,
+            limit: data.pagination.per_page || limit,
+            total_products: data.pagination.total_products || 0,
+            total_pages: data.pagination.total_pages || 1,
+            has_next: data.pagination.has_next || false,
+            has_prev: data.pagination.has_prev || false
+          } : {
+            page: page,
+            limit: limit,
+            total_products: data.data?.length || 0,
+            total_pages: Math.ceil((data.data?.length || 0) / limit),
+            has_next: page < Math.ceil((data.data?.length || 0) / limit),
+            has_prev: page > 1
+          }
         };
 
         // Cache the processed response for offline use
@@ -241,8 +342,10 @@ export const getProducts = async (params = {}) => {
           return { ...processedCachedData, isOffline: true };
         }
 
-        // If no cache available, throw the network error
-        throw networkError;
+        // If no cache available, use grocery data as fallback
+        console.log('No cache available, using grocery data as fallback');
+        const fallbackData = convertGroceryDataToApiFormat(groceryData.products, page, limit);
+        return { ...fallbackData, isOffline: true, isFallback: true };
       }
     } else {
       // Offline mode - try to get from cache
@@ -258,7 +361,10 @@ export const getProducts = async (params = {}) => {
         };
         return { ...processedCachedData, isOffline: true };
       } else {
-        throw new Error('No cached products available. Please check your internet connection.');
+        // No cache available, use grocery data as fallback
+        console.log('No cache available in offline mode, using grocery data as fallback');
+        const fallbackData = convertGroceryDataToApiFormat(groceryData.products, page, limit);
+        return { ...fallbackData, isOffline: true, isFallback: true };
       }
     }
   } catch (error) {
@@ -290,7 +396,12 @@ export const fetchProductById = async (id) => {
 
 export const fetchCategories = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/products/categories`);
+    // Check if we're online
+    if (!navigator.onLine) {
+      throw new Error('No internet connection');
+    }
+
+    const response = await fetchWithTimeout(`${API_BASE_URL}/products/categories`, {}, 10000);
     if (!response.ok) {
       throw new Error(`Failed to fetch categories: ${response.statusText}`);
     }
@@ -299,7 +410,14 @@ export const fetchCategories = async () => {
     return data;
   } catch (error) {
     console.error('Error fetching categories:', error);
-    throw error;
+    
+    // Return fallback data structure instead of throwing
+    return {
+      success: false,
+      data: [],
+      message: 'Failed to fetch categories. Using fallback data.',
+      error: error.message
+    };
   }
 };
 

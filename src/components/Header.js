@@ -7,6 +7,7 @@ import { useResponsive } from '../hooks/useResponsive';
 import Button from './Button';
 import CategoriesDrawer from './CategoriesDrawer';
 import { fetchCategories } from '../api/productsApi';
+import { getActiveDepartments } from '../services/groceryApi';
 import {
   MapPinIcon,
   BellIcon,
@@ -28,6 +29,7 @@ const Header = () => {
   // Local UI state
   const [search, setSearch] = useState(searchParams.get('q') || '');
   const [categories, setCategories] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
@@ -197,39 +199,78 @@ const Header = () => {
   ];
 
   useEffect(() => {
-    // Load categories for the category bar
-    const load = async () => {
+    // Load departments for the category bar (same as CategoriesDrawer)
+    const loadDepartments = async () => {
       try {
-        const cats = await fetchCategories();
-        // Combine API categories with additional hardcoded categories
-        const additionalCategories = [
-          'household items',
-          'grocery and staples', 
-          'personal care',
-          'baby care',
-          'beverages',
-          'instant food',
-          'bakery/dairy',
-          'biscuits/snacks'
-        ];
-        setCategories(['all', ...cats, ...additionalCategories]);
+        const response = await getActiveDepartments();
+        
+        if (response.success && response.data && response.data.length > 0) {
+          // Use API departments
+          const departmentNames = response.data.map(dept => dept.department_name);
+          setDepartments(['all', ...departmentNames]);
+          setCategories(['all', ...departmentNames]); // Keep categories for backward compatibility
+        } else {
+          // Fallback to hardcoded departments (same as CategoriesDrawer fallback)
+          const fallbackDepartments = [
+            'all',
+            'GROCERY & STAPLES',
+            'FRUITS & VEGETABLES',
+            'DAIRY & BEVERAGES',
+            'PACKAGED FOOD',
+            'PERSONAL CARE',
+            'HOME & KITCHEN',
+            'CLEANING SUPPLIES',
+            'BABY CARE',
+            'PET CARE',
+            'HEALTH & WELLNESS',
+            'HOUSEHOLD ITEMS',
+            'STATIONERY & OFFICE',
+            'AUTOMOTIVE',
+            'ELECTRONICS',
+            'FASHION & CLOTHING',
+            'HOME FURNISHING',
+            'BOOKS & MEDIA',
+            'SPORTS & FITNESS',
+            'GARDEN & OUTDOOR',
+            'TOYS & GAMES',
+            'JEWELRY & WATCHES'
+          ];
+          setDepartments(fallbackDepartments);
+          setCategories(fallbackDepartments); // Keep categories for backward compatibility
+        }
       } catch (e) {
-        // If API fails, use hardcoded categories
-        const fallbackCategories = [
+        console.error('Error loading departments:', e);
+        // Fallback to hardcoded departments
+        const fallbackDepartments = [
           'all',
-          'household items',
-          'grocery and staples', 
-          'personal care',
-          'baby care',
-          'beverages',
-          'instant food',
-          'bakery/dairy',
-          'biscuits/snacks'
+          'GROCERY & STAPLES',
+          'FRUITS & VEGETABLES',
+          'DAIRY & BEVERAGES',
+          'PACKAGED FOOD',
+          'PERSONAL CARE',
+          'HOME & KITCHEN',
+          'CLEANING SUPPLIES',
+          'BABY CARE',
+          'PET CARE',
+          'HEALTH & WELLNESS',
+          'HOUSEHOLD ITEMS',
+          'STATIONERY & OFFICE',
+          'AUTOMOTIVE',
+          'ELECTRONICS',
+          'FASHION & CLOTHING',
+          'HOME FURNISHING',
+          'BOOKS & MEDIA',
+          'SPORTS & FITNESS',
+          'GARDEN & OUTDOOR',
+          'TOYS & GAMES',
+          'JEWELRY & WATCHES'
         ];
-        setCategories(fallbackCategories);
+        setDepartments(fallbackDepartments);
+        setCategories(fallbackDepartments); // Keep categories for backward compatibility
       }
     };
-    load();
+
+    loadDepartments();
   }, []);
 
   // Close user menu when clicking outside
@@ -283,7 +324,11 @@ const Header = () => {
   const goToCategory = (cat) => {
     const params = {};
     if (search && search.trim()) params.q = search.trim();
-    if (cat && cat !== 'all') params.category = cat;
+    if (cat && cat !== 'all') {
+      // Convert department name to category slug format
+      const categorySlug = cat.toLowerCase().replace(/\s+/g, '-');
+      params.category = categorySlug;
+    }
     setSearchParams(params);
     navigate({ pathname: '/', search: `?${new URLSearchParams(params).toString()}` });
     setIsDrawerOpen(false); // Close drawer when navigating
@@ -668,25 +713,26 @@ const Header = () => {
       {/* Category bar */}
       <div className="border-t border-gray-200 bg-white">
         <div className="container mx-auto px-4">
-          <div className="flex items-center gap-6 h-12 overflow-x-auto">
+          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 h-12 overflow-x-auto">
             <button
-              className="inline-flex items-center gap-2 text-gray-800 hover:text-primary-700 font-medium whitespace-nowrap text-sm"
+              className="inline-flex items-center gap-1 sm:gap-2 text-gray-800 hover:text-primary-700 font-medium whitespace-nowrap text-xs sm:text-sm flex-shrink-0"
               onClick={handleAllCategoriesClick}
             >
-              <Bars3Icon className="w-5 h-5" />
-              All Categories
+              <Bars3Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">All Categories</span>
+              <span className="sm:hidden">All</span>
             </button>
             {categories.slice(1).map((cat) => (
               <button
                 key={cat}
                 onClick={() => goToCategory(cat)}
-                className={`text-sm whitespace-nowrap pb-0.5 border-b-2 transition-colors font-medium ${
-                  (currentCategory === cat) || (currentCategory === 'all' && cat === 'all')
+                className={`text-xs sm:text-sm whitespace-nowrap pb-0.5 border-b-2 transition-colors font-medium flex-shrink-0 ${
+                  (currentCategory === cat.toLowerCase().replace(/\s+/g, '-')) || (currentCategory === 'all' && cat === 'all')
                     ? 'border-primary-600 text-primary-700'
                     : 'border-transparent text-gray-700 hover:text-primary-700'
                 }`}
               >
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                {cat === 'all' ? 'All' : cat.replace(/\s+/g, ' ')}
               </button>
             ))}
           </div>

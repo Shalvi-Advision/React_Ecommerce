@@ -53,6 +53,22 @@ const ProductCard = ({ product, onAddToCart }) => {
 
   const handleAddToCart = () => {
     if (safeStoreQuantity > 0 && quantity <= safeMaxQuantity) {
+      // Create product object for cart
+      const productForCart = {
+        id: safeId,
+        title: safeName,
+        price: safePrice,
+        image: safeImage,
+        brand: safeBrandName,
+        packageSize: `${safePackageSize} ${safePackageUnit}`,
+        mrp: safeMrp,
+        discountPercentage: safeDiscountPercentage
+      };
+      
+      // Call the parent's onAddToCart function with the product and quantity
+      onAddToCart(productForCart, quantity);
+      
+      // Show quantity selector for further adjustments
       setShowQuantitySelector(true);
     }
   };
@@ -60,6 +76,20 @@ const ProductCard = ({ product, onAddToCart }) => {
   const handleQuantityChange = (newQuantity) => {
     if (newQuantity >= 1 && newQuantity <= safeMaxQuantity) {
       setQuantity(newQuantity);
+      
+      // Update cart with new quantity
+      const productForCart = {
+        id: safeId,
+        title: safeName,
+        price: safePrice,
+        image: safeImage,
+        brand: safeBrandName,
+        packageSize: `${safePackageSize} ${safePackageUnit}`,
+        mrp: safeMrp,
+        discountPercentage: safeDiscountPercentage
+      };
+      
+      onAddToCart(productForCart, newQuantity);
     }
   };
 

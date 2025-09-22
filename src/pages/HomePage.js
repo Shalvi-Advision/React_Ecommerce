@@ -20,6 +20,7 @@ const HomePage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isOffline, setIsOffline] = useState(false);
   const [isDataFromCache, setIsDataFromCache] = useState(false);
+  const [isFallbackData, setIsFallbackData] = useState(false);
   const { addItem } = useCart();
   const { openDrawer } = useCartDrawer();
 
@@ -61,21 +62,32 @@ const HomePage = () => {
       const response = await getProducts({
         page,
         limit: 20,
-        sort_by: 'createdAt',
-        sort_order: 'desc'
+        dept_id: "2",
+        category_id: "72",
+        sub_category_id: "391"
       });
 
       setProducts(response.products || []);
       setPagination(response.pagination || null);
 
-      // Check if data is from cache (offline mode)
+      // Check if data is from cache (offline mode) or fallback
       if (response.isOffline) {
         setIsDataFromCache(true);
       } else {
         setIsDataFromCache(false);
       }
+      
+      // Check if data is from fallback
+      if (response.isFallback) {
+        setIsFallbackData(true);
+      } else {
+        setIsFallbackData(false);
+      }
     } catch (err) {
       console.error('Error loading products:', err);
+      
+      // Only show error if we don't have any fallback data
+      // The getProducts function should now provide fallback data instead of throwing errors
       setError(err.message || 'Failed to load products');
 
       // If offline and no cached data, show offline message
@@ -87,8 +99,8 @@ const HomePage = () => {
     }
   };
 
-  const handleAddToCart = (product) => {
-    addItem(product);
+  const handleAddToCart = (product, quantity = 1) => {
+    addItem(product, quantity);
     // Open cart drawer when item is added
     openDrawer();
   };
@@ -157,8 +169,8 @@ const HomePage = () => {
                 Discover our wide range of fresh groceries, household items, and daily essentials
               </p>
 
-              {/* Offline/Cache Status Indicators */}
-              {(isOffline || isDataFromCache) && (
+              {/* Offline/Cache/Fallback Status Indicators */}
+              {(isOffline || isDataFromCache || isFallbackData) && (
                 <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2 px-2">
                   {isOffline && (
                     <div className="flex items-center gap-2 bg-red-100 text-red-700 px-3 py-2 rounded-full text-xs sm:text-sm font-medium min-h-[32px]">
@@ -166,10 +178,16 @@ const HomePage = () => {
                       <span className="whitespace-nowrap">Offline Mode</span>
                     </div>
                   )}
-                  {isDataFromCache && (
+                  {isDataFromCache && !isFallbackData && (
                     <div className="flex items-center gap-2 bg-yellow-100 text-yellow-700 px-3 py-2 rounded-full text-xs sm:text-sm font-medium min-h-[32px]">
                       <div className="w-2 h-2 bg-yellow-500 rounded-full flex-shrink-0"></div>
                       <span className="whitespace-nowrap">Cached Data</span>
+                    </div>
+                  )}
+                  {isFallbackData && (
+                    <div className="flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-2 rounded-full text-xs sm:text-sm font-medium min-h-[32px]">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                      <span className="whitespace-nowrap">Demo Data</span>
                     </div>
                   )}
                 </div>

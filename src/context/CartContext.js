@@ -157,16 +157,28 @@ export const CartProvider = ({ children }) => {
 
   // Cart actions
   const addItem = (product, quantity = 1) => {
-    dispatch({
-      type: cartActions.ADD_ITEM,
-      payload: {
-        id: product.id,
-        title: product.title,
-        price: product.price,
-        image: product.image,
-        quantity,
-      },
-    });
+    // Check if item already exists in cart
+    const existingItem = state.items.find(item => item.id === product.id);
+    
+    if (existingItem) {
+      // If item exists, update its quantity
+      dispatch({
+        type: cartActions.UPDATE_QUANTITY,
+        payload: { id: product.id, quantity },
+      });
+    } else {
+      // If item doesn't exist, add it
+      dispatch({
+        type: cartActions.ADD_ITEM,
+        payload: {
+          id: product.id,
+          title: product.title,
+          price: product.price,
+          image: product.image,
+          quantity,
+        },
+      });
+    }
   };
 
   const removeItem = (itemId) => {

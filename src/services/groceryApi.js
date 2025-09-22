@@ -8,8 +8,29 @@ import groceryData from '../groceryData.json';
 // Simulate API delay
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Utility function to make API calls with timeout
+const fetchWithTimeout = async (url, options = {}, timeout = 10000) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout');
+    }
+    throw error;
+  }
+};
+
 // API Base URL (replace with actual API URL in production)
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://ecom-api-ozl0.onrender.com/api';
 
 // Project configuration
 const PROJECT_CODE = process.env.REACT_APP_PROJECT_CODE || 'your_project_code';
@@ -246,7 +267,12 @@ class GroceryApiService {
   // Get active departments
   async getActiveDepartments() {
     try {
-      const response = await fetch(`${API_BASE_URL}/departments/get_active_department_list`, {
+      // Check if we're online
+      if (!navigator.onLine) {
+        throw new Error('No internet connection');
+      }
+
+      const response = await fetchWithTimeout(`${API_BASE_URL}/departments/get_active_department_list`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -254,7 +280,7 @@ class GroceryApiService {
         body: JSON.stringify({
           project_code: PROJECT_CODE
         })
-      });
+      }, 10000);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -264,10 +290,12 @@ class GroceryApiService {
       return data;
     } catch (error) {
       console.error('Error fetching departments:', error);
+      
+      // Return fallback data structure
       return {
         success: false,
         data: [],
-        message: 'Failed to fetch departments',
+        message: 'Failed to fetch departments. Using fallback data.',
         error: error.message
       };
     }
@@ -276,7 +304,12 @@ class GroceryApiService {
   // Get active categories for a department
   async getActiveCategories(departmentId) {
     try {
-      const response = await fetch(`${API_BASE_URL}/categories/get_active_categories_list`, {
+      // Check if we're online
+      if (!navigator.onLine) {
+        throw new Error('No internet connection');
+      }
+
+      const response = await fetchWithTimeout(`${API_BASE_URL}/categories/get_active_categories_list`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -286,7 +319,7 @@ class GroceryApiService {
           store_code: STORE_CODE,
           project_code: PROJECT_CODE
         })
-      });
+      }, 10000);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -296,10 +329,12 @@ class GroceryApiService {
       return data;
     } catch (error) {
       console.error('Error fetching categories:', error);
+      
+      // Return fallback data structure
       return {
         success: false,
         data: [],
-        message: 'Failed to fetch categories',
+        message: 'Failed to fetch categories. Using fallback data.',
         error: error.message
       };
     }

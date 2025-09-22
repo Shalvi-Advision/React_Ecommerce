@@ -1,18 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { XMarkIcon } from '@heroicons/react/24/outline';
-import { getDepartmentsWithCategories } from '../services/groceryApi';
+import { XMarkIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { getActiveDepartments, getActiveCategories } from '../services/groceryApi';
+import { APP_CONSTANTS } from '../constants';
 
 const CategoriesDrawer = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const [departments, setDepartments] = useState([]);
+  const [categories, setCategories] = useState({});
+  const [expandedDepartment, setExpandedDepartment] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [categoriesLoading, setCategoriesLoading] = useState({});
   const [error, setError] = useState(null);
   
   const handleCategoryClick = (categoryName) => {
     const categorySlug = categoryName.toLowerCase().replace(/\s+/g, '-');
     navigate(`/category/${categorySlug}`);
     onClose();
+  };
+
+  const handleDepartmentClick = (departmentId) => {
+    if (expandedDepartment === departmentId) {
+      setExpandedDepartment(null);
+    } else {
+      setExpandedDepartment(departmentId);
+      // Load categories for this department if not already loaded
+      if (!categories[departmentId]) {
+        loadCategoriesForDepartment(departmentId);
+      }
+    }
   };
 
   // Icon mapping for departments
@@ -43,7 +59,40 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
     return iconMap[departmentName] || '📦';
   };
 
-  // Load departments and categories from API
+  // Default fallback values
+  const getDefaultImage = () => '/images/placeholder-category.png';
+  const getDefaultBgColor = () => '#f3f4f6';
+
+  // Load categories for a specific department
+  const loadCategoriesForDepartment = useCallback(async (departmentId) => {
+    setCategoriesLoading(prev => ({ ...prev, [departmentId]: true }));
+    
+    try {
+      const response = await getActiveCategories(departmentId);
+      if (response.success) {
+        setCategories(prev => ({
+          ...prev,
+          [departmentId]: response.data || []
+        }));
+      } else {
+        console.error('Failed to load categories for department:', departmentId, response.message);
+        setCategories(prev => ({
+          ...prev,
+          [departmentId]: []
+        }));
+      }
+    } catch (err) {
+      console.error('Error loading categories for department:', departmentId, err);
+      setCategories(prev => ({
+        ...prev,
+        [departmentId]: []
+      }));
+    } finally {
+      setCategoriesLoading(prev => ({ ...prev, [departmentId]: false }));
+    }
+  }, []);
+
+  // Load departments from API
   useEffect(() => {
     const loadDepartments = async () => {
       if (!isOpen) return;
@@ -52,9 +101,9 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
       setError(null);
       
       try {
-        const response = await getDepartmentsWithCategories();
+        const response = await getActiveDepartments();
         if (response.success) {
-          setDepartments(response.data);
+          setDepartments(response.data || []);
         } else {
           setError(response.message || 'Failed to load departments');
         }
@@ -254,11 +303,7 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
   ];
 
   // Use API data if available, otherwise fallback to hardcoded categories
-  const categories = departments.length > 0 ? departments.map(dept => ({
-    name: dept.department_name,
-    icon: getDepartmentIcon(dept.department_name),
-    subcategories: dept.categories.map(cat => cat.category_name)
-  })) : fallbackCategories;
+  const displayCategories = departments.length > 0 ? departments : fallbackCategories;
 
   if (!isOpen) return null;
 
@@ -267,17 +312,11 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
       {/* Drawer - positioned below the header bar */}
       <div className="fixed top-12 left-0 w-full bg-white z-50 shadow-lg border-t border-gray-200" style={{ height: 'calc(100vh - 3rem)' }}>
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 bg-white">
-          <div className="flex items-center gap-8">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-gray-200 bg-white">
+          <div className="flex items-center gap-4 sm:gap-8">
             <h2 className="text-lg font-semibold text-gray-800">All Categories</h2>
-            <div className="flex gap-6 text-sm text-gray-600">
-              <span className="hover:text-primary-600 cursor-pointer font-medium">Ready To Cook</span>
-              <span className="hover:text-primary-600 cursor-pointer font-medium">Home Appliances</span>
-              <span className="hover:text-primary-600 cursor-pointer font-medium">Cookware</span>
-              <span className="hover:text-primary-600 cursor-pointer font-medium">Serveware</span>
-              <span className="hover:text-primary-600 cursor-pointer font-medium">Cleaners</span>
-              <span className="hover:text-primary-600 cursor-pointer font-medium">Detergent & Fabric Care</span>
-            </div>
+            
+            
           </div>
           <button
             onClick={onClose}
@@ -311,29 +350,122 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-5 gap-0 p-6">
-              {categories.map((category, index) => (
-                <div key={index} className="border-r border-gray-100 last:border-r-0 pr-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-2xl">{category.icon}</span>
-                    <h3 className="font-semibold text-gray-800 text-sm leading-tight">
-                      {category.name}
-                    </h3>
-                  </div>
-                  <ul className="space-y-1">
-                    {category.subcategories.map((subcategory, subIndex) => (
-                      <li key={subIndex}>
-                        <button 
-                          onClick={() => handleCategoryClick(subcategory)}
-                          className="text-xs text-gray-600 hover:text-primary-600 hover:bg-gray-50 w-full text-left py-1 px-2 rounded transition-colors"
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-0 p-4 sm:p-6">
+              {displayCategories.map((department, index) => {
+                const departmentId = department.department_id || department.name;
+                const departmentName = department.department_name || department.name;
+                const departmentImage = department.image_link || getDefaultImage();
+                const isExpanded = expandedDepartment === departmentId;
+                const departmentCategories = categories[departmentId] || [];
+                const isLoadingCategories = categoriesLoading[departmentId] || false;
+                
+                return (
+                  <div key={index} className="border-r border-gray-100 last:border-r-0 pr-4 sm:pr-6">
+                    {/* Department Header */}
+                    <div 
+                      className="flex items-center gap-2 mb-3 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+                      onClick={() => handleDepartmentClick(departmentId)}
+                    >
+                      <div className="flex-shrink-0">
+                        {department.image_link ? (
+                          <img 
+                            src={departmentImage} 
+                            alt={departmentName}
+                            className="w-8 h-8 object-cover rounded"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'block';
+                            }}
+                          />
+                        ) : null}
+                        <span 
+                          className={`text-2xl ${department.image_link ? 'hidden' : 'block'}`}
+                          style={{ display: department.image_link ? 'none' : 'block' }}
                         >
-                          {subcategory}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+                          {getDepartmentIcon(departmentName)}
+                        </span>
+                      </div>
+                      <h3 className="font-semibold text-gray-800 text-sm leading-tight flex-1">
+                        {departmentName}
+                      </h3>
+                      <ChevronRightIcon 
+                        className={`w-4 h-4 text-gray-400 transition-transform ${
+                          isExpanded ? 'rotate-90' : ''
+                        }`} 
+                      />
+                    </div>
+
+                    {/* Categories List */}
+                    {isExpanded && (
+                      <div className="ml-10">
+                        {isLoadingCategories ? (
+                          <div className="flex items-center justify-center py-4">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+                          </div>
+                        ) : departmentCategories.length > 0 ? (
+                          <ul className="space-y-1">
+                            {departmentCategories.map((category, subIndex) => (
+                              <li key={subIndex}>
+                                <button 
+                                  onClick={() => handleCategoryClick(category.category_name)}
+                                  className="text-xs text-gray-600 hover:text-primary-600 hover:bg-gray-50 w-full text-left py-2 px-3 rounded transition-colors flex items-center gap-2"
+                                  style={{
+                                    backgroundColor: category.category_bg_color || 'transparent'
+                                  }}
+                                >
+                                  {category.image_link && (
+                                    <img 
+                                      src={category.image_link} 
+                                      alt={category.category_name}
+                                      className="w-4 h-4 object-cover rounded"
+                                      onError={(e) => {
+                                        e.target.style.display = 'none';
+                                      }}
+                                    />
+                                  )}
+                                  <span className="flex-1 truncate">
+                                    {category.category_name || 'Not Available'}
+                                  </span>
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div className="text-xs text-gray-500 py-2">
+                            No categories available
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Fallback subcategories for hardcoded data */}
+                    {!isExpanded && department.subcategories && (
+                      <ul className="space-y-1">
+                        {department.subcategories.slice(0, 6).map((subcategory, subIndex) => (
+                          <li key={subIndex}>
+                            <button 
+                              onClick={() => handleCategoryClick(subcategory)}
+                              className="text-xs text-gray-600 hover:text-primary-600 hover:bg-gray-50 w-full text-left py-1 px-2 rounded transition-colors"
+                            >
+                              {subcategory}
+                            </button>
+                          </li>
+                        ))}
+                        {department.subcategories.length > 6 && (
+                          <li>
+                            <button 
+                              onClick={() => handleDepartmentClick(departmentId)}
+                              className="text-xs text-primary-600 hover:text-primary-700 font-medium w-full text-left py-1 px-2 rounded transition-colors"
+                            >
+                              View all {department.subcategories.length} categories →
+                            </button>
+                          </li>
+                        )}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
