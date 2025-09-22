@@ -5,7 +5,7 @@ const AddressPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex">
-        {/* Sidebar */}
+      
         <AccountSidebar />
 
         {/* Main Content */}
