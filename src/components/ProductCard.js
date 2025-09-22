@@ -14,6 +14,13 @@ const ProductCard = ({ product, onAddToCart }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
+  // Debug: Log the raw product data
+  console.log('🔍 ProductCard received product data:', product);
+  console.log('🔍 ProductCard product keys:', Object.keys(product || {}));
+  console.log('🔍 ProductCard p_code field:', product?.p_code);
+  console.log('🔍 ProductCard pcode field:', product?.pcode);
+  console.log('🔍 ProductCard _id field:', product?._id);
+
   // Extract product data with fallbacks (conversion is handled in API layer)
   const {
     _id: id,
@@ -27,7 +34,8 @@ const ProductCard = ({ product, onAddToCart }) => {
     store_quantity,
     max_quantity_allowed,
     pcode_img: image,
-    discount_percentage
+    discount_percentage,
+    p_code: pcode
   } = product;
 
   // Provide fallbacks for all fields
@@ -37,6 +45,12 @@ const ProductCard = ({ product, onAddToCart }) => {
   const safeBrandName = safeValue(brand_name, '');
   const safePackageUnit = safeValue(package_unit, 'unit');
   const safeImage = safeValue(image, '');
+  const safePcode = safeValue(pcode, safeId); // Use pcode if available, fallback to id
+
+  // Debug: Log the navigation URL
+  console.log('🔗 ProductCard navigation URL will be:', `/product/${safePcode}`);
+  console.log('🔗 ProductCard safePcode:', safePcode);
+  console.log('🔗 ProductCard safeId:', safeId);
 
   // Ensure numeric values have defaults
   const safeMrp = mrp || 0;
@@ -52,6 +66,9 @@ const ProductCard = ({ product, onAddToCart }) => {
     : Math.round(safeMrp - safePrice);
 
   const handleAddToCart = () => {
+    // Debug logging for pcode
+    console.log('🛒 ProductCard Add to Cart clicked - PCode:', pcode || 'N/A', 'Product ID:', safeId, 'Product Name:', safeName);
+    
     if (safeStoreQuantity > 0 && quantity <= safeMaxQuantity) {
       // Create product object for cart
       const productForCart = {
@@ -115,7 +132,13 @@ const ProductCard = ({ product, onAddToCart }) => {
     <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 w-full max-w-sm mx-auto flex flex-col" style={{ minHeight: '420px' }}>
       {/* Image Container */}
       <div className="relative bg-gradient-to-br from-orange-50 to-orange-100 h-40 flex items-center justify-center p-6 flex-shrink-0">
-        <Link to={`/product/${safeId}`} className="block w-full h-full flex items-center justify-center">
+        <Link 
+          to={`/product/${safePcode}`} 
+          className="block w-full h-full flex items-center justify-center"
+          onClick={() => {
+            console.log('🖼️ ProductCard Product Image clicked - PCode:', safePcode, 'Product ID:', safeId, 'Product Name:', safeName);
+          }}
+        >
           {!imageError ? (
             <img
               src={safeImage}
@@ -177,7 +200,12 @@ const ProductCard = ({ product, onAddToCart }) => {
             )}
 
             {/* Product Name - Fixed height */}
-            <Link to={`/product/${safeId}`}>
+            <Link 
+              to={`/product/${safePcode}`}
+              onClick={() => {
+                console.log('🔗 ProductCard Product Name clicked - PCode:', safePcode, 'Product ID:', safeId, 'Product Name:', safeName);
+              }}
+            >
               <h3 className="text-sm font-semibold text-gray-900 mb-1 line-clamp-2 hover:text-green-600 transition-colors leading-tight h-10 flex items-start">
                 {safeName}
               </h3>

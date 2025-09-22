@@ -50,14 +50,20 @@ const convertObjectId = (id) => {
 const processProductData = (product) => {
   if (!product || typeof product !== 'object') return product;
 
+  // Debug: Log the raw product data
+  console.log('🔄 processProductData - Raw product:', product);
+  console.log('🔄 processProductData - p_code field:', product.p_code);
+  console.log('🔄 processProductData - _id field:', product._id);
+
   // Calculate discount percentage
   const mrp = convertToNumber(product.product_mrp, 0);
   const ourPrice = convertToNumber(product.our_price, 0);
   const discountPercentage = mrp > 0 ? Math.round(((mrp - ourPrice) / mrp) * 100) : 0;
 
-  return {
+  const processedProduct = {
     ...product,
     _id: convertObjectId(product._id),
+    p_code: product.p_code || product.pcode || product._id, // Preserve p_code field
     product_name: product.product_name || '',
     product_description: product.product_description || '',
     product_mrp: mrp,
@@ -73,6 +79,13 @@ const processProductData = (product) => {
     created_at: product.created_at || new Date().toISOString(),
     updated_at: product.updated_at || new Date().toISOString()
   };
+
+  // Debug: Log the processed product data
+  console.log('✅ processProductData - Processed product:', processedProduct);
+  console.log('✅ processProductData - Final p_code:', processedProduct.p_code);
+  console.log('✅ processProductData - Final _id:', processedProduct._id);
+
+  return processedProduct;
 };
 
 // Convert grocery data to API format

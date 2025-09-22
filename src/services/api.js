@@ -127,9 +127,24 @@ const clearIndexedDBToken = async () => {
 // Reusable API methods
 export const apiPost = async (endpoint, data) => {
   try {
+    console.log('🌐 apiPost called:', { endpoint, data });
+    console.log('🌐 Full URL:', `${API_BASE_URL}${endpoint}`);
+    console.log('🌐 Request headers:', api.defaults.headers);
+    
     const response = await api.post(endpoint, data);
+    console.log('✅ apiPost response status:', response.status);
+    console.log('✅ apiPost response headers:', response.headers);
+    console.log('✅ apiPost response data:', response.data);
     return response.data;
   } catch (error) {
+    console.error('❌ apiPost error occurred');
+    console.error('❌ Error type:', typeof error);
+    console.error('❌ Error message:', error.message);
+    console.error('❌ Error code:', error.code);
+    console.error('❌ Error response status:', error.response?.status);
+    console.error('❌ Error response statusText:', error.response?.statusText);
+    console.error('❌ Error response data:', error.response?.data);
+    console.error('❌ Full error object:', error);
     throw error.response?.data || error;
   }
 };
@@ -253,6 +268,149 @@ export const postAuth = async (endpoint, data, useToken = true) => {
       }
     }
     throw error.response?.data || error;
+  }
+};
+
+// Utility function to convert MongoDB Decimal128 to number
+const convertToNumber = (value, defaultValue = 0) => {
+  if (value === null || value === undefined) return defaultValue;
+
+  // Handle MongoDB Decimal128 objects
+  if (typeof value === 'object' && value !== null && '$numberDecimal' in value) {
+    return parseFloat(value.$numberDecimal) || defaultValue;
+  }
+
+  // Handle regular numbers
+  if (typeof value === 'number') return value;
+
+  // Handle string numbers
+  if (typeof value === 'string') {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? defaultValue : parsed;
+  }
+
+  return defaultValue;
+};
+
+// Utility function to convert MongoDB ObjectId to string
+const convertObjectId = (id) => {
+  if (id === null || id === undefined) return null;
+
+  // Handle MongoDB ObjectId objects
+  if (typeof id === 'object' && id !== null && '$oid' in id) {
+    return id.$oid;
+  }
+
+  // Handle regular strings
+  if (typeof id === 'string') return id;
+
+  // Try to convert to string
+  return id?.toString() || null;
+};
+
+// Process product data to convert MongoDB types
+const processProductData = (product) => {
+  if (!product || typeof product !== 'object') return product;
+
+  // Calculate discount percentage
+  const mrp = convertToNumber(product.product_mrp, 0);
+  const ourPrice = convertToNumber(product.our_price, 0);
+  const discountPercentage = mrp > 0 ? Math.round(((mrp - ourPrice) / mrp) * 100) : 0;
+
+  return {
+    ...product,
+    _id: convertObjectId(product._id),
+    product_name: product.product_name || '',
+    product_description: product.product_description || '',
+    product_mrp: mrp,
+    our_price: ourPrice,
+    discount_percentage: discountPercentage,
+    store_quantity: convertToNumber(product.store_quantity, 50), // Default stock
+    max_quantity_allowed: convertToNumber(product.max_quantity_allowed, 10),
+    package_size: product.package_size ? `${product.package_size} ${product.package_unit || 'GM'}` : '1 GM',
+    category: product.category || 'General',
+    brand: product.brand_name || product.brand || 'Unknown',
+    image_url: product.pcode_img || product.image_url || '/images/placeholder-product.jpg',
+    is_active: product.pcode_status === 'Y',
+    created_at: product.created_at || new Date().toISOString(),
+    updated_at: product.updated_at || new Date().toISOString()
+  };
+};
+
+// Product Details API
+export const getProductDetails = async (p_code, store_code, project_code) => {
+  try {
+    console.log('🔍 getProductDetails called with:', { p_code, store_code, project_code });
+    console.log('🌐 API Base URL:', API_BASE_URL);
+    console.log('🔗 Full endpoint URL:', `${API_BASE_URL}/products/getpcodeproducts`);
+    
+    const response = await apiPost('/products/getpcodeproducts', {
+      p_code,
+      store_code,
+      project_code
+    });
+    
+    console.log('📦 getProductDetails API response:', response);
+    
+    // Check if the response indicates an error
+    if (response && response.success === false) {
+      console.error('❌ API returned success: false', response);
+      throw new Error(response.message || 'Product not found');
+    }
+    
+    // Check if response has data
+    if (!response || !response.data) {
+      console.error('❌ API response missing data:', response);
+      throw new Error('Product data not found in response');
+    }
+    
+    // Process the product data to convert MongoDB types
+    console.log('🔄 Processing product data...');
+    console.log('🔄 Raw product data:', response.data);
+    const processedData = processProductData(response.data);
+    console.log('✅ Processed product data:', processedData);
+    console.log('✅ Processed data type:', typeof processedData);
+    console.log('✅ Processed data keys:', Object.keys(processedData || {}));
+    
+    // Return the response with processed data
+    const finalResponse = {
+      ...response,
+      data: processedData
+    };
+    console.log('✅ Final response to return:', finalResponse);
+    return finalResponse;
+  } catch (error) {
+    console.error('❌ getProductDetails error:', error);
+    console.error('❌ Error details:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data
+    });
+    
+    // If it's already an Error object, re-throw it
+    if (error instanceof Error) {
+      throw error;
+    }
+    
+    // Handle different types of errors
+    if (error.response) {
+      // Server responded with error status
+      if (error.response.status === 404) {
+        throw new Error('Product not found (404)');
+      } else if (error.response.status === 500) {
+        throw new Error('Server error (500)');
+      } else {
+        throw new Error(`API error: ${error.response.status} - ${error.response.statusText}`);
+      }
+    } else if (error.request) {
+      // Network error
+      throw new Error('Network error - unable to reach server');
+    } else {
+      // Other error
+      const errorMessage = error.message || 'Failed to fetch product details';
+      throw new Error(errorMessage);
+    }
   }
 };
 
