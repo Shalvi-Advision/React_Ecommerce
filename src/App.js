@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { CartDrawerProvider, useCartDrawer } from './context/CartDrawerContext';
 import { OrderProvider } from './context/OrderContext';
+import { PincodeProvider, usePincode } from './context/PincodeContext';
 
 // Import page components
 import HomePage from './pages/HomePage';
@@ -35,12 +36,30 @@ import DevTools from './components/DevTools';
 //import DebugInfo from './components/';
 import CartDebugTools from './components/CartDebugTools';
 
+// Import pincode modals
+import PincodeSelectionModal from './components/PincodeSelectionModal';
+import StoreSelectionModal from './components/StoreSelectionModal';
+import StoreDetailsModal from './components/StoreDetailsModal';
+
 // Import PWA utilities
 import pwaUtils from './utils/pwa';
 
 function AppContent() {
   const { successMessage, clearSuccessMessage } = useAuth();
   const { isOpen: isCartDrawerOpen, closeDrawer } = useCartDrawer();
+  const {
+    isPincodeModalOpen,
+    isStoreModalOpen,
+    isStoreDetailsModalOpen,
+    selectedPincode,
+    selectedStore,
+    handlePincodeSelect,
+    handleStoreSelect,
+    handleConfirmLocation,
+    closePincodeModal,
+    closeStoreModal,
+    closeStoreDetailsModal
+  } = usePincode();
 
   return (
     <Router>
@@ -88,6 +107,28 @@ function AppContent() {
           isVisible={!!successMessage}
           onClose={clearSuccessMessage}
         />
+
+        {/* Pincode Selection Modals */}
+        <PincodeSelectionModal
+          isOpen={isPincodeModalOpen}
+          onClose={closePincodeModal}
+          onPincodeSelect={handlePincodeSelect}
+        />
+        
+        <StoreSelectionModal
+          isOpen={isStoreModalOpen}
+          onClose={closeStoreModal}
+          onStoreSelect={handleStoreSelect}
+          selectedPincode={selectedPincode}
+        />
+        
+        <StoreDetailsModal
+          isOpen={isStoreDetailsModalOpen}
+          onClose={closeStoreDetailsModal}
+          onConfirm={handleConfirmLocation}
+          selectedPincode={selectedPincode}
+          selectedStore={selectedStore}
+        />
       </div>
     </Router>
   );
@@ -122,7 +163,9 @@ function App() {
       <CartProvider>
         <CartDrawerProvider>
           <OrderProvider>
-            <AppContent />
+            <PincodeProvider>
+              <AppContent />
+            </PincodeProvider>
           </OrderProvider>
         </CartDrawerProvider>
       </CartProvider>
