@@ -1,5 +1,6 @@
 // Products API service functions
 import { APP_CONSTANTS } from '../constants';
+import { getProductsOptimized } from '../services/optimizedApi';
 import groceryData from '../groceryData.json';
 
 const API_BASE_URL = APP_CONSTANTS.API_BASE_URL;

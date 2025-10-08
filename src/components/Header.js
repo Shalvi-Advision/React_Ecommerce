@@ -206,14 +206,15 @@ const Header = () => {
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
       {/* Top bar */}
-      <div className="container mx-auto px-4">
-        <div className={`flex items-center justify-between py-3 ${isMobile ? 'gap-2' : 'gap-4'}`}>
+      <div className="container mx-auto px-2 sm:px-4">
+        <div className="flex items-center justify-between py-2 sm:py-3 gap-2 sm:gap-4">
           {/* Left: Logo + Location */}
-          <div className={`flex items-center ${isMobile ? 'gap-2 min-w-[120px]' : isTablet ? 'gap-3 min-w-[160px]' : 'gap-4 min-w-[200px]'}`}>
-            <Link to="/" className={`${isMobile ? 'text-xl' : 'text-2xl'} font-extrabold text-primary-600 tracking-tight`}>
+          <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 min-w-0 flex-shrink-0">
+            <Link to="/" className="text-lg sm:text-xl lg:text-2xl font-extrabold text-primary-600 tracking-tight">
               E-Shop
             </Link>
-            {isDesktop && (
+            {/* Desktop Location Button */}
+            <div className="hidden lg:block">
               <button 
                 onClick={openPincodeModal}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:border-primary-300 transition-colors"
@@ -229,179 +230,169 @@ const Header = () => {
                   </span>
                 )}
               </button>
-            )}
+            </div>
           </div>
 
           {/* Middle: Delivery info (on desktop+) */}
-          {isDesktop && (
-            <div className="flex items-center gap-2 text-sm text-gray-600 whitespace-nowrap">
-              <span className="w-2 h-2 rounded-full bg-primary-500 inline-block"></span>
-              <span>
-                Earliest <span className="text-primary-600 font-medium">Home Delivery</span> available
-              </span>
-            </div>
-          )}
+          <div className="hidden xl:flex items-center gap-2 text-sm text-gray-600 whitespace-nowrap">
+            <span className="w-2 h-2 rounded-full bg-primary-500 inline-block"></span>
+            <span>
+              Earliest <span className="text-primary-600 font-medium">Home Delivery</span> available
+            </span>
+          </div>
 
-          {/* Search */}
-          <form onSubmit={handleSearchSubmit} className="flex-1 max-w-4xl w-full">
+          {/* Search - Responsive */}
+          <form onSubmit={handleSearchSubmit} className="flex-1 max-w-2xl lg:max-w-4xl w-full mx-2 sm:mx-4">
             <div className="flex">
-              <div className="flex items-center gap-2 flex-1 border border-gray-300 rounded-l-lg px-3 focus-within:ring-2 focus-within:ring-primary-500">
-                <MagnifyingGlassIcon className="w-5 h-5 text-gray-500" />
+              <div className="flex items-center gap-2 flex-1 border border-gray-300 rounded-l-lg px-2 sm:px-3 focus-within:ring-2 focus-within:ring-primary-500">
+                <MagnifyingGlassIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search for products"
-                  className="w-full py-2 outline-none text-gray-800 placeholder-gray-400"
+                  className="w-full py-2 outline-none text-gray-800 placeholder-gray-400 text-sm sm:text-base"
                 />
               </div>
-              <button type="submit" className="bg-primary-600 hover:bg-primary-700 text-white px-4 rounded-r-lg font-medium">
-                SEARCH
+              <button 
+                type="submit" 
+                className="bg-primary-600 hover:bg-primary-700 text-white px-3 sm:px-4 py-2 rounded-r-lg font-medium text-xs sm:text-sm transition-colors"
+              >
+                <span className="hidden sm:inline">SEARCH</span>
+                <span className="sm:hidden">🔍</span>
               </button>
             </div>
           </form>
 
           {/* Right: Actions */}
-          <div className={`flex items-center gap-2 justify-end ${isMobile ? 'min-w-[80px]' : isTablet ? 'min-w-[120px]' : 'min-w-[180px]'}`}>
+          <div className="flex items-center gap-1 sm:gap-2 justify-end min-w-0 flex-shrink-0">
             {/* Desktop Auth Links */}
             {isAuthenticated ? (
               // Authenticated user actions
               <>
-                {isDesktop && (
-                  <div className="relative account-dropdown-container">
-                    <button
-                      onClick={handleAccountDropdownToggle}
-                      className="flex items-center gap-2 text-gray-700 hover:text-primary-700 text-sm font-medium p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="text-right">
-                        <div className="text-xs text-gray-500">Hello {user?.name || 'User'}</div>
-                        <div className="font-semibold">My Account</div>
-                      </div>
-                      <ChevronDownIcon className={`w-4 h-4 transition-transform ${isAccountDropdownOpen ? 'rotate-180' : ''}`} />
-                    </button>
-
-                    {/* Account Dropdown Menu */}
-                    {isAccountDropdownOpen && (
-                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                        {/* Account Details Section */}
-                        <div className="px-4 py-2">
-                          <div className="text-xs text-gray-500 font-medium mb-2">Account Details</div>
-                          <button
-                            onClick={() => handleAccountMenuClick('profile')}
-                            className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                          >
-                            My Profile
-                          </button>
-                          <button
-                            onClick={() => handleAccountMenuClick('address')}
-                            className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                          >
-                            My Address
-                          </button>
-                          <button
-                            onClick={() => handleAccountMenuClick('cards')}
-                            className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                          >
-                            My Saved Cards
-                          </button>
-                        </div>
-
-                        {/* Divider */}
-                        <div className="border-t border-gray-200 my-2"></div>
-
-                        {/* Lists and Orders Section */}
-                        <div className="px-4 py-2">
-                          <button
-                            onClick={() => handleAccountMenuClick('orders')}
-                            className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                          >
-                            Ready List
-                          </button>
-                          <button
-                            onClick={() => handleAccountMenuClick('orders')}
-                            className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                          >
-                            My Orders
-                          </button>
-                          <button
-                            onClick={() => handleAccountMenuClick('saved-list')}
-                            className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                          >
-                            My Saved List
-                          </button>
-                          <button
-                            onClick={() => handleAccountMenuClick('subscribed-list')}
-                            className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                          >
-                            My Subscribed List
-                          </button>
-                        </div>
-
-                        {/* Divider */}
-                        <div className="border-t border-gray-200 my-2"></div>
-
-                        {/* Logout Section */}
-                        <div className="px-4 py-2">
-                          <button
-                            onClick={() => handleAccountMenuClick('logout')}
-                            className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                          >
-                            Logout
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {isMobile && (
-                  <button className="inline-flex p-2 rounded-full hover:bg-gray-100">
-                    <BellIcon className="w-6 h-6 text-primary-600" />
+                <div className="hidden lg:block relative account-dropdown-container">
+                  <button
+                    onClick={handleAccountDropdownToggle}
+                    className="flex items-center gap-2 text-gray-700 hover:text-primary-700 text-sm font-medium p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="text-right">
+                      <div className="text-xs text-gray-500">Hello {user?.name || 'User'}</div>
+                      <div className="font-semibold">My Account</div>
+                    </div>
+                    <ChevronDownIcon className={`w-4 h-4 transition-transform ${isAccountDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
-                )}
+
+                  {/* Account Dropdown Menu */}
+                  {isAccountDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                      {/* Account Details Section */}
+                      <div className="px-4 py-2">
+                        <div className="text-xs text-gray-500 font-medium mb-2">Account Details</div>
+                        <button
+                          onClick={() => handleAccountMenuClick('profile')}
+                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                        >
+                          My Profile
+                        </button>
+                        <button
+                          onClick={() => handleAccountMenuClick('address')}
+                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                        >
+                          My Address
+                        </button>
+                        <button
+                          onClick={() => handleAccountMenuClick('cards')}
+                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                        >
+                          My Saved Cards
+                        </button>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="border-t border-gray-200 my-2"></div>
+
+                      {/* Lists and Orders Section */}
+                      <div className="px-4 py-2">
+                        <button
+                          onClick={() => handleAccountMenuClick('orders')}
+                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                        >
+                          Ready List
+                        </button>
+                        <button
+                          onClick={() => handleAccountMenuClick('orders')}
+                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                        >
+                          My Orders
+                        </button>
+                        <button
+                          onClick={() => handleAccountMenuClick('saved-list')}
+                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                        >
+                          My Saved List
+                        </button>
+                        <button
+                          onClick={() => handleAccountMenuClick('subscribed-list')}
+                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                        >
+                          My Subscribed List
+                        </button>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="border-t border-gray-200 my-2"></div>
+
+                      {/* Logout Section */}
+                      <div className="px-4 py-2">
+                        <button
+                          onClick={() => handleAccountMenuClick('logout')}
+                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               // Unauthenticated user actions
               <>
-                {isDesktop && (
-                  <div className="flex items-center gap-2">
-                    <Link to="/register" className="text-gray-700 hover:text-primary-700 text-sm font-medium">
-                      <span>Register</span>
-                    </Link>
-                    <Link to="/login" className="text-gray-700 hover:text-primary-700 text-sm font-medium">
-                      <span>Login</span>
-                    </Link>
-                  </div>
-                )}
-                {isMobile && (
-                  <button className="inline-flex p-2 rounded-full hover:bg-gray-100">
-                    <BellIcon className="w-6 h-6 text-primary-600" />
-                  </button>
-                )}
+                <div className="hidden lg:flex items-center gap-2">
+                  <Link to="/register" className="text-gray-700 hover:text-primary-700 text-sm font-medium">
+                    <span>Register</span>
+                  </Link>
+                  <Link to="/login" className="text-gray-700 hover:text-primary-700 text-sm font-medium">
+                    <span>Login</span>
+                  </Link>
+                </div>
               </>
             )}
 
-            {/* Mobile Location Button */}
-            {(isMobile || isTablet) && (
+            {/* Mobile/Tablet Location Button */}
+            <div className="lg:hidden">
               <button
                 onClick={openPincodeModal}
                 className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-gray-200 text-gray-700 hover:border-primary-300 transition-colors"
               >
                 <MapPinIcon className="w-4 h-4 text-primary-600" />
-                <span className="text-xs font-medium">
+                <span className="text-xs font-medium hidden sm:inline">
                   {isLocationSet ? getLocationDisplayText() : 'Location'}
                 </span>
+                <span className="text-xs font-medium sm:hidden">
+                  {isLocationSet ? 'Set' : 'Loc'}
+                </span>
               </button>
-            )}
+            </div>
 
             {/* Mobile/Tablet User Menu */}
-            {(isMobile || isTablet) && (
-              <div className="relative user-menu-container">
+            <div className="lg:hidden relative user-menu-container">
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="inline-flex p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 aria-label="User menu"
               >
-                <UserIcon className="w-6 h-6 text-primary-600" />
+                <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600" />
               </button>
 
               {/* Mobile User Dropdown Menu */}
@@ -528,14 +519,13 @@ const Header = () => {
                 </div>
               )}
             </div>
-            )}
 
             {/* Favorites Icon */}
             <Link
               to="/favorites"
               className="relative inline-flex p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
-              <HeartIcon className="w-6 h-6 text-primary-600" />
+              <HeartIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600" />
               {favorites.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
                   {favorites.length}
@@ -548,7 +538,7 @@ const Header = () => {
               onClick={openDrawer}
               className="relative inline-flex p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
-              <ShoppingCartIcon className="w-6 h-6 text-primary-600" />
+              <ShoppingCartIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600" />
               {totalItems > 0 && (
                 <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
                   {totalItems}
@@ -561,10 +551,10 @@ const Header = () => {
 
       {/* Category bar */}
       <div className="border-t border-gray-200 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 h-12 overflow-x-auto">
+        <div className="container mx-auto px-2 sm:px-4">
+          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 h-10 sm:h-12 overflow-x-auto scrollbar-hide">
             <button
-              className="inline-flex items-center gap-1 sm:gap-2 text-gray-800 hover:text-primary-700 font-medium whitespace-nowrap text-xs sm:text-sm flex-shrink-0"
+              className="inline-flex items-center gap-1 sm:gap-2 text-gray-800 hover:text-primary-700 font-medium whitespace-nowrap text-xs sm:text-sm flex-shrink-0 px-2 py-1 rounded-md hover:bg-gray-50"
               onClick={handleAllCategoriesClick}
             >
               <Bars3Icon className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -575,7 +565,7 @@ const Header = () => {
               <button
                 key={cat}
                 onClick={() => goToCategory(cat)}
-                className={`text-xs sm:text-sm whitespace-nowrap pb-0.5 border-b-2 transition-colors font-medium flex-shrink-0 ${
+                className={`text-xs sm:text-sm whitespace-nowrap pb-0.5 border-b-2 transition-colors font-medium flex-shrink-0 px-2 py-1 rounded-md hover:bg-gray-50 ${
                   (currentCategory === cat.toLowerCase().replace(/\s+/g, '-')) || (currentCategory === 'all' && cat === 'all')
                     ? 'border-primary-600 text-primary-700'
                     : 'border-transparent text-gray-700 hover:text-primary-700'

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { initializeApiOptimization } from './utils/apiOptimization';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { CartDrawerProvider, useCartDrawer } from './context/CartDrawerContext';
@@ -139,6 +140,9 @@ function AppContent() {
 
 function App() {
   useEffect(() => {
+    // Initialize API optimization
+    initializeApiOptimization();
+    
     // Register service worker when app loads
     const registerPWA = async () => {
       try {

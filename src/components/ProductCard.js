@@ -132,9 +132,9 @@ const ProductCard = ({ product, onAddToCart }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 w-full max-w-sm mx-auto flex flex-col" style={{ minHeight: '420px' }}>
+    <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 w-full max-w-sm mx-auto flex flex-col" style={{ minHeight: '380px' }}>
       {/* Image Container */}
-      <div className="relative bg-gradient-to-br from-orange-50 to-orange-100 h-40 flex items-center justify-center p-6 flex-shrink-0">
+      <div className="relative bg-gradient-to-br from-orange-50 to-orange-100 h-32 sm:h-40 flex items-center justify-center p-4 sm:p-6 flex-shrink-0">
         {/* Favorite Button */}
         <button
           onClick={(e) => {
@@ -154,12 +154,12 @@ const ProductCard = ({ product, onAddToCart }) => {
               });
             }
           }}
-          className="absolute bottom-3 right-3 z-10 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:shadow-lg transition-all duration-200 group"
+          className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 z-10 p-1.5 sm:p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:shadow-lg transition-all duration-200 group"
         >
           {isFavorite(safeId) ? (
-            <HeartSolid className="w-5 h-5 text-red-500" />
+            <HeartSolid className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
           ) : (
-            <HeartOutline className="w-5 h-5 text-gray-400 group-hover:text-red-500 transition-colors duration-200" />
+            <HeartOutline className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-red-500 transition-colors duration-200" />
           )}
         </button>
         <Link 
@@ -195,7 +195,7 @@ const ProductCard = ({ product, onAddToCart }) => {
         </Link>
 
         {/* Stock Status Badge */}
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
           {safeStoreQuantity > 0 ? (
             <div className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-semibold">
               In Stock
@@ -209,7 +209,7 @@ const ProductCard = ({ product, onAddToCart }) => {
 
         {/* Discount Badge */}
         {safeDiscountPercentage > 0 && (
-          <div className="absolute top-3 left-3">
+          <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
             <div className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
               {safeDiscountPercentage}% OFF
             </div>
@@ -218,10 +218,10 @@ const ProductCard = ({ product, onAddToCart }) => {
       </div>
 
       {/* Content Container */}
-      <div className="p-3 pb-4 flex flex-col flex-1 min-h-0">
+      <div className="p-2 sm:p-3 pb-3 sm:pb-4 flex flex-col flex-1 min-h-0">
         {/* Content area */}
         <div className="flex flex-col justify-between flex-1">
-          <div className="space-y-2 flex-shrink-0">
+          <div className="space-y-1.5 sm:space-y-2 flex-shrink-0">
             {/* Brand Name */}
             {safeBrandName && (
               <div className="text-xs text-orange-600 font-semibold uppercase tracking-wide">
@@ -236,7 +236,7 @@ const ProductCard = ({ product, onAddToCart }) => {
                 console.log('🔗 ProductCard Product Name clicked - PCode:', safePcode, 'Product ID:', safeId, 'Product Name:', safeName);
               }}
             >
-              <h3 className="text-sm font-semibold text-gray-900 mb-1 line-clamp-2 hover:text-green-600 transition-colors leading-tight h-10 flex items-start">
+              <h3 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1 line-clamp-2 hover:text-green-600 transition-colors leading-tight h-8 sm:h-10 flex items-start">
                 {safeName}
               </h3>
             </Link>
@@ -266,18 +266,18 @@ const ProductCard = ({ product, onAddToCart }) => {
             {/* Pricing Section */}
             <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                   <div className="text-left">
                     <div className="text-xs text-gray-500 font-medium">MRP</div>
-                    <div className="text-sm text-gray-500 line-through">₹{safeMrp}</div>
+                    <div className="text-xs sm:text-sm text-gray-500 line-through">₹{safeMrp}</div>
                   </div>
                   <div className="text-left">
                     <div className="text-xs text-gray-500 font-medium">Our Price</div>
-                    <div className="text-xl font-bold text-gray-900">₹{safePrice}</div>
+                    <div className="text-lg sm:text-xl font-bold text-gray-900">₹{safePrice}</div>
                   </div>
                 </div>
                 {discountAmount > 0 && (
-                  <div className="bg-green-100 text-green-700 text-xs px-3 py-1.5 rounded-full font-semibold flex-shrink-0">
+                  <div className="bg-green-100 text-green-700 text-xs px-2 sm:px-3 py-1 sm:py-1.5 rounded-full font-semibold flex-shrink-0">
                     ₹{discountAmount} OFF
                   </div>
                 )}
@@ -292,57 +292,58 @@ const ProductCard = ({ product, onAddToCart }) => {
               <button
                 onClick={handleAddToCart}
                 disabled={safeStoreQuantity === 0}
-                className={`w-full py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-200 shadow-md ${
+                className={`w-full py-2 sm:py-3 px-3 sm:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-1 sm:gap-2 transition-all duration-200 shadow-md ${
                   safeStoreQuantity > 0
                     ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-lg transform hover:scale-105'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
-                <ShoppingCartIcon className="w-4 h-4" />
-                {safeStoreQuantity > 0 ? 'ADD TO CART' : 'OUT OF STOCK'}
+                <ShoppingCartIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">{safeStoreQuantity > 0 ? 'ADD TO CART' : 'OUT OF STOCK'}</span>
+                <span className="sm:hidden">{safeStoreQuantity > 0 ? 'ADD' : 'OUT'}</span>
               </button>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 {/* Quantity Selector */}
                 <div className="flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                   {/* Minus Button */}
                   <button
                     onClick={() => handleQuantityChange(quantity - 1)}
                     disabled={quantity <= 1}
-                    className={`p-2 flex items-center justify-center transition-colors duration-200 ${
+                    className={`p-1.5 sm:p-2 flex items-center justify-center transition-colors duration-200 ${
                       quantity <= 1
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-green-600 hover:bg-green-700 text-white'
                     }`}
                   >
-                    <MinusIcon className="w-4 h-4" />
+                    <MinusIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                   </button>
 
                   {/* Quantity Display */}
-                  <div className="bg-white px-4 py-2 min-w-[3rem] flex items-center justify-center">
-                    <span className="text-sm font-semibold text-gray-900">{quantity}</span>
+                  <div className="bg-white px-2 sm:px-4 py-1.5 sm:py-2 min-w-[2rem] sm:min-w-[3rem] flex items-center justify-center">
+                    <span className="text-xs sm:text-sm font-semibold text-gray-900">{quantity}</span>
                   </div>
 
                   {/* Plus Button */}
                   <button
                     onClick={() => handleQuantityChange(quantity + 1)}
                     disabled={quantity >= safeMaxQuantity}
-                    className={`p-2 flex items-center justify-center transition-colors duration-200 ${
+                    className={`p-1.5 sm:p-2 flex items-center justify-center transition-colors duration-200 ${
                       quantity >= safeMaxQuantity
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-green-600 hover:bg-green-700 text-white'
                     }`}
                   >
-                    <PlusIcon className="w-4 h-4" />
+                    <PlusIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                   </button>
                 </div>
 
                 {/* Close Button */}
                 <button
                   onClick={handleClose}
-                  className="bg-white border border-gray-300 hover:border-gray-400 text-gray-600 hover:text-gray-800 p-2 rounded-lg flex items-center justify-center transition-colors duration-200 shadow-sm"
+                  className="bg-white border border-gray-300 hover:border-gray-400 text-gray-600 hover:text-gray-800 p-1.5 sm:p-2 rounded-lg flex items-center justify-center transition-colors duration-200 shadow-sm"
                 >
-                  <XMarkIcon className="w-4 h-4" />
+                  <XMarkIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                 </button>
               </div>
             )}

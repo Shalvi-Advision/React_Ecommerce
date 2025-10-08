@@ -60,36 +60,36 @@ const CartPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             
             {/* Left Section - Cart Items */}
             <div className="lg:col-span-2">
               {/* Header */}
-              <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">
+              <div className="mb-4 sm:mb-6">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
                   My Cart
-                  <span className="text-lg font-normal text-gray-500 ml-2">
+                  <span className="text-base sm:text-lg font-normal text-gray-500 ml-2">
                     ({totalItems} item{totalItems !== 1 ? 's' : ''})
                   </span>
                 </h1>
               </div>
 
-              {/* Column Headers */}
+              {/* Column Headers - Hidden on mobile */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <div className="hidden sm:grid grid-cols-12 gap-4 px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b border-gray-200">
                   <div className="col-span-4">
-                    <span className="text-sm font-medium text-gray-700">Product</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">Product</span>
                   </div>
                   <div className="col-span-2 text-center">
-                    <span className="text-sm font-medium text-gray-700">You Pay</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">You Pay</span>
                   </div>
                   <div className="col-span-2 text-center">
-                    <span className="text-sm font-medium text-gray-700">You Save</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">You Save</span>
                   </div>
                   <div className="col-span-3 text-center">
-                    <span className="text-sm font-medium text-gray-700">No. of items</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">Quantity</span>
                   </div>
                   <div className="col-span-1"></div>
                 </div>
@@ -101,44 +101,45 @@ const CartPage = () => {
                     const variant = item.quantity > 1 ? `${item.quantity} units` : '1 unit';
                     
                     return (
-                      <div key={item.id} className="p-6">
-                        <div className="grid grid-cols-12 gap-4 items-center">
-                          {/* Product Image & Details */}
-                          <div className="col-span-4 flex items-center gap-4">
+                      <div key={item.id} className="p-3 sm:p-4 lg:p-6">
+                        {/* Mobile Layout */}
+                        <div className="sm:hidden">
+                          <div className="flex gap-3 mb-3">
                             <img
                               src={item.image || '/placeholder-product.jpg'}
                               alt={item.title}
-                              className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                              className="w-16 h-16 object-cover rounded-lg border border-gray-200 flex-shrink-0"
                               onError={(e) => {
                                 e.target.src = '/placeholder-product.jpg';
                               }}
                             />
-                            <div>
-                              <h3 className="font-semibold text-gray-900 text-sm leading-tight">
-                                {item.title} : {variant}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-1">
+                                {item.title}
                               </h3>
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="text-xs text-gray-500 mb-2">
                                 Variant: <span className="font-bold">{variant}</span>
                               </p>
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <span className="text-sm font-semibold text-gray-900">
+                                    ₹{item.price}
+                                  </span>
+                                  <span className="text-xs text-green-600 ml-2">
+                                    Save ₹{itemSavings}
+                                  </span>
+                                </div>
+                                <button
+                                  onClick={() => handleRemoveItem(item.id)}
+                                  className="p-1 text-gray-600 hover:text-red-600 transition-colors"
+                                  title="Remove item"
+                                >
+                                  <TrashIcon className="w-4 h-4" />
+                                </button>
+                              </div>
                             </div>
                           </div>
-
-                          {/* You Pay */}
-                          <div className="col-span-2 text-center">
-                            <span className="text-sm font-semibold text-gray-900">
-                              ₹{item.price}
-                            </span>
-                          </div>
-
-                          {/* You Save */}
-                          <div className="col-span-2 text-center">
-                            <span className="text-sm font-semibold text-green-600">
-                              ₹{itemSavings}
-                            </span>
-                          </div>
-
-                          {/* Quantity Controls */}
-                          <div className="col-span-3 flex items-center justify-center gap-2">
+                          <div className="flex items-center justify-center">
                             <div className="flex items-center border border-gray-300 rounded-lg">
                               <button
                                 onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
@@ -158,6 +159,65 @@ const CartPage = () => {
                               </button>
                             </div>
                           </div>
+                        </div>
+
+                        {/* Desktop Layout */}
+                        <div className="hidden sm:grid grid-cols-12 gap-4 items-center">
+                          {/* Product Image & Details */}
+                          <div className="col-span-4 flex items-center gap-3 lg:gap-4">
+                            <img
+                              src={item.image || '/placeholder-product.jpg'}
+                              alt={item.title}
+                              className="w-12 h-12 lg:w-16 lg:h-16 object-cover rounded-lg border border-gray-200 flex-shrink-0"
+                              onError={(e) => {
+                                e.target.src = '/placeholder-product.jpg';
+                              }}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-semibold text-gray-900 text-xs lg:text-sm leading-tight">
+                                {item.title} : {variant}
+                              </h3>
+                              <p className="text-xs text-gray-500 mt-1">
+                                Variant: <span className="font-bold">{variant}</span>
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* You Pay */}
+                          <div className="col-span-2 text-center">
+                            <span className="text-xs lg:text-sm font-semibold text-gray-900">
+                              ₹{item.price}
+                            </span>
+                          </div>
+
+                          {/* You Save */}
+                          <div className="col-span-2 text-center">
+                            <span className="text-xs lg:text-sm font-semibold text-green-600">
+                              ₹{itemSavings}
+                            </span>
+                          </div>
+
+                          {/* Quantity Controls */}
+                          <div className="col-span-3 flex items-center justify-center gap-2">
+                            <div className="flex items-center border border-gray-300 rounded-lg">
+                              <button
+                                onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                                className="w-6 h-6 lg:w-8 lg:h-8 bg-green-600 hover:bg-green-700 text-white rounded-l-lg flex items-center justify-center transition-colors"
+                                disabled={item.quantity <= 1}
+                              >
+                                <MinusIcon className="w-3 h-3 lg:w-4 lg:h-4" />
+                              </button>
+                              <span className="px-2 lg:px-3 py-1 text-xs lg:text-sm font-medium min-w-[1.5rem] lg:min-w-[2rem] text-center bg-white">
+                                {item.quantity}
+                              </span>
+                              <button
+                                onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                                className="w-6 h-6 lg:w-8 lg:h-8 bg-green-600 hover:bg-green-700 text-white rounded-r-lg flex items-center justify-center transition-colors"
+                              >
+                                <PlusIcon className="w-3 h-3 lg:w-4 lg:h-4" />
+                              </button>
+                            </div>
+                          </div>
 
                           {/* Delete Button */}
                           <div className="col-span-1 flex justify-center">
@@ -166,7 +226,7 @@ const CartPage = () => {
                               className="p-1 text-gray-600 hover:text-red-600 transition-colors"
                               title="Remove item"
                             >
-                              <TrashIcon className="w-5 h-5" />
+                              <TrashIcon className="w-4 h-4 lg:w-5 lg:h-5" />
                             </button>
                           </div>
                         </div>
@@ -176,13 +236,13 @@ const CartPage = () => {
                 </div>
 
                 {/* Remove All */}
-                <div className="px-6 py-4 border-t border-gray-200">
+                <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-t border-gray-200">
                   <button
                     onClick={handleRemoveAll}
                     className="flex items-center gap-2 text-red-500 hover:text-red-700 transition-colors"
                   >
                     <TrashIcon className="w-4 h-4" />
-                    <span className="text-sm font-medium">Remove all</span>
+                    <span className="text-xs sm:text-sm font-medium">Remove all</span>
                   </button>
                 </div>
               </div>
@@ -190,38 +250,39 @@ const CartPage = () => {
 
             {/* Right Section - Price Summary */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8">
-                <h2 className="text-lg font-bold text-gray-900 mb-6">Price Summary</h2>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 sticky top-4 sm:top-8">
+                <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-4 sm:mb-6">Price Summary</h2>
                 
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {/* Cart Total */}
                   <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span className="font-bold text-gray-900">Cart Total</span>
-                    <span className="font-bold text-gray-900">₹{totalPrice}</span>
+                    <span className="font-bold text-gray-900 text-sm sm:text-base">Cart Total</span>
+                    <span className="font-bold text-gray-900 text-sm sm:text-base">₹{totalPrice}</span>
                   </div>
 
                   {/* Delivery Charge */}
                   <div className="flex justify-between items-center py-2 border-b border-gray-200">
                     <div className="flex items-center gap-1">
-                      <span className="text-gray-700">Delivery Charge</span>
-                      <InformationCircleIcon className="w-4 h-4 text-gray-400" />
+                      <span className="text-gray-700 text-sm sm:text-base">Delivery Charge</span>
+                      <InformationCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
                     </div>
-                    <span className="text-red-500 text-sm">+ Extra</span>
+                    <span className="text-red-500 text-xs sm:text-sm">+ Extra</span>
                   </div>
 
                   {/* Savings */}
                   <div className="flex justify-between items-center py-2">
-                    <span className="text-gray-700">Savings</span>
-                    <span className="font-semibold text-green-600">₹{totalSavings}</span>
+                    <span className="text-gray-700 text-sm sm:text-base">Savings</span>
+                    <span className="font-semibold text-green-600 text-sm sm:text-base">₹{totalSavings}</span>
                   </div>
                 </div>
 
                 {/* Checkout Button */}
                 <button
                   onClick={() => navigate('/checkout')}
-                  className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+                  className="w-full mt-4 sm:mt-6 bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg transition-colors text-sm sm:text-base"
                 >
-                  PROCEED TO CHECKOUT
+                  <span className="hidden sm:inline">PROCEED TO CHECKOUT</span>
+                  <span className="sm:hidden">CHECKOUT</span>
                 </button>
               </div>
             </div>

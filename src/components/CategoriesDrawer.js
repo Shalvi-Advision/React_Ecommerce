@@ -309,14 +309,18 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
 
   return (
     <>
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
+        onClick={onClose}
+      />
+      
       {/* Drawer - positioned below the header bar */}
       <div className="fixed top-12 left-0 w-full bg-white z-50 shadow-lg border-t border-gray-200" style={{ height: 'calc(100vh - 3rem)' }}>
         {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-gray-200 bg-white">
-          <div className="flex items-center gap-4 sm:gap-8">
-            <h2 className="text-lg font-semibold text-gray-800">All Categories</h2>
-            
-            
+        <div className="flex items-center justify-between px-3 sm:px-4 lg:px-6 py-2 sm:py-3 border-b border-gray-200 bg-white">
+          <div className="flex items-center gap-2 sm:gap-4 lg:gap-8">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-800">All Categories</h2>
           </div>
           <button
             onClick={onClose}
@@ -331,26 +335,26 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading categories...</p>
+                <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-primary-600 mx-auto mb-3 sm:mb-4"></div>
+                <p className="text-gray-600 text-sm sm:text-base">Loading categories...</p>
               </div>
             </div>
           ) : error ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
-                <div className="text-red-500 text-4xl mb-4">⚠️</div>
-                <p className="text-red-600 mb-2">Failed to load categories</p>
-                <p className="text-gray-500 text-sm">{error}</p>
+                <div className="text-red-500 text-3xl sm:text-4xl mb-3 sm:mb-4">⚠️</div>
+                <p className="text-red-600 mb-2 text-sm sm:text-base">Failed to load categories</p>
+                <p className="text-gray-500 text-xs sm:text-sm">{error}</p>
                 <button 
                   onClick={() => window.location.reload()} 
-                  className="mt-4 px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors"
+                  className="mt-3 sm:mt-4 px-3 sm:px-4 py-1.5 sm:py-2 bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors text-sm sm:text-base"
                 >
                   Retry
                 </button>
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-0 p-4 sm:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-0 p-2 sm:p-4 lg:p-6">
               {displayCategories.map((department, index) => {
                 const departmentId = department.department_id || department.name;
                 const departmentName = department.department_name || department.name;
@@ -360,10 +364,10 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
                 const isLoadingCategories = categoriesLoading[departmentId] || false;
                 
                 return (
-                  <div key={index} className="border-r border-gray-100 last:border-r-0 pr-4 sm:pr-6">
+                  <div key={index} className="border-r border-gray-100 last:border-r-0 pr-2 sm:pr-4 lg:pr-6">
                     {/* Department Header */}
                     <div 
-                      className="flex items-center gap-2 mb-3 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+                      className="flex items-center gap-2 mb-2 sm:mb-3 cursor-pointer hover:bg-gray-50 p-1.5 sm:p-2 rounded transition-colors"
                       onClick={() => handleDepartmentClick(departmentId)}
                     >
                       <div className="flex-shrink-0">
@@ -371,7 +375,7 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
                           <img 
                             src={departmentImage} 
                             alt={departmentName}
-                            className="w-8 h-8 object-cover rounded"
+                            className="w-6 h-6 sm:w-8 sm:h-8 object-cover rounded"
                             onError={(e) => {
                               e.target.style.display = 'none';
                               e.target.nextSibling.style.display = 'block';
@@ -379,17 +383,17 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
                           />
                         ) : null}
                         <span 
-                          className={`text-2xl ${department.image_link ? 'hidden' : 'block'}`}
+                          className={`text-lg sm:text-2xl ${department.image_link ? 'hidden' : 'block'}`}
                           style={{ display: department.image_link ? 'none' : 'block' }}
                         >
                           {getDepartmentIcon(departmentName)}
                         </span>
                       </div>
-                      <h3 className="font-semibold text-gray-800 text-sm leading-tight flex-1">
+                      <h3 className="font-semibold text-gray-800 text-xs sm:text-sm leading-tight flex-1">
                         {departmentName}
                       </h3>
                       <ChevronRightIcon 
-                        className={`w-4 h-4 text-gray-400 transition-transform ${
+                        className={`w-3 h-3 sm:w-4 sm:h-4 text-gray-400 transition-transform ${
                           isExpanded ? 'rotate-90' : ''
                         }`} 
                       />
@@ -397,18 +401,18 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
 
                     {/* Categories List */}
                     {isExpanded && (
-                      <div className="ml-10">
+                      <div className="ml-6 sm:ml-8 lg:ml-10">
                         {isLoadingCategories ? (
-                          <div className="flex items-center justify-center py-4">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+                          <div className="flex items-center justify-center py-2 sm:py-4">
+                            <div className="animate-spin rounded-full h-4 w-4 sm:h-6 sm:w-6 border-b-2 border-primary-600"></div>
                           </div>
                         ) : departmentCategories.length > 0 ? (
-                          <ul className="space-y-1">
+                          <ul className="space-y-0.5 sm:space-y-1">
                             {departmentCategories.map((category, subIndex) => (
                               <li key={subIndex}>
                                 <button 
                                   onClick={() => handleCategoryClick(category.category_name)}
-                                  className="text-xs text-gray-600 hover:text-primary-600 hover:bg-gray-50 w-full text-left py-2 px-3 rounded transition-colors flex items-center gap-2"
+                                  className="text-xs text-gray-600 hover:text-primary-600 hover:bg-gray-50 w-full text-left py-1.5 sm:py-2 px-2 sm:px-3 rounded transition-colors flex items-center gap-1.5 sm:gap-2"
                                   style={{
                                     backgroundColor: category.category_bg_color || 'transparent'
                                   }}
@@ -417,13 +421,13 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
                                     <img 
                                       src={category.image_link} 
                                       alt={category.category_name}
-                                      className="w-4 h-4 object-cover rounded"
+                                      className="w-3 h-3 sm:w-4 sm:h-4 object-cover rounded flex-shrink-0"
                                       onError={(e) => {
                                         e.target.style.display = 'none';
                                       }}
                                     />
                                   )}
-                                  <span className="flex-1 truncate">
+                                  <span className="flex-1 truncate text-xs">
                                     {category.category_name || 'Not Available'}
                                   </span>
                                 </button>
@@ -431,7 +435,7 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
                             ))}
                           </ul>
                         ) : (
-                          <div className="text-xs text-gray-500 py-2">
+                          <div className="text-xs text-gray-500 py-1 sm:py-2">
                             No categories available
                           </div>
                         )}
@@ -440,12 +444,12 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
 
                     {/* Fallback subcategories for hardcoded data */}
                     {!isExpanded && department.subcategories && (
-                      <ul className="space-y-1">
+                      <ul className="space-y-0.5 sm:space-y-1">
                         {department.subcategories.slice(0, 6).map((subcategory, subIndex) => (
                           <li key={subIndex}>
                             <button 
                               onClick={() => handleCategoryClick(subcategory)}
-                              className="text-xs text-gray-600 hover:text-primary-600 hover:bg-gray-50 w-full text-left py-1 px-2 rounded transition-colors"
+                              className="text-xs text-gray-600 hover:text-primary-600 hover:bg-gray-50 w-full text-left py-1 sm:py-1.5 px-2 sm:px-3 rounded transition-colors"
                             >
                               {subcategory}
                             </button>
