@@ -124,13 +124,27 @@ const clearIndexedDBToken = async () => {
   }
 };
 
-// Reusable API methods (optimized with reduced logging)
+// Reusable API methods
 export const apiPost = async (endpoint, data) => {
   try {
+    console.log('🌐 apiPost called:', { endpoint, data });
+    console.log('🌐 Full URL:', `${API_BASE_URL}${endpoint}`);
+    console.log('🌐 Request headers:', api.defaults.headers);
+    
     const response = await api.post(endpoint, data);
+    console.log('✅ apiPost response status:', response.status);
+    console.log('✅ apiPost response headers:', response.headers);
+    console.log('✅ apiPost response data:', response.data);
     return response.data;
   } catch (error) {
-    console.error('❌ apiPost error:', error.message);
+    console.error('❌ apiPost error occurred');
+    console.error('❌ Error type:', typeof error);
+    console.error('❌ Error message:', error.message);
+    console.error('❌ Error code:', error.code);
+    console.error('❌ Error response status:', error.response?.status);
+    console.error('❌ Error response statusText:', error.response?.statusText);
+    console.error('❌ Error response data:', error.response?.data);
+    console.error('❌ Full error object:', error);
     throw error.response?.data || error;
   }
 };

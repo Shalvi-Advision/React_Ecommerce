@@ -1,6 +1,5 @@
 // Banner API service functions
 import { APP_CONSTANTS } from '../constants';
-import { getBannersOptimized } from '../services/optimizedApi';
 
 const API_BASE_URL = APP_CONSTANTS.API_BASE_URL;
 
@@ -211,65 +210,163 @@ const fetchWithTimeout = async (url, options = {}, timeout = 10000) => {
 };
 
 /**
- * Fetch banners from API with optimized caching and rate limiting
+ * Fetch banners from API with offline caching support
  * @param {Object} params - Query parameters
- * @param {string} params.store_code - Store code (default: from env or "KET")
+ * @param {string} params.store_code - Store code (default: from env or "KLK")
  * @param {string} params.project_code - Project code (default: from env or "RET90")
  * @returns {Promise<Object>} - API response with banners
  */
 export const getBanners = async (params = {}) => {
   try {
     const {
-      store_code = process.env.REACT_APP_STORE_CODE || "KET",
+      store_code = process.env.REACT_APP_STORE_CODE || "KLK",
       project_code = process.env.REACT_APP_PROJECT_CODE || "RET90"
     } = params;
 
-    // Use optimized API call with rate limiting and caching
-    try {
-      const data = await getBannersOptimized(params);
-      
-      // Validate response structure
-      if (!data.success) {
-        throw new Error('API returned success: false');
-      }
+    const url = `${API_BASE_URL}/banners/get_all_banners`;
+    console.log('🔗 Full API URL:', url);
+    console.log('🔑 Using credentials:', { store_code, project_code });
+    const cacheKey = `banners_${store_code}_${project_code}`;
 
-      if (!data.data) {
-        console.warn('⚠️ No data field in response, using empty banners array');
-        return {
-          banners: [],
+    // If online, try to fetch from network first
+    if (isOnline()) {
+      try {
+        const requestBody = {
+          store_code,
+          project_code
+        };
+
+        console.log('🌐 Fetching banners from API:', { url, requestBody });
+        console.log('📡 API Endpoint: /banners/get_all_banners');
+        console.log('🌐 Request headers:', {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        });
+
+        const response = await fetchWithTimeout(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        }, 10000);
+
+        console.log('📥 Response received:', {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok,
+          url: response.url
+        });
+
+        if (!response.ok) {
+          let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          
+          if (response.status === 404) {
+            errorMessage = `Banner API endpoint not found (404). The endpoint '${url}' does not exist on the server.`;
+            console.warn('⚠️ Banner API endpoint not found. Please check if the backend API endpoint is implemented.');
+          } else if (response.status === 500) {
+            errorMessage = `Server error (500). The banner API endpoint exists but returned an error.`;
+          } else if (response.status === 0) {
+            errorMessage = `Network error. Unable to connect to the API server.`;
+          }
+          
+          console.error('❌ Banner API Error:', errorMessage);
+          throw new Error(errorMessage);
+        }
+
+        const data = await response.json();
+        console.log('✅ Banner API response received');
+
+        // Validate response structure
+        if (!data.success) {
+          throw new Error('API returned success: false');
+        }
+
+        if (!data.data) {
+          console.warn('⚠️ No data field in response, using empty banners array');
+          const processedData = {
+            banners: [],
+            success: data.success,
+            message: data.message || 'No banners available',
+            isOffline: false,
+            isFallback: false
+          };
+          return processedData;
+        }
+
+        // Process and convert banner data
+        const processedBanners = convertBannerData(data);
+        console.log('✅ Processed banners:', processedBanners.length, 'banners');
+
+        const processedData = {
+          banners: processedBanners,
           success: data.success,
-          message: data.message || 'No banners available',
+          message: data.message || 'Banners retrieved successfully',
           isOffline: false,
           isFallback: false
         };
+
+        // Cache the processed response for offline use
+        await cacheBannerData(cacheKey, processedData);
+
+        return processedData;
+      } catch (networkError) {
+        console.warn('Network request failed, trying cache:', networkError);
+        console.warn('Error details:', {
+          name: networkError.name,
+          message: networkError.message,
+          status: networkError.response?.status,
+          statusText: networkError.response?.statusText
+        });
+
+        // If network fails, try to get from cache
+        const cachedData = await getCachedBannerData(cacheKey);
+        if (cachedData) {
+          console.log('✅ Serving banners from cache');
+          return { ...cachedData, isOffline: true };
+        }
+
+        // If no cache available, use fallback data
+        console.log('⚠️ No cache available, using fallback banner data');
+        const fallbackBanners = getFallbackBanners();
+        return {
+          banners: fallbackBanners,
+          success: true,
+          message: 'Using fallback banner data',
+          isOffline: true,
+          isFallback: true
+        };
       }
+    } else {
+      // Offline mode - try to get from cache
+      console.log('Offline mode: Attempting to load banners from cache');
+      const cachedData = await getCachedBannerData(cacheKey);
 
-      // Process and convert banner data
-      const processedBanners = convertBannerData(data);
-      console.log('✅ Processed banners:', processedBanners.length, 'banners');
-
-      return {
-        banners: processedBanners,
-        success: data.success,
-        message: data.message || 'Banners retrieved successfully',
-        isOffline: false,
-        isFallback: false
-      };
-    } catch (apiError) {
-      console.warn('API request failed, using fallback data:', apiError.message);
-      
-      // If API fails, use fallback data
-      const fallbackBanners = getFallbackBanners();
-      return {
-        banners: fallbackBanners,
-        success: true,
-        message: 'Using fallback banner data',
-        isOffline: true,
-        isFallback: true
-      };
+      if (cachedData) {
+        console.log('Serving banners from cache (offline mode)');
+        return { ...cachedData, isOffline: true };
+      } else {
+        // No cache available, use fallback data
+        console.log('No cache available in offline mode, using fallback banner data');
+        const fallbackBanners = getFallbackBanners();
+        return {
+          banners: fallbackBanners,
+          success: true,
+          message: 'Using fallback banner data (offline)',
+          isOffline: true,
+          isFallback: true
+        };
+      }
     }
   } catch (error) {
     console.error('❌ Error fetching banners:', error);
+    console.error('❌ Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      isOnline: isOnline()
+    });
     
     // Return fallback data instead of throwing error
     const fallbackBanners = getFallbackBanners();
@@ -278,7 +375,7 @@ export const getBanners = async (params = {}) => {
       success: false,
       message: `Failed to fetch banners: ${error.message}. Using fallback data.`,
       error: error.message,
-      isOffline: true,
+      isOffline: !isOnline(),
       isFallback: true
     };
   }

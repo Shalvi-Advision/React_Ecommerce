@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { initializeApiOptimization } from './utils/apiOptimization';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { CartDrawerProvider, useCartDrawer } from './context/CartDrawerContext';
 import { OrderProvider } from './context/OrderContext';
 import { PincodeProvider, usePincode } from './context/PincodeContext';
 import { FavoriteProvider } from './context/FavoriteContext';
+import { ProfileProvider } from './context/ProfileContext';
 
 // Import page components
 import HomePage from './pages/HomePage';
@@ -140,9 +140,6 @@ function AppContent() {
 
 function App() {
   useEffect(() => {
-    // Initialize API optimization
-    initializeApiOptimization();
-    
     // Register service worker when app loads
     const registerPWA = async () => {
       try {
@@ -172,7 +169,9 @@ function App() {
           <OrderProvider>
             <PincodeProvider>
               <FavoriteProvider>
-                <AppContent />
+                <ProfileProvider>
+                  <AppContent />
+                </ProfileProvider>
               </FavoriteProvider>
             </PincodeProvider>
           </OrderProvider>

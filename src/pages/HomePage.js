@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getProducts } from '../api/optimizedProductsApi';
+import { getProducts } from '../api/productsApi';
 import { useCart } from '../context/CartContext';
 import { useCartDrawer } from '../context/CartDrawerContext';
 import Card from '../components/Card';
