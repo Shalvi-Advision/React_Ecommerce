@@ -1,6 +1,8 @@
 // Base API service with authentication support
 import axios from 'axios';
 import { APP_CONSTANTS } from '../constants';
+import { optimizedFetch, generateCacheKey, cacheResponse, getCachedResponse } from '../utils/apiOptimizer';
+import { throttle } from '../utils/asyncUtils';
 
 // OTP Authentication Configuration
 const OTP_PROJECT_CODE = "RET90";
@@ -12,6 +14,8 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // Add default timeout
+  timeout: 15000,
 });
 
 // Request interceptor to add auth token
@@ -125,28 +129,81 @@ const clearIndexedDBToken = async () => {
 };
 
 // Reusable API methods
-export const apiPost = async (endpoint, data) => {
+// Cache for API responses
+const apiCache = new Map();
+const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
+
+// Throttle consecutive API calls to the same endpoint
+const throttledApiCalls = new Map();
+
+// Get or create a throttled version of apiPost for a specific endpoint
+const getThrottledApiCall = (endpoint) => {
+  if (!throttledApiCalls.has(endpoint)) {
+    throttledApiCalls.set(endpoint, throttle(async (data) => {
+      return await apiPostInternal(endpoint, data);
+    }, 1000)); // Throttle to one call per second per endpoint
+  }
+  return throttledApiCalls.get(endpoint);
+};
+
+// Internal API post implementation
+const apiPostInternal = async (endpoint, data) => {
   try {
-    console.log('🌐 apiPost called:', { endpoint, data });
-    console.log('🌐 Full URL:', `${API_BASE_URL}${endpoint}`);
-    console.log('🌐 Request headers:', api.defaults.headers);
+    // Only log in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🌐 apiPost called:', { endpoint, data });
+      console.log('🌐 Full URL:', `${API_BASE_URL}${endpoint}`);
+    }
     
     const response = await api.post(endpoint, data);
-    console.log('✅ apiPost response status:', response.status);
-    console.log('✅ apiPost response headers:', response.headers);
-    console.log('✅ apiPost response data:', response.data);
+    
+    // Only log in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('✅ apiPost response status:', response.status);
+    }
+    
     return response.data;
   } catch (error) {
-    console.error('❌ apiPost error occurred');
-    console.error('❌ Error type:', typeof error);
-    console.error('❌ Error message:', error.message);
-    console.error('❌ Error code:', error.code);
-    console.error('❌ Error response status:', error.response?.status);
-    console.error('❌ Error response statusText:', error.response?.statusText);
-    console.error('❌ Error response data:', error.response?.data);
-    console.error('❌ Full error object:', error);
+    console.error('❌ apiPost error:', error.message);
+    
+    // Only log detailed error in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('❌ Error response status:', error.response?.status);
+      console.error('❌ Error response data:', error.response?.data);
+    }
+    
     throw error.response?.data || error;
   }
+};
+
+// Public API post function with caching for GET-like POST requests
+export const apiPost = async (endpoint, data, useCache = false) => {
+  // For some endpoints that are effectively GET requests but use POST (like product listings),
+  // we can safely cache them
+  const cacheable = [
+    '/products/getpcodeproducts',
+    '/products/get_active_products_list'
+  ];
+  
+  // If it's a cacheable endpoint and we want to use cache
+  if (useCache && cacheable.includes(endpoint)) {
+    const cacheKey = generateCacheKey(`${API_BASE_URL}${endpoint}`, data, 'POST');
+    const cachedData = getCachedResponse(cacheKey);
+    
+    if (cachedData) {
+      return cachedData;
+    }
+    
+    // If not in cache, make the request
+    const response = await getThrottledApiCall(endpoint)(data);
+    
+    // Cache the response
+    cacheResponse(cacheKey, response);
+    return response;
+  }
+  
+  // For non-cacheable endpoints or when not using cache
+  return getThrottledApiCall(endpoint)(data);
 };
 
 // POST method that automatically includes project code
@@ -163,11 +220,23 @@ export const postWithProjectCode = async (endpoint, data) => {
   }
 };
 
-export const apiGet = async (endpoint, params = {}) => {
+export const apiGet = async (endpoint, params = {}, useCache = true) => {
   try {
-    const response = await api.get(endpoint, { params });
-    return response.data;
+    // Use optimizedFetch with caching for GET requests
+    const url = `${API_BASE_URL}${endpoint}`;
+    const queryString = Object.keys(params).length > 0 
+      ? '?' + new URLSearchParams(params).toString() 
+      : '';
+    
+    const result = await optimizedFetch(
+      `${url}${queryString}`,
+      { method: 'GET' },
+      useCache
+    );
+    
+    return result;
   } catch (error) {
+    console.error(`❌ apiGet error for ${endpoint}:`, error.message);
     throw error.response?.data || error;
   }
 };
@@ -175,8 +244,20 @@ export const apiGet = async (endpoint, params = {}) => {
 export const apiPut = async (endpoint, data) => {
   try {
     const response = await api.put(endpoint, data);
+    
+    // Clear any cached GET requests that might be affected by this PUT
+    const cacheKey = endpoint.split('/');
+    if (cacheKey.length > 1) {
+      const resourceType = cacheKey[1]; // e.g., 'products', 'users', etc.
+      // Clear all cache entries that contain this resource type
+      Array.from(apiCache.keys())
+        .filter(key => key.includes(`/${resourceType}/`))
+        .forEach(key => apiCache.delete(key));
+    }
+    
     return response.data;
   } catch (error) {
+    console.error(`❌ apiPut error for ${endpoint}:`, error.message);
     throw error.response?.data || error;
   }
 };
@@ -184,8 +265,20 @@ export const apiPut = async (endpoint, data) => {
 export const apiDelete = async (endpoint) => {
   try {
     const response = await api.delete(endpoint);
+    
+    // Clear any cached GET requests that might be affected by this DELETE
+    const cacheKey = endpoint.split('/');
+    if (cacheKey.length > 1) {
+      const resourceType = cacheKey[1]; // e.g., 'products', 'users', etc.
+      // Clear all cache entries that contain this resource type
+      Array.from(apiCache.keys())
+        .filter(key => key.includes(`/${resourceType}/`))
+        .forEach(key => apiCache.delete(key));
+    }
+    
     return response.data;
   } catch (error) {
+    console.error(`❌ apiDelete error for ${endpoint}:`, error.message);
     throw error.response?.data || error;
   }
 };
@@ -338,55 +431,71 @@ const processProductData = (product) => {
 };
 
 // Product Details API
+// Product details cache with 5 minute expiry
+const productDetailsCache = new Map();
+const PRODUCT_CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
+
 export const getProductDetails = async (p_code, store_code, project_code) => {
   try {
-    console.log('🔍 getProductDetails called with:', { p_code, store_code, project_code });
-    console.log('🌐 API Base URL:', API_BASE_URL);
-    console.log('🔗 Full endpoint URL:', `${API_BASE_URL}/products/getpcodeproducts`);
+    // Generate cache key based on parameters
+    const cacheKey = `product:${p_code}:${store_code}:${project_code}`;
     
+    // Check if we have a cached version
+    const cachedProduct = productDetailsCache.get(cacheKey);
+    if (cachedProduct && (Date.now() - cachedProduct.timestamp < PRODUCT_CACHE_EXPIRY)) {
+      // Return cached version if not expired
+      return cachedProduct.data;
+    }
+    
+    // Minimal logging in production
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 getProductDetails called with:', { p_code, store_code, project_code });
+    }
+    
+    // Use apiPost with caching enabled for product details
     const response = await apiPost('/products/getpcodeproducts', {
       p_code,
       store_code,
       project_code
-    });
-    
-    console.log('📦 getProductDetails API response:', response);
+    }, true); // Enable caching for this POST request
     
     // Check if the response indicates an error
     if (response && response.success === false) {
-      console.error('❌ API returned success: false', response);
       throw new Error(response.message || 'Product not found');
     }
     
     // Check if response has data
     if (!response || !response.data) {
-      console.error('❌ API response missing data:', response);
       throw new Error('Product data not found in response');
     }
     
     // Process the product data to convert MongoDB types
-    console.log('🔄 Processing product data...');
-    console.log('🔄 Raw product data:', response.data);
     const processedData = processProductData(response.data);
-    console.log('✅ Processed product data:', processedData);
-    console.log('✅ Processed data type:', typeof processedData);
-    console.log('✅ Processed data keys:', Object.keys(processedData || {}));
     
-    // Return the response with processed data
+    // Create the final response
     const finalResponse = {
       ...response,
       data: processedData
     };
-    console.log('✅ Final response to return:', finalResponse);
+    
+    // Cache the processed response
+    productDetailsCache.set(cacheKey, {
+      data: finalResponse,
+      timestamp: Date.now()
+    });
+    
     return finalResponse;
   } catch (error) {
-    console.error('❌ getProductDetails error:', error);
-    console.error('❌ Error details:', {
-      message: error.message,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data
-    });
+    console.error(`❌ getProductDetails error for ${p_code}:`, error.message);
+    
+    // Provide more detailed logging only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('❌ Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+    }
     
     // If it's already an Error object, re-throw it
     if (error instanceof Error) {

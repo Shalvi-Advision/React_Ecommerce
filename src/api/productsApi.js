@@ -1,6 +1,8 @@
 // Products API service functions
 import { APP_CONSTANTS } from '../constants';
 import groceryData from '../groceryData.json';
+import { optimizedFetch, generateCacheKey, cacheResponse, getCachedResponse, clearExpiredCache } from '../utils/apiOptimizer';
+import { debounce, throttle } from '../utils/asyncUtils';
 
 const API_BASE_URL = APP_CONSTANTS.API_BASE_URL;
 
@@ -196,8 +198,8 @@ const getCachedProductsData = async (cacheKey) => {
   }
 };
 
-// Clear expired cache entries
-const clearExpiredCache = async () => {
+// Clear expired cache entries from IndexedDB
+const clearExpiredProductCache = async () => {
   try {
     const db = await initDB();
     const transaction = db.transaction([PRODUCTS_STORE], 'readwrite');
@@ -281,7 +283,7 @@ export const getProducts = async (params = {}) => {
 
     // Clear expired cache entries periodically
     if (Math.random() < 0.1) { // 10% chance to clear expired cache
-      clearExpiredCache();
+      clearExpiredProductCache();
     }
 
     // If online, try to fetch from network first
@@ -386,20 +388,49 @@ export const getProducts = async (params = {}) => {
   }
 };
 
+// Throttled version of getProducts to prevent API abuse
+const throttledGetProducts = throttle(getProducts, 2000);
+
+// Cached and throttled version of getProducts
+export const getProductsOptimized = async (params = {}) => {
+  // Create a cache key based on params
+  const cacheKey = generateCacheKey(
+    `${API_BASE_URL}/products/get_active_products_list`,
+    params,
+    'POST'
+  );
+  
+  // Try to get from cache first
+  const cachedData = getCachedResponse(cacheKey);
+  if (cachedData) {
+    console.log('Serving products from cache for params:', params);
+    return cachedData;
+  }
+  
+  // If not in cache, use throttled function
+  const response = await throttledGetProducts(params);
+  
+  // Cache the response for future use
+  cacheResponse(cacheKey, response);
+  
+  return response;
+};
+
 // Keep the old function for backward compatibility but mark as deprecated
 export const fetchProducts = async (params = {}) => {
-  console.warn('fetchProducts is deprecated. Use getProducts instead.');
-  return getProducts(params);
+  console.warn('fetchProducts is deprecated. Use getProductsOptimized instead.');
+  return getProductsOptimized(params);
 };
 
 export const fetchProductById = async (id) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/products/${id}`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch product: ${response.statusText}`);
-    }
-
-    const data = await response.json();
+    // Use optimized fetch with caching
+    const data = await optimizedFetch(
+      `${API_BASE_URL}/products/${id}`,
+      { method: 'GET' },
+      true // use cache
+    );
+    
     return data;
   } catch (error) {
     console.error('Error fetching product:', error);
@@ -407,24 +438,59 @@ export const fetchProductById = async (id) => {
   }
 };
 
+// Categories cache
+const categoriesCache = new Map();
+const CATEGORIES_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+// Throttled categories fetch to prevent hammering the API
+const fetchCategoriesThrottled = throttle(async () => {
+  // Check if we're online
+  if (!navigator.onLine) {
+    throw new Error('No internet connection');
+  }
+
+  const data = await optimizedFetch(
+    `${API_BASE_URL}/products/categories`,
+    { method: 'GET' },
+    true,  // use cache
+    3,     // max retries
+    2000   // retry delay
+  );
+  
+  return data;
+}, 5000); // Throttle to one request every 5 seconds
+
 export const fetchCategories = async () => {
   try {
-    // Check if we're online
-    if (!navigator.onLine) {
-      throw new Error('No internet connection');
+    // Check cache first
+    const cachedCategories = categoriesCache.get('categories');
+    if (cachedCategories && (Date.now() - cachedCategories.timestamp < CATEGORIES_CACHE_TTL)) {
+      return cachedCategories.data;
     }
-
-    const response = await fetchWithTimeout(`${API_BASE_URL}/products/categories`, {}, 10000);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch categories: ${response.statusText}`);
-    }
-
-    const data = await response.json();
+    
+    const data = await fetchCategoriesThrottled();
+    
+    // Cache the successful response
+    categoriesCache.set('categories', {
+      data,
+      timestamp: Date.now()
+    });
+    
     return data;
   } catch (error) {
     console.error('Error fetching categories:', error);
     
-    // Return fallback data structure instead of throwing
+    // Try to use expired cache as a fallback
+    const expiredCache = categoriesCache.get('categories');
+    if (expiredCache) {
+      console.log('Using expired categories cache as fallback');
+      return {
+        ...expiredCache.data,
+        isExpiredCache: true
+      };
+    }
+    
+    // Return fallback data structure if no cache available
     return {
       success: false,
       data: [],
@@ -434,23 +500,48 @@ export const fetchCategories = async () => {
   }
 };
 
-export const searchProducts = async (query) => {
+// Debounced search function to prevent excessive API calls while typing
+const debouncedSearch = debounce(async (query) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/products`);
-    if (!response.ok) {
-      throw new Error(`Failed to search products: ${response.statusText}`);
-    }
-
-    const products = await response.json();
+    // Use optimized fetch with shorter cache TTL for search results
+    const products = await optimizedFetch(
+      `${API_BASE_URL}/products`,
+      { method: 'GET' },
+      true
+    );
+    
     // Simple client-side search - in a real app, this would be server-side
     const filteredProducts = products.filter(product =>
-      product.title.toLowerCase().includes(query.toLowerCase()) ||
-      product.description.toLowerCase().includes(query.toLowerCase())
+      product.title?.toLowerCase().includes(query.toLowerCase()) ||
+      product.description?.toLowerCase().includes(query.toLowerCase())
     );
 
     return filteredProducts;
   } catch (error) {
-    console.error('Error searching products:', error);
+    console.error('Error in debounced search:', error);
     throw error;
   }
+}, 300); // 300ms debounce time
+
+export const searchProducts = async (query) => {
+  try {
+    // If query is too short, return empty results
+    if (!query || query.length < 2) {
+      return [];
+    }
+    
+    return await debouncedSearch(query);
+  } catch (error) {
+    console.error('Error searching products:', error);
+    
+    // Return empty array instead of throwing to prevent UI disruption
+    return [];
+  }
 };
+
+// Periodically clear expired cache to prevent memory leaks
+// This runs every 10 minutes
+setInterval(() => {
+  console.log('Clearing expired product cache entries...');
+  clearExpiredProductCache();
+}, 10 * 60 * 1000);

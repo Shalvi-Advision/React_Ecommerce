@@ -188,18 +188,38 @@ const isOnline = () => {
   return navigator.onLine;
 };
 
-// Utility function to make API calls with timeout
+// Utility function to make API calls with timeout and CORS handling
 const fetchWithTimeout = async (url, options = {}, timeout = 10000) => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
   
   try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
-    return response;
+    // Try using a CORS proxy if direct request fails
+    const corsProxyUrl = `https://cors-anywhere.herokuapp.com/${url}`;
+    
+    // First try to use direct URL
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+        // Add CORS mode explicitly
+        mode: 'cors',
+        // Include credentials if needed
+        credentials: 'same-origin'
+      });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (directError) {
+      console.warn('Direct API call failed, trying alternative approach...', directError);
+      
+      // If direct request failed due to CORS, use local fallback immediately
+      if (directError.name === 'TypeError' || directError.message?.includes('CORS')) {
+        throw new Error('CORS error: Using local fallback data');
+      }
+      
+      // For non-CORS errors, throw the original error
+      throw directError;
+    }
   } catch (error) {
     clearTimeout(timeoutId);
     if (error.name === 'AbortError') {
@@ -247,7 +267,11 @@ export const getBanners = async (params = {}) => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            // Add optional headers that might help with CORS
+            'Origin': window.location.origin,
+            'Access-Control-Request-Method': 'POST',
+            'Access-Control-Request-Headers': 'Content-Type, Accept'
           },
           body: JSON.stringify(requestBody)
         }, 10000);
@@ -311,7 +335,7 @@ export const getBanners = async (params = {}) => {
         await cacheBannerData(cacheKey, processedData);
 
         return processedData;
-      } catch (networkError) {
+      }       catch (networkError) {
         console.warn('Network request failed, trying cache:', networkError);
         console.warn('Error details:', {
           name: networkError.name,
@@ -319,6 +343,12 @@ export const getBanners = async (params = {}) => {
           status: networkError.response?.status,
           statusText: networkError.response?.statusText
         });
+        
+        // Special handling for CORS errors
+        if (networkError.message?.includes('CORS')) {
+          console.warn('❌ CORS error detected. This is likely because the API server does not allow requests from this origin.');
+          console.warn('💡 Using cached or fallback data instead.');
+        }
 
         // If network fails, try to get from cache
         const cachedData = await getCachedBannerData(cacheKey);

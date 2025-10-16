@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useResponsive } from '../hooks/useResponsive';
 import GroceryProductCard from '../components/GroceryProductCard';
 import { ChevronDownIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { getProducts } from '../api/productsApi';
+import { getProductsOptimized } from '../api/productsApi';
 import groceryApiService from '../services/groceryApi';
 
 const CategoryPage = () => {
@@ -45,81 +45,138 @@ const CategoryPage = () => {
     return slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  // Load department and categories on component mount
-  useEffect(() => {
-    const loadDepartmentData = async () => {
-      try {
-        setLoading(true);
-        const departmentName = getDepartmentNameFromSlug(categoryName);
-        setSelectedDepartment(departmentName);
-        
-        // Load categories for this department
-        const response = await groceryApiService.getActiveCategoriesByDepartmentName(departmentName);
-        if (response.success) {
-          setCategories(response.data);
-        } else {
-          // Fallback to dummy categories if API fails
-          setCategories([
-            { category_name: 'Cooker', category_id: 1, product_count: 45 },
-            { category_name: 'Kadai / Handi / Pans', category_id: 2, product_count: 78 },
-            { category_name: 'Cookware Sets', category_id: 3, product_count: 32 },
-            { category_name: 'Pressure Cookers', category_id: 4, product_count: 56 },
-            { category_name: 'Non-Stick Cookware', category_id: 5, product_count: 67 },
-            { category_name: 'Stainless Steel Cookware', category_id: 6, product_count: 43 }
-          ]);
+  // Memoized function to load department data
+  const loadDepartmentData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const departmentName = getDepartmentNameFromSlug(categoryName);
+      setSelectedDepartment(departmentName);
+      
+      // Use local storage cache if available
+      const cachedCategories = localStorage.getItem(`categories_${departmentName}`);
+      const cacheTimestamp = localStorage.getItem(`categories_timestamp_${departmentName}`);
+      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : Infinity;
+      const cacheValid = cacheAge < 30 * 60 * 1000; // 30 minutes cache validity
+      
+      if (cachedCategories && cacheValid) {
+        try {
+          // Use cached categories
+          setCategories(JSON.parse(cachedCategories));
+          console.log('Using cached categories data for', departmentName);
+          setLoading(false);
+          return;
+        } catch (e) {
+          console.error('Error parsing cached categories:', e);
+          // Fall through to fetch fresh data
         }
-      } catch (err) {
-        console.error('Error loading department data:', err);
-        setError('Failed to load department data');
-      } finally {
-        setLoading(false);
       }
-    };
-
-    if (categoryName) {
-      loadDepartmentData();
+      
+      // Load categories for this department
+      const response = await groceryApiService.getActiveCategoriesByDepartmentName(departmentName);
+      if (response.success) {
+        setCategories(response.data);
+        
+        // Cache the categories
+        try {
+          localStorage.setItem(`categories_${departmentName}`, JSON.stringify(response.data));
+          localStorage.setItem(`categories_timestamp_${departmentName}`, Date.now().toString());
+        } catch (e) {
+          console.error('Error caching categories:', e);
+        }
+      } else {
+        // Fallback to dummy categories if API fails
+        const fallbackCategories = [
+          { category_name: 'Cooker', category_id: 1, product_count: 45 },
+          { category_name: 'Kadai / Handi / Pans', category_id: 2, product_count: 78 },
+          { category_name: 'Cookware Sets', category_id: 3, product_count: 32 },
+          { category_name: 'Pressure Cookers', category_id: 4, product_count: 56 },
+          { category_name: 'Non-Stick Cookware', category_id: 5, product_count: 67 },
+          { category_name: 'Stainless Steel Cookware', category_id: 6, product_count: 43 }
+        ];
+        setCategories(fallbackCategories);
+        
+        // Cache the fallback categories too
+        try {
+          localStorage.setItem(`categories_${departmentName}`, JSON.stringify(fallbackCategories));
+          localStorage.setItem(`categories_timestamp_${departmentName}`, Date.now().toString());
+        } catch (e) {
+          console.error('Error caching fallback categories:', e);
+        }
+      }
+    } catch (err) {
+      console.error('Error loading department data:', err);
+      setError('Failed to load department data');
+      
+      // If offline, use fallback categories
+      if (!navigator.onLine) {
+        const fallbackCategories = [
+          { category_name: 'Cooker', category_id: 1, product_count: 45 },
+          { category_name: 'Kadai / Handi / Pans', category_id: 2, product_count: 78 },
+          { category_name: 'Cookware Sets', category_id: 3, product_count: 32 },
+          { category_name: 'Pressure Cookers', category_id: 4, product_count: 56 },
+          { category_name: 'Non-Stick Cookware', category_id: 5, product_count: 67 },
+          { category_name: 'Stainless Steel Cookware', category_id: 6, product_count: 43 }
+        ];
+        setCategories(fallbackCategories);
+        setError('You are offline. Showing cached categories.');
+      }
+    } finally {
+      setLoading(false);
     }
   }, [categoryName]);
 
-  // Load products when category changes
+  // Load department and categories on component mount
   useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Use productsApi to fetch products
-        const response = await getProducts({
+    if (categoryName) {
+      loadDepartmentData();
+    }
+  }, [categoryName, loadDepartmentData]);
+
+  // Memoized loadProducts function to prevent recreating on every render
+  const loadProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Use optimized productsApi to fetch products
+      const response = await getProductsOptimized({
+        page: currentPage,
+        limit: 20,
+        dept_id: "2", // Default department ID
+        category_id: selectedCategory?.category_id?.toString() || "72", // Use selected category or default
+        sub_category_id: "391" // Default sub-category ID
+      });
+
+      if (response) {
+        setProducts(response.products || []);
+        setPagination(response.pagination || {
           page: currentPage,
           limit: 20,
-          dept_id: "2", // Default department ID
-          category_id: selectedCategory?.category_id?.toString() || "72", // Use selected category or default
-          sub_category_id: "391" // Default sub-category ID
+          total_products: response.products?.length || 0,
+          total_pages: 1,
+          has_next: false,
+          has_prev: false
         });
-
-        if (response) {
-          setProducts(response.products || []);
-          setPagination(response.pagination || {
-            page: currentPage,
-            limit: 20,
-            total_products: response.products?.length || 0,
-            total_pages: 1,
-            has_next: false,
-            has_prev: false
-          });
-        } else {
-          setError('Failed to load products');
-        }
-      } catch (err) {
-        console.error('Error loading products:', err);
+      } else {
         setError('Failed to load products');
-      } finally {
-        setLoading(false);
       }
-    };
-
+    } catch (err) {
+      console.error('Error loading products:', err);
+      setError('Failed to load products');
+      
+      // If offline, show appropriate message
+      if (!navigator.onLine) {
+        setError('You are currently offline. Please check your internet connection.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, selectedCategory]);
+  
+  // Load products when category changes or current page changes
+  useEffect(() => {
     loadProducts();
-  }, [selectedCategory, currentPage]);
+  }, [selectedCategory, currentPage, loadProducts]);
 
   // Filter products based on additional filters and sorting
   const filteredProducts = useMemo(() => {

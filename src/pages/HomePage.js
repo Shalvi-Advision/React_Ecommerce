@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { getProducts } from '../api/productsApi';
+import { getProductsOptimized } from '../api/productsApi';
 import { useCart } from '../context/CartContext';
 import { useCartDrawer } from '../context/CartDrawerContext';
 import Card from '../components/Card';
@@ -30,42 +30,13 @@ const HomePage = () => {
   const { addItem } = useCart();
   const { openDrawer } = useCartDrawer();
 
-  useEffect(() => {
-    loadProducts(currentPage);
-  }, [currentPage]);
-
-  // Handle online/offline status
-  useEffect(() => {
-    const handleOnline = () => {
-      setIsOffline(false);
-      // Reload data when coming back online
-      if (isDataFromCache) {
-        loadProducts(currentPage);
-      }
-    };
-
-    const handleOffline = () => {
-      setIsOffline(true);
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    // Set initial online status
-    setIsOffline(!navigator.onLine);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [isDataFromCache, currentPage]);
-
-  const loadProducts = async (page = 1) => {
+  // Memoize loadProducts function to prevent recreating it on every render
+  const loadProducts = useCallback(async (page = 1) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await getProducts({
+      const response = await getProductsOptimized({
         page,
         limit: 20,
         dept_id: "2",
@@ -93,7 +64,6 @@ const HomePage = () => {
       console.error('Error loading products:', err);
       
       // Only show error if we don't have any fallback data
-      // The getProducts function should now provide fallback data instead of throwing errors
       setError(err.message || 'Failed to load products');
 
       // If offline and no cached data, show offline message
@@ -103,7 +73,39 @@ const HomePage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+  
+  useEffect(() => {
+    loadProducts(currentPage);
+  }, [currentPage, loadProducts]);
+
+  // Handle online/offline status
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOffline(false);
+      // Reload data when coming back online after a small delay to ensure connectivity
+      if (isDataFromCache) {
+        setTimeout(() => loadProducts(currentPage), 1000);
+      }
+    };
+
+    const handleOffline = () => {
+      setIsOffline(true);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Set initial online status
+    setIsOffline(!navigator.onLine);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [isDataFromCache, currentPage]);
+
+  // loadProducts is now defined using useCallback above
 
   const handleAddToCart = (product, quantity = 1) => {
     addItem(product, quantity);
@@ -142,7 +144,7 @@ const HomePage = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
           <p className="text-red-600 mb-4">Error: {error}</p>
-          <Button onClick={loadProducts}>Try Again</Button>
+          <Button onClick={() => loadProducts(currentPage)}>Try Again</Button>
         </div>
       </div>
     );

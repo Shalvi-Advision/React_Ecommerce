@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useRef } from 'react';
 import { login as apiLogin, register as apiRegister, getCurrentUser, logout as apiLogout } from '../api/authApi';
 import { setStoredToken, clearStoredToken, otpAuth } from '../services/api';
+import { throttle } from '../utils/asyncUtils';
 
 // Auth Context
 const AuthContext = createContext();
@@ -246,68 +247,135 @@ const initialAuthState = {
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialAuthState);
 
+  // Throttled token verification function to prevent hammering the API
+  const throttledVerifyToken = useRef(
+    throttle(async (token) => {
+      try {
+        return await otpAuth.verifyToken(token);
+      } catch (error) {
+        console.error('Throttled token verification failed:', error);
+        throw error;
+      }
+    }, 30000) // Only verify once every 30 seconds at most
+  ).current;
+
+  // Throttled token refresh function
+  const throttledRefreshToken = useRef(
+    throttle(async (token) => {
+      try {
+        return await otpAuth.refreshToken(token);
+      } catch (error) {
+        console.error('Throttled token refresh failed:', error);
+        throw error;
+      }
+    }, 60000) // Only refresh once per minute at most
+  ).current;
+
+  // Store last verification time to avoid excessive checks
+  const lastVerificationTime = useRef(0);
+
   // Load user from localStorage and verify token on mount
   useEffect(() => {
     const initializeAuth = async () => {
       const token = localStorage.getItem('auth_token');
       const user = localStorage.getItem('user');
+      const tokenTimestamp = parseInt(localStorage.getItem('token_timestamp') || '0', 10);
+      const now = Date.now();
+
+      // Skip verification if token was verified recently (within last 5 minutes)
+      const skipVerification = now - lastVerificationTime.current < 5 * 60 * 1000;
 
       if (token && user) {
         try {
           const userData = JSON.parse(user);
 
-          // Verify token validity
-          dispatch({ type: authActions.TOKEN_VERIFY_START });
-          try {
-            const verifyResult = await otpAuth.verifyToken(token);
-            if (verifyResult.success && verifyResult.data.valid) {
-              dispatch({
-                type: authActions.TOKEN_VERIFY_SUCCESS,
-                payload: {
-                  user: userData,
-                  token,
-                },
-              });
-            } else {
-              // Token is invalid, try to refresh it
-              try {
-                const refreshResult = await otpAuth.refreshToken(token);
-                if (refreshResult.success) {
-                  await setStoredToken(refreshResult.data.token);
-                  dispatch({
-                    type: authActions.TOKEN_VERIFY_SUCCESS,
-                    payload: {
-                      user: userData,
-                      token: refreshResult.data.token,
-                    },
-                  });
-                } else {
-                  throw new Error('Token refresh failed');
+          // Auto-load user without verification if token is fresh (less than 10 minutes old)
+          if (now - tokenTimestamp < 10 * 60 * 1000) {
+            dispatch({
+              type: authActions.LOAD_USER,
+              payload: {
+                user: userData,
+                token,
+              },
+            });
+            return;
+          }
+
+          // Only verify if needed
+          if (!skipVerification) {
+            // Update verification timestamp
+            lastVerificationTime.current = now;
+            
+            // Verify token validity
+            dispatch({ type: authActions.TOKEN_VERIFY_START });
+            try {
+              const verifyResult = await throttledVerifyToken(token);
+              if (verifyResult.success && verifyResult.data.valid) {
+                // Update token timestamp
+                localStorage.setItem('token_timestamp', now.toString());
+                
+                dispatch({
+                  type: authActions.TOKEN_VERIFY_SUCCESS,
+                  payload: {
+                    user: userData,
+                    token,
+                  },
+                });
+              } else {
+                // Token is invalid, try to refresh it
+                try {
+                  const refreshResult = await throttledRefreshToken(token);
+                  if (refreshResult.success) {
+                    await setStoredToken(refreshResult.data.token);
+                    localStorage.setItem('token_timestamp', now.toString());
+                    
+                    dispatch({
+                      type: authActions.TOKEN_VERIFY_SUCCESS,
+                      payload: {
+                        user: userData,
+                        token: refreshResult.data.token,
+                      },
+                    });
+                  } else {
+                    throw new Error('Token refresh failed');
+                  }
+                } catch (refreshError) {
+                  console.error('Token refresh failed:', refreshError);
+                  dispatch({ type: authActions.TOKEN_VERIFY_FAILURE });
+                  localStorage.removeItem('auth_token');
+                  localStorage.removeItem('user');
+                  localStorage.removeItem('token_timestamp');
                 }
-              } catch (refreshError) {
-                console.error('Token refresh failed:', refreshError);
-                dispatch({ type: authActions.TOKEN_VERIFY_FAILURE });
-                localStorage.removeItem('auth_token');
-                localStorage.removeItem('user');
               }
+            } catch (verifyError) {
+              console.error('Token verification failed:', verifyError);
+              dispatch({ type: authActions.TOKEN_VERIFY_FAILURE });
+              localStorage.removeItem('auth_token');
+              localStorage.removeItem('user');
+              localStorage.removeItem('token_timestamp');
             }
-          } catch (verifyError) {
-            console.error('Token verification failed:', verifyError);
-            dispatch({ type: authActions.TOKEN_VERIFY_FAILURE });
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('user');
+          } else {
+            // Skip verification, just load user from localStorage
+            dispatch({
+              type: authActions.LOAD_USER,
+              payload: {
+                user: userData,
+                token,
+              },
+            });
           }
         } catch (error) {
           console.error('Error loading user from localStorage:', error);
           localStorage.removeItem('auth_token');
           localStorage.removeItem('user');
+          localStorage.removeItem('token_timestamp');
           dispatch({ type: authActions.TOKEN_VERIFY_FAILURE });
         }
       }
     };
 
     initializeAuth();
-  }, []);
+  }, [throttledVerifyToken, throttledRefreshToken]);
 
   // Authentication actions
   const login = async (credentials) => {

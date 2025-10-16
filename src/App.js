@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import ApiErrorBoundary from './components/ApiErrorBoundary';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { CartDrawerProvider, useCartDrawer } from './context/CartDrawerContext';
@@ -64,32 +65,55 @@ function AppContent() {
     closeStoreDetailsModal
   } = usePincode();
 
+  // Custom fallback UI for API errors
+  const apiErrorFallback = (error, reset) => (
+    <div className="p-6 bg-orange-50 border border-orange-100 rounded-lg shadow-sm max-w-2xl mx-auto my-8">
+      <div className="flex items-center gap-3">
+        <div className="text-orange-500 text-2xl">⚠️</div>
+        <h2 className="text-lg font-bold text-orange-800">We're having trouble connecting to our servers</h2>
+      </div>
+      <p className="mt-2 text-orange-700">
+        Don't worry! You can still browse products, but some features may be limited until the connection is restored.
+      </p>
+      <div className="mt-4 flex justify-end">
+        <button
+          onClick={reset}
+          className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+        >
+          Try Again
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-50 flex flex-col">
         <Header />
         <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/product/:id" element={<ProductDetailsPage />} />
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/otp-input" element={<OtpInputPage />} />
-            <Route path="/otp-verify" element={<OtpVerifyPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/address" element={<AddressPage />} />
-            <Route path="/saved-cards" element={<SavedCardsPage />} />
-            <Route path="/ready-list" element={<ReadyListPage />} />
-            <Route path="/orders" element={<OrdersPage />} />
-            <Route path="/saved-list" element={<SavedListPage />} />
-            <Route path="/category/:categoryName" element={<CategoryPage />} />
-            <Route path="/category" element={<CategoryPage />} />
-            <Route path="/test-category" element={<TestCategoryPage />} />
-            <Route path="/favorites" element={<FavoritesPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
+          <ApiErrorBoundary fallback={apiErrorFallback}>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/product/:id" element={<ProductDetailsPage />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/otp-input" element={<OtpInputPage />} />
+              <Route path="/otp-verify" element={<OtpVerifyPage />} />
+              <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/address" element={<AddressPage />} />
+              <Route path="/saved-cards" element={<SavedCardsPage />} />
+              <Route path="/ready-list" element={<ReadyListPage />} />
+              <Route path="/orders" element={<OrdersPage />} />
+              <Route path="/saved-list" element={<SavedListPage />} />
+              <Route path="/category/:categoryName" element={<CategoryPage />} />
+              <Route path="/category" element={<CategoryPage />} />
+              <Route path="/test-category" element={<TestCategoryPage />} />
+              <Route path="/favorites" element={<FavoritesPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </ApiErrorBoundary>
         </main>
         <Footer />
         
@@ -151,10 +175,17 @@ function App() {
     };
 
     registerPWA();
+    
+    // Clean up any expired cache on app load
+    const { clearExpiredCache } = require('./utils/apiOptimizer');
+    clearExpiredCache();
 
     // Check for updates periodically
     const updateInterval = setInterval(() => {
       pwaUtils.checkForUpdates();
+      
+      // Also periodically clean expired cache
+      clearExpiredCache();
     }, 60000); // Check every minute
 
     return () => {

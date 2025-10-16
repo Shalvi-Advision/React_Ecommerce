@@ -40,94 +40,77 @@ const Carousel = () => {
     }
   }, [banners.length]);
 
+  // Load banners from API with fallback for CORS issues
+  const loadLocalBanners = useCallback(() => {
+    console.log('🔄 Loading local banner images as fallback');
+    // Local banner images that are bundled with the app
+    const localBanners = [
+      {
+        _id: 'local_1',
+        redirect_link: '#',
+        banner_img: process.env.PUBLIC_URL + '/images/banner1.jpg',
+        is_active: true,
+        title: 'Welcome to Our Store',
+        description: 'Discover amazing products',
+        alt_text: 'Welcome banner'
+      },
+      {
+        _id: 'local_2',
+        redirect_link: '#',
+        banner_img: process.env.PUBLIC_URL + '/images/banner2.jpg',
+        is_active: true,
+        title: 'Special Offers',
+        description: 'Limited time deals',
+        alt_text: 'Special offers banner'
+      },
+      {
+        _id: 'local_3',
+        redirect_link: '#',
+        banner_img: process.env.PUBLIC_URL + '/images/banner3.jpg',
+        is_active: true,
+        title: 'New Arrivals',
+        description: 'Fresh products daily',
+        alt_text: 'New arrivals banner'
+      }
+    ];
+    
+    setBanners(localBanners);
+    setIsOffline(true);
+    setIsFallback(true);
+  }, []);
+
   // Load banners from API
   const loadBanners = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await getBanners();
-      
-      console.log('📊 Banner API Response:', response);
-      
-      if (response.banners) {
-        if (response.banners.length > 0) {
-          setBanners(response.banners);
-          setIsOffline(response.isOffline || false);
-          setIsFallback(response.isFallback || false);
-          console.log('✅ Banners loaded successfully:', response.banners.length, 'banners');
+      try {
+        const response = await getBanners();
+        
+        console.log('📊 Banner API Response:', response);
+        
+        if (response.banners) {
+          if (response.banners.length > 0) {
+            setBanners(response.banners);
+            setIsOffline(response.isOffline || false);
+            setIsFallback(response.isFallback || false);
+            console.log('✅ Banners loaded successfully:', response.banners.length, 'banners');
+          } else {
+            console.warn('⚠️ No banners in response, using fallback data');
+            loadLocalBanners();
+          }
         } else {
-          console.warn('⚠️ No banners in response, using fallback data');
-          // Don't throw error, just use fallback data
-          const fallbackBanners = [
-            {
-              _id: 'fallback_1',
-              banner_img: '/images/banner1.jpg',
-              redirect_link: '#',
-              is_active: true,
-              title: 'Welcome',
-              alt_text: 'Welcome banner'
-            },
-            {
-              _id: 'fallback_2',
-              banner_img: '/images/banner2.jpg',
-              redirect_link: '#',
-              is_active: true,
-              title: 'Special Offers',
-              alt_text: 'Special offers banner'
-            },
-            {
-              _id: 'fallback_3',
-              banner_img: '/images/banner3.jpg',
-              redirect_link: '#',
-              is_active: true,
-              title: 'New Arrivals',
-              alt_text: 'New arrivals banner'
-            }
-          ];
-          setBanners(fallbackBanners);
-          setIsFallback(true);
-          console.log('🔄 Using fallback banners due to empty response');
+          console.warn('⚠️ No banners property in response, using fallback data');
+          loadLocalBanners();
         }
-      } else {
-        console.warn('⚠️ No banners property in response, using fallback data');
-        throw new Error(response.message || 'No banners property in response');
+      } catch (apiError) {
+        console.error('Error loading banners from API:', apiError);
+        loadLocalBanners();
       }
     } catch (err) {
-      console.warn('⚠️ Error loading banners, using fallback data:', err.message);
-      setError(err.message || 'Failed to load banners');
-      
-      // Set fallback banners
-      const fallbackBanners = [
-        {
-          _id: 'fallback_1',
-          banner_img: '/images/banner1.jpg',
-          redirect_link: '#',
-          is_active: true,
-          title: 'Welcome',
-          alt_text: 'Welcome banner'
-        },
-        {
-          _id: 'fallback_2',
-          banner_img: '/images/banner2.jpg',
-          redirect_link: '#',
-          is_active: true,
-          title: 'Special Offers',
-          alt_text: 'Special offers banner'
-        },
-        {
-          _id: 'fallback_3',
-          banner_img: '/images/banner3.jpg',
-          redirect_link: '#',
-          is_active: true,
-          title: 'New Arrivals',
-          alt_text: 'New arrivals banner'
-        }
-      ];
-      
-      setBanners(fallbackBanners);
-      setIsFallback(true);
-      console.log('🔄 Using fallback banners:', fallbackBanners.length, 'banners');
+      console.error('Unhandled banner loading error:', err);
+      loadLocalBanners();
     } finally {
       setLoading(false);
     }
@@ -186,10 +169,24 @@ const Carousel = () => {
     }
   }, [goToNext, goToPrevious, banners.length]);
 
-  // Image error handler
+  // Image error handler with CORS fallback
   const handleImageError = useCallback((imageId) => {
+    console.warn(`Image loading error for banner ${imageId}`);
     setImageErrors(prev => new Set([...prev, imageId]));
-  }, []);
+    
+    // If this is the first image error and we have banners, check if we should reload all banners
+    if (imageErrors.size === 0 && banners.length > 0) {
+      // Find the banner with this ID
+      const banner = banners.find(b => b._id === imageId);
+      
+      // If the image URL contains the API base URL, it might be a CORS issue
+      if (banner?.banner_img?.includes('ecom-api-ozl0.onrender.com')) {
+        console.warn('⚠️ Possible CORS issue with banner images. Using local fallback images instead.');
+        // Load local banners with small delay to avoid immediate re-render conflicts
+        setTimeout(loadLocalBanners, 100);
+      }
+    }
+  }, [banners, imageErrors, loadLocalBanners]);
 
   // Pause auto-play on hover (desktop)
   const handleMouseEnter = useCallback(() => {
@@ -347,6 +344,7 @@ const Carousel = () => {
                 }}
                 onError={() => {
                   console.log('❌ Image failed to load:', banner._id, banner.banner_img);
+                  handleImageError(banner._id);
                 }}
               />
 
