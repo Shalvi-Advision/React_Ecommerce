@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import Card from '../components/Card';
-import Button from '../components/Button';
-import Input from '../components/Input';
-import { PhoneIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 
 const OtpVerifyPage = () => {
   const [otp, setOtp] = useState('');
@@ -136,6 +133,10 @@ const OtpVerifyPage = () => {
     }
   };
 
+  const handleClose = () => {
+    navigate('/login');
+  };
+
   const formatMobileNumber = (number) => {
     if (!number) return '';
     const cleaned = number.replace(/\D/g, '');
@@ -149,61 +150,117 @@ const OtpVerifyPage = () => {
   const expectedOtpLength = otpLength || 4;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-4 px-4 sm:py-8 sm:px-6 lg:py-12 lg:px-8">
-      <div className="w-full max-w-md mx-auto">
-        <div className="text-center mb-8">
-          <div className="mx-auto h-12 w-12 bg-primary-100 rounded-full flex items-center justify-center mb-4">
-            <PhoneIcon className="h-6 w-6 text-primary-600" />
+    <div className="min-h-screen flex flex-col lg:flex-row">
+      {/* Left side - Illustration (hidden on mobile) */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.1)_0%,transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(14,165,233,0.1)_0%,transparent_50%)]"></div>
+        
+        <div className="flex items-center justify-center w-full p-12 relative z-10">
+          <div className="max-w-md text-center">
+            {/* Shield Icon Illustration */}
+            <div className="mb-8">
+              <div className="mx-auto w-48 h-48 bg-white rounded-full shadow-lg flex items-center justify-center">
+                <ShieldCheckIcon className="w-24 h-24 text-emerald-600" />
+              </div>
+            </div>
+
+            {/* Message */}
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">
+              {isRegistration ? 'Almost There!' : 'Verify Your Identity'}
+            </h3>
+            <p className="text-lg text-gray-600">
+              {isRegistration 
+                ? 'Just one more step to complete your D-Mart registration'
+                : 'Enter the verification code we sent to your mobile number'}
+            </p>
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">
-            {isRegistration ? 'Verify your account' : 'Enter verification code'}
-          </h2>
-          <p className="mt-2 text-gray-600">
+        </div>
+      </div>
+
+      {/* Right side - Form */}
+      <div className="flex-1 lg:w-1/2 bg-white flex items-center justify-center p-4 sm:p-8 relative">
+        {/* Close Button */}
+        <button
+          onClick={handleClose}
+          className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 rounded-full hover:bg-gray-100 transition-colors duration-200 z-10"
+          aria-label="Close"
+        >
+          <XMarkIcon className="w-6 h-6 sm:w-8 sm:h-8 text-gray-500 hover:text-gray-700" />
+        </button>
+
+        <div className="w-full max-w-md mx-auto">
+          {/* Mobile Logo (visible only on mobile) */}
+          <div className="lg:hidden flex justify-center mb-6">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-br from-emerald-50 to-teal-50 px-6 py-3 rounded-2xl shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold text-emerald-600">D</span>
+                <div className="flex flex-col items-start">
+                  <span className="text-lg font-bold text-gray-800 leading-none">Mart</span>
+                  <span className="text-xs font-medium text-rose-500 leading-none">Ready</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Title */}
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 text-center lg:text-left">
+            {isRegistration ? 'Verify Your Account' : 'Enter Verification Code'}
+          </h1>
+          <p className="text-sm text-gray-600 mb-6 text-center lg:text-left">
             We sent a {expectedOtpLength}-digit code to{' '}
-            <span className="font-medium text-gray-900">
+            <span className="font-semibold text-gray-900">
               {formatMobileNumber(displayMobile)}
             </span>
-            {isRegistration ? ' to complete your registration' : ' to sign in'}
           </p>
-        </div>
 
-        <Card>
+          {/* Error Message */}
+          {otpVerifyError && (
+            <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-red-800 text-sm">{otpVerifyError}</p>
+            </div>
+          )}
+
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {otpVerifyError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-800 text-sm">{otpVerifyError}</p>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 text-center">
-                Enter {expectedOtpLength}-digit OTP
+            {/* OTP Input */}
+            <div>
+              <label htmlFor="otp" className="block text-sm font-medium text-gray-500 mb-3 text-center lg:text-left">
+                Enter {expectedOtpLength}-digit verification code
               </label>
-              <Input
+              <input
                 ref={otpInputRef}
+                id="otp"
                 type="text"
+                inputMode="numeric"
                 value={otp}
                 onChange={handleOtpChange}
                 onKeyDown={handleKeyDown}
-                error={errors.otp}
-                placeholder={`Enter ${expectedOtpLength} digit code`}
                 maxLength={expectedOtpLength}
-                className="text-center text-2xl font-mono tracking-widest"
-                inputClassName="text-center"
+                placeholder="••••"
+                className={`block w-full px-4 py-4 text-center text-3xl font-mono tracking-[0.5em] border-2 rounded-lg focus:outline-none transition-colors duration-200 ${
+                  errors.otp 
+                    ? 'border-red-300 focus:border-red-500' 
+                    : 'border-gray-200 focus:border-emerald-500'
+                }`}
+                autoFocus
               />
+              {errors.otp && (
+                <p className="mt-2 text-sm text-red-600 text-center">{errors.otp}</p>
+              )}
             </div>
 
-            <Button
+            {/* Submit Button */}
+            <button
               type="submit"
               disabled={otpVerifyLoading || otp.length !== expectedOtpLength}
-              className="w-full"
-              size="large"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3.5 px-6 rounded-lg transition-all duration-200 uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {otpVerifyLoading ? 'Verifying...' : 'Verify OTP'}
-            </Button>
+              {otpVerifyLoading ? 'VERIFYING...' : 'VERIFY & CONTINUE'}
+            </button>
           </form>
 
-          {/* Resend OTP section */}
+          {/* Resend Section */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600 mb-2">
               Didn't receive the code?
@@ -211,40 +268,43 @@ const OtpVerifyPage = () => {
             <button
               onClick={handleResendOtp}
               disabled={countdown > 0 || resendAttempts >= 3}
-              className="text-primary-600 hover:text-primary-500 text-sm font-medium disabled:text-gray-400 disabled:cursor-not-allowed"
+              className="text-emerald-600 hover:text-emerald-700 font-medium text-sm transition-colors disabled:text-gray-400 disabled:cursor-not-allowed"
             >
               {resendAttempts >= 3
-                ? 'Maximum resend attempts reached'
+                ? 'Maximum attempts reached'
                 : countdown > 0
                   ? `Resend code in ${countdown}s`
-                  : 'Resend code'
+                  : 'Resend Code'
               }
             </button>
+            {resendAttempts > 0 && resendAttempts < 3 && (
+              <p className="text-xs text-gray-500 mt-1">
+                Attempts: {resendAttempts}/3
+              </p>
+            )}
           </div>
 
-          {/* Back button */}
-          <div className="mt-4 text-center">
+          {/* Change Number */}
+          <div className="mt-6 text-center">
             <button
               onClick={handleBackToInput}
-              className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-primary-600 font-medium"
+              className="text-sm text-gray-600 hover:text-emerald-600 font-medium transition-colors"
             >
-              <ArrowLeftIcon className="w-4 h-4" />
-              Change mobile number
+              ← Change mobile number
             </button>
           </div>
-        </Card>
 
-        <div className="mt-8 text-center">
-          <p className="text-xs text-gray-500">
+          {/* Terms */}
+          <div className="mt-6 text-center text-xs text-gray-500">
             By continuing, you agree to our{' '}
-            <Link to="/terms" className="text-primary-600 hover:text-primary-500">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link to="/privacy" className="text-primary-600 hover:text-primary-500">
+            <Link to="/terms" className="text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
+              Terms
+            </Link>
+            {' '}and{' '}
+            <Link to="/privacy" className="text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
               Privacy Policy
             </Link>
-          </p>
+          </div>
         </div>
       </div>
     </div>

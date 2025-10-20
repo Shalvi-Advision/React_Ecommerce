@@ -309,171 +309,243 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Modern Backdrop with Blur */}
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
+        className="fixed inset-0 bg-gradient-to-br from-black/60 via-black/50 to-black/60 backdrop-blur-sm z-40 transition-all duration-300 animate-fade-in"
         onClick={onClose}
       />
       
-      {/* Drawer - positioned below the header bar */}
-      <div className="fixed top-12 left-0 w-full bg-white z-50 shadow-lg border-t border-gray-200" style={{ height: 'calc(100vh - 3rem)' }}>
-        {/* Header */}
-        <div className="flex items-center justify-between px-3 sm:px-4 lg:px-6 py-2 sm:py-3 border-b border-gray-200 bg-white">
-          <div className="flex items-center gap-2 sm:gap-4 lg:gap-8">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-800">All Categories</h2>
+      {/* Modern Drawer - positioned below the header bar */}
+      <div className="fixed top-12 left-0 w-full bg-gradient-to-br from-white via-gray-50 to-white z-50 shadow-2xl border-t-4 border-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 animate-slide-up" style={{ height: 'calc(100vh - 3rem)' }}>
+        {/* Enhanced Header */}
+        <div className="relative overflow-hidden">
+          {/* Header Background Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10"></div>
+          
+          <div className="relative flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4 border-b border-gray-200/50 backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-2xl">🛒</span>
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">
+                  All Categories
+                </h2>
+                <p className="text-xs text-gray-500 hidden sm:block">Explore our wide range of products</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="group p-2 hover:bg-red-50 rounded-xl transition-all duration-300 hover:scale-110"
+            >
+              <XMarkIcon className="w-6 h-6 text-gray-500 group-hover:text-red-500 transition-colors" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
-          >
-            <XMarkIcon className="w-5 h-5 text-gray-500" />
-          </button>
         </div>
 
-        {/* Categories Grid */}
-        <div className="h-full overflow-y-auto bg-white" style={{ height: 'calc(100vh - 6rem)' }}>
+        {/* Modern Categories Grid */}
+        <div className="h-full overflow-y-auto bg-gradient-to-br from-white via-gray-50 to-white custom-scrollbar" style={{ height: 'calc(100vh - 6rem)' }}>
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-primary-600 mx-auto mb-3 sm:mb-4"></div>
-                <p className="text-gray-600 text-sm sm:text-base">Loading categories...</p>
+                <div className="relative">
+                  <div className="w-16 h-16 border-4 border-transparent border-t-emerald-500 border-r-teal-500 border-b-cyan-500 rounded-full animate-spin"></div>
+                  <div className="absolute inset-0 w-16 h-16 bg-gradient-to-r from-emerald-400/20 to-cyan-400/20 rounded-full blur-lg animate-pulse"></div>
+                </div>
+                <p className="mt-4 text-gray-600 text-base font-semibold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
+                  Loading categories...
+                </p>
               </div>
             </div>
           ) : error ? (
             <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="text-red-500 text-3xl sm:text-4xl mb-3 sm:mb-4">⚠️</div>
-                <p className="text-red-600 mb-2 text-sm sm:text-base">Failed to load categories</p>
-                <p className="text-gray-500 text-xs sm:text-sm">{error}</p>
+              <div className="text-center bg-white/80 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-white/60 mx-4">
+                <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-4xl">⚠️</span>
+                </div>
+                <p className="text-red-600 mb-2 text-base font-semibold">Failed to load categories</p>
+                <p className="text-gray-500 text-sm mb-4">{error}</p>
                 <button 
                   onClick={() => window.location.reload()} 
-                  className="mt-3 sm:mt-4 px-3 sm:px-4 py-1.5 sm:py-2 bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors text-sm sm:text-base"
+                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300"
                 >
                   Retry
                 </button>
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-0 p-2 sm:p-4 lg:p-6">
-              {displayCategories.map((department, index) => {
-                const departmentId = department.department_id || department.name;
-                const departmentName = department.department_name || department.name;
-                const departmentImage = department.image_link || getDefaultImage();
-                const isExpanded = expandedDepartment === departmentId;
-                const departmentCategories = categories[departmentId] || [];
-                const isLoadingCategories = categoriesLoading[departmentId] || false;
-                
-                return (
-                  <div key={index} className="border-r border-gray-100 last:border-r-0 pr-2 sm:pr-4 lg:pr-6">
-                    {/* Department Header */}
-                    <div 
-                      className="flex items-center gap-2 mb-2 sm:mb-3 cursor-pointer hover:bg-gray-50 p-1.5 sm:p-2 rounded transition-colors"
-                      onClick={() => handleDepartmentClick(departmentId)}
-                    >
-                      <div className="flex-shrink-0">
-                        {department.image_link ? (
-                          <img 
-                            src={departmentImage} 
-                            alt={departmentName}
-                            className="w-6 h-6 sm:w-8 sm:h-8 object-cover rounded"
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                              e.target.nextSibling.style.display = 'block';
-                            }}
-                          />
-                        ) : null}
-                        <span 
-                          className={`text-lg sm:text-2xl ${department.image_link ? 'hidden' : 'block'}`}
-                          style={{ display: department.image_link ? 'none' : 'block' }}
-                        >
-                          {getDepartmentIcon(departmentName)}
-                        </span>
-                      </div>
-                      <h3 className="font-semibold text-gray-800 text-xs sm:text-sm leading-tight flex-1">
-                        {departmentName}
-                      </h3>
-                      <ChevronRightIcon 
-                        className={`w-3 h-3 sm:w-4 sm:h-4 text-gray-400 transition-transform ${
-                          isExpanded ? 'rotate-90' : ''
-                        }`} 
-                      />
-                    </div>
-
-                    {/* Categories List */}
-                    {isExpanded && (
-                      <div className="ml-6 sm:ml-8 lg:ml-10">
-                        {isLoadingCategories ? (
-                          <div className="flex items-center justify-center py-2 sm:py-4">
-                            <div className="animate-spin rounded-full h-4 w-4 sm:h-6 sm:w-6 border-b-2 border-primary-600"></div>
+            <div className="p-4 sm:p-6 lg:p-8">
+              {/* Departments Grid - Modern Card Layout */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 sm:gap-4 lg:gap-6">
+                {displayCategories.map((department, index) => {
+                  const departmentId = department.department_id || department.name;
+                  const departmentName = department.department_name || department.name;
+                  const departmentImage = department.image_link || getDefaultImage();
+                  const isExpanded = expandedDepartment === departmentId;
+                  const departmentCategories = categories[departmentId] || [];
+                  const isLoadingCategories = categoriesLoading[departmentId] || false;
+                  
+                  return (
+                    <div key={index} className="flex flex-col">
+                      {/* Modern Department Card */}
+                      <div 
+                        className="group cursor-pointer"
+                        onClick={() => handleDepartmentClick(departmentId)}
+                      >
+                        <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100/50 hover:border-emerald-300 hover:scale-105">
+                          {/* Image Container with Gradient Background */}
+                          <div className="relative bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 rounded-xl sm:rounded-2xl mb-3 overflow-hidden aspect-square group-hover:shadow-inner transition-all duration-300">
+                            {/* Decorative Corner Gradient */}
+                            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500 z-0"></div>
+                            
+                            {department.image_link ? (
+                              <img 
+                                src={departmentImage} 
+                                alt={departmentName}
+                                className="relative z-10 w-full h-full object-cover drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                  const iconElement = e.target.parentElement.querySelector('.fallback-icon');
+                                  if (iconElement) iconElement.style.display = 'flex';
+                                }}
+                              />
+                            ) : null}
+                            <div 
+                              className={`fallback-icon absolute inset-0 z-10 bg-gradient-to-br from-white to-gray-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 ${department.image_link ? 'hidden' : 'flex'}`}
+                            >
+                              <span className="text-4xl sm:text-5xl lg:text-6xl">
+                                {getDepartmentIcon(departmentName)}
+                              </span>
+                            </div>
                           </div>
-                        ) : departmentCategories.length > 0 ? (
-                          <ul className="space-y-0.5 sm:space-y-1">
-                            {departmentCategories.map((category, subIndex) => (
-                              <li key={subIndex}>
-                                <button 
-                                  onClick={() => handleCategoryClick(category.category_name)}
-                                  className="text-xs text-gray-600 hover:text-primary-600 hover:bg-gray-50 w-full text-left py-1.5 sm:py-2 px-2 sm:px-3 rounded transition-colors flex items-center gap-1.5 sm:gap-2"
-                                  style={{
-                                    backgroundColor: category.category_bg_color || 'transparent'
-                                  }}
-                                >
-                                  {category.image_link && (
-                                    <img 
-                                      src={category.image_link} 
-                                      alt={category.category_name}
-                                      className="w-3 h-3 sm:w-4 sm:h-4 object-cover rounded flex-shrink-0"
-                                      onError={(e) => {
-                                        e.target.style.display = 'none';
+                          
+                          {/* Expand Indicator */}
+                          <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-md">
+                            <ChevronRightIcon 
+                              className={`w-3 h-3 sm:w-4 sm:h-4 text-emerald-600 transition-all duration-300 ${
+                                isExpanded ? 'rotate-90 text-teal-600' : ''
+                              }`} 
+                            />
+                          </div>
+                          
+                          {/* Active State Indicator */}
+                          {isExpanded && (
+                            <div className="absolute inset-0 border-2 border-emerald-500 rounded-2xl sm:rounded-3xl pointer-events-none animate-pulse"></div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Expanded Categories - Modern Dropdown */}
+                      {isExpanded && (
+                        <div className="mt-3 bg-white/95 backdrop-blur-lg rounded-2xl shadow-xl border border-emerald-200/50 p-3 sm:p-4 animate-scale-in">
+                          {isLoadingCategories ? (
+                            <div className="flex items-center justify-center py-6">
+                              <div className="relative">
+                                <div className="w-10 h-10 border-3 border-transparent border-t-emerald-500 border-r-teal-500 rounded-full animate-spin"></div>
+                                <div className="absolute inset-0 w-10 h-10 bg-gradient-to-r from-emerald-400/20 to-teal-400/20 rounded-full blur-lg animate-pulse"></div>
+                              </div>
+                            </div>
+                          ) : departmentCategories.length > 0 ? (
+                            <div className="space-y-1.5">
+                              <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-200">
+                                <div className="w-1.5 h-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full animate-pulse"></div>
+                                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                  Subcategories
+                                </span>
+                              </div>
+                              <div className="max-h-60 overflow-y-auto custom-scrollbar space-y-1">
+                                {/* Filter out duplicate categories based on category_id or category_name */}
+                                {departmentCategories
+                                  .filter((category, index, self) => {
+                                    // Remove duplicates by checking if this is the first occurrence
+                                    // Use category_id if available, otherwise use category_name
+                                    const identifier = category.category_id || category.category_name;
+                                    return index === self.findIndex(c => 
+                                      (c.category_id || c.category_name) === identifier
+                                    );
+                                  })
+                                  .map((category) => (
+                                    <button 
+                                      key={category.category_id || category.category_name}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleCategoryClick(category.category_name);
                                       }}
-                                    />
-                                  )}
-                                  <span className="flex-1 truncate text-xs">
-                                    {category.category_name || 'Not Available'}
-                                  </span>
-                                </button>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <div className="text-xs text-gray-500 py-1 sm:py-2">
-                            No categories available
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Fallback subcategories for hardcoded data */}
-                    {!isExpanded && department.subcategories && (
-                      <ul className="space-y-0.5 sm:space-y-1">
-                        {department.subcategories.slice(0, 6).map((subcategory, subIndex) => (
-                          <li key={subIndex}>
-                            <button 
-                              onClick={() => handleCategoryClick(subcategory)}
-                              className="text-xs text-gray-600 hover:text-primary-600 hover:bg-gray-50 w-full text-left py-1 sm:py-1.5 px-2 sm:px-3 rounded transition-colors"
-                            >
-                              {subcategory}
-                            </button>
-                          </li>
-                        ))}
-                        {department.subcategories.length > 6 && (
-                          <li>
-                            <button 
-                              onClick={() => handleDepartmentClick(departmentId)}
-                              className="text-xs text-primary-600 hover:text-primary-700 font-medium w-full text-left py-1 px-2 rounded transition-colors"
-                            >
-                              View all {department.subcategories.length} categories →
-                            </button>
-                          </li>
-                        )}
-                      </ul>
-                    )}
+                                      className="group w-full text-left py-2.5 px-3 rounded-xl transition-all duration-300 flex items-center gap-3 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 hover:shadow-md hover:scale-102"
+                                    >
+                                      {category.image_link && (
+                                        <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-1.5 group-hover:scale-110 transition-transform duration-300">
+                                          <img 
+                                            src={category.image_link} 
+                                            alt={category.category_name}
+                                            className="w-full h-full object-contain"
+                                            onError={(e) => {
+                                              e.target.style.display = 'none';
+                                            }}
+                                          />
+                                        </div>
+                                      )}
+                                      <span className="flex-1 text-xs sm:text-sm text-gray-700 font-medium group-hover:text-emerald-600 transition-colors">
+                                        {category.category_name || 'Not Available'}
+                                      </span>
+                                      <ChevronRightIcon className="w-4 h-4 text-gray-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
+                                    </button>
+                                  ))
+                                }
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-center py-4">
+                              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                                <span className="text-2xl">📦</span>
+                              </div>
+                              <p className="text-xs text-gray-500">No categories available</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {/* Empty State if no categories */}
+              {displayCategories.length === 0 && !loading && (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center bg-white/80 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-white/60">
+                    <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-4xl">🛒</span>
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-800 mb-2">No Categories Found</h3>
+                    <p className="text-sm text-gray-600">Categories will appear here once they're available</p>
                   </div>
-                );
-              })}
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
+      
+      {/* Custom Scrollbar Styles */}
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: linear-gradient(to bottom, #10b981, #14b8a6);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(to bottom, #059669, #0d9488);
+        }
+        .hover\:scale-102:hover {
+          transform: scale(1.02);
+        }
+      `}</style>
     </>
   );
 };

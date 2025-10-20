@@ -269,7 +269,7 @@ const Carousel = () => {
   return (
     <div 
       ref={carouselRef}
-      className="relative w-full h-[200px] sm:h-[250px] lg:h-[300px] xl:h-[350px] overflow-hidden rounded-lg group"
+      className="relative w-full h-[200px] sm:h-[250px] lg:h-[300px] xl:h-[350px] overflow-hidden rounded-3xl group"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       style={{ 
@@ -277,18 +277,18 @@ const Carousel = () => {
         maxHeight: '100%'
       }}
     >
-      {/* Status Indicators */}
+      {/* Modern Status Indicators */}
       {(isOffline || isFallback) && (
-        <div className="absolute top-2 left-2 z-10 flex gap-2">
+        <div className="absolute top-3 left-3 z-10 flex gap-2">
           {isOffline && (
-            <div className="flex items-center gap-1 bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-medium">
-              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+            <div className="flex items-center gap-1.5 bg-gradient-to-r from-red-500 to-rose-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg backdrop-blur-sm">
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
               <span>Offline</span>
             </div>
           )}
           {isFallback && (
-            <div className="flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-medium" title="Using demo banners - API not available">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <div className="flex items-center gap-1.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg backdrop-blur-sm" title="Using demo banners - API not available">
+              <div className="w-2 h-2 bg-white rounded-full"></div>
               <span>Demo</span>
             </div>
           )}
@@ -370,38 +370,38 @@ const Carousel = () => {
         ))}
       </div>
 
-      {/* Navigation Arrows - Only show if more than 1 banner */}
+      {/* Modern Navigation Arrows - Only show if more than 1 banner */}
       {banners.length > 1 && (
         <>
       <button
         onClick={goToPrevious}
-            className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white p-2 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 touch-manipulation"
+            className="absolute left-3 sm:left-5 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-md hover:bg-white text-gray-800 p-2.5 sm:p-3 rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110 shadow-xl touch-manipulation"
         aria-label="Previous slide"
       >
-            <ChevronLeftIcon className="w-4 h-4 sm:w-6 sm:h-6" />
+            <ChevronLeftIcon className="w-5 h-5 sm:w-6 sm:h-6" />
       </button>
       
       <button
         onClick={goToNext}
-            className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white p-2 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 touch-manipulation"
+            className="absolute right-3 sm:right-5 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-md hover:bg-white text-gray-800 p-2.5 sm:p-3 rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110 shadow-xl touch-manipulation"
         aria-label="Next slide"
       >
-            <ChevronRightIcon className="w-4 h-4 sm:w-6 sm:h-6" />
+            <ChevronRightIcon className="w-5 h-5 sm:w-6 sm:h-6" />
       </button>
         </>
       )}
 
-      {/* Dots Indicator - Only show if more than 1 banner */}
+      {/* Modern Dots Indicator - Only show if more than 1 banner */}
       {banners.length > 1 && (
-        <div className="absolute bottom-3 sm:bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+        <div className="absolute bottom-4 sm:bottom-5 left-1/2 transform -translate-x-1/2 flex space-x-2.5">
           {banners.map((_, index) => (
           <button
             key={index}
             onClick={() => goToSlide(index)}
-              className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-200 touch-manipulation ${
+              className={`rounded-full transition-all duration-300 touch-manipulation ${
               index === currentSlide
-                ? 'bg-white scale-110'
-                : 'bg-white bg-opacity-50 hover:bg-opacity-75'
+                ? 'w-8 sm:w-10 h-2.5 sm:h-3 bg-white shadow-lg'
+                : 'w-2.5 sm:w-3 h-2.5 sm:h-3 bg-white/50 hover:bg-white/75'
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />
@@ -409,11 +409,11 @@ const Carousel = () => {
       </div>
       )}
 
-      {/* Progress Bar - Only show if more than 1 banner */}
+      {/* Modern Progress Bar - Only show if more than 1 banner */}
       {banners.length > 1 && (
-      <div className="absolute bottom-0 left-0 w-full h-1 bg-black bg-opacity-20">
+      <div className="absolute bottom-0 left-0 w-full h-1.5 bg-gradient-to-r from-black/20 to-black/10">
         <div 
-          className="h-full bg-white transition-all duration-200 ease-linear"
+          className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 transition-all duration-200 ease-linear shadow-lg"
           style={{ 
               width: `${((currentSlide + 1) / banners.length) * 100}%` 
           }}

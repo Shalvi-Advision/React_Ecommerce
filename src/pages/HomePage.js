@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { getProductsOptimized } from '../api/productsApi';
 import { useCart } from '../context/CartContext';
 import { useCartDrawer } from '../context/CartDrawerContext';
@@ -16,10 +16,15 @@ import FestiveSpecials from '../components/FestiveSpecials';
 import OfferBanner from '../components/OfferBanner';
 import SeasonalOfferBanner from '../components/SeasonalOfferBanner';
 import ProductCard from '../components/ProductCard';
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, ChevronRightIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
 const HomePage = () => {
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get('q') || '';
+  const categoryFilter = searchParams.get('category') || '';
+  
   const [products, setProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -38,13 +43,13 @@ const HomePage = () => {
 
       const response = await getProductsOptimized({
         page,
-        limit: 20,
+        limit: 100, // Increased limit to get more products for search
         dept_id: "2",
         category_id: "72",
         sub_category_id: "391"
       });
 
-      setProducts(response.products || []);
+      setAllProducts(response.products || []); // Store all products for filtering
       setPagination(response.pagination || null);
 
       // Check if data is from cache (offline mode) or fallback
@@ -75,9 +80,57 @@ const HomePage = () => {
     }
   }, []);
   
+  // Filter products based on search query
+  const filteredProducts = useMemo(() => {
+    if (!searchQuery) {
+      return allProducts;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    return allProducts.filter(product => {
+      // Search in product name, brand, description
+      const searchableText = [
+        product.product_name || '',
+        product.brand || '',
+        product.description || '',
+        product.category || '',
+        product.sub_category || ''
+      ].join(' ').toLowerCase();
+
+      return searchableText.includes(query);
+    });
+  }, [allProducts, searchQuery]);
+
+  // Paginate filtered products
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * 20;
+    const endIndex = startIndex + 20;
+    return filteredProducts.slice(startIndex, endIndex);
+  }, [filteredProducts, currentPage]);
+
+  // Calculate pagination info for filtered products
+  const filteredPagination = useMemo(() => {
+    const totalProducts = filteredProducts.length;
+    const totalPages = Math.ceil(totalProducts / 20);
+    
+    return {
+      page: currentPage,
+      limit: 20,
+      total_products: totalProducts,
+      total_pages: totalPages,
+      has_next: currentPage < totalPages,
+      has_prev: currentPage > 1
+    };
+  }, [filteredProducts, currentPage]);
+
+  // Reset to first page when search query changes
   useEffect(() => {
-    loadProducts(currentPage);
-  }, [currentPage, loadProducts]);
+    setCurrentPage(1);
+  }, [searchQuery, categoryFilter]);
+  
+  useEffect(() => {
+    loadProducts(1);
+  }, [loadProducts]);
 
   // Handle online/offline status
   useEffect(() => {
@@ -114,36 +167,41 @@ const HomePage = () => {
   };
 
   const handleNextPage = () => {
-    if (pagination?.has_next) {
+    if (filteredPagination?.has_next) {
       setCurrentPage(prev => prev + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handlePrevPage = () => {
-    if (pagination?.has_prev) {
+    if (filteredPagination?.has_prev) {
       setCurrentPage(prev => prev - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handlePageChange = (page) => {
-    if (page >= 1 && page <= (pagination?.total_pages || 1)) {
+    if (page >= 1 && page <= (filteredPagination?.total_pages || 1)) {
       setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
-  if (loading && products.length === 0) {
+  if (loading && allProducts.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Loading size="large" text="Loading products..." />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
+        <div className="text-center">
+          <Loading size="large" text="Loading products..." />
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">Error: {error}</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 via-pink-50 to-red-50">
+        <div className="text-center bg-white/80 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-white/20">
+          <p className="text-red-600 mb-4 text-lg font-semibold">Error: {error}</p>
           <Button onClick={() => loadProducts(currentPage)}>Try Again</Button>
         </div>
       </div>
@@ -151,25 +209,35 @@ const HomePage = () => {
   }
 
   return (
-    <div>
-      {/* Hero Carousel */}
-      <div className="w-full">
-        <Carousel />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50">
+      {/* Hero Carousel with Modern Frame */}
+      <div className="w-full bg-gradient-to-r from-violet-600/5 via-purple-600/5 to-fuchsia-600/5 py-3 sm:py-4 lg:py-6">
+        <div className="container mx-auto px-2 sm:px-4 lg:px-6">
+          <div className="relative overflow-hidden rounded-3xl shadow-2xl ring-1 ring-gray-900/5">
+            <div className="absolute inset-0 bg-gradient-to-tr from-violet-500/10 via-purple-500/10 to-fuchsia-500/10 pointer-events-none"></div>
+            <Carousel />
+          </div>
+        </div>
       </div>
 
-      {/* GST Banner */}
-      <div className="bg-gradient-to-br from-gray-50 to-gray-100 py-2 sm:py-4 lg:py-6">
-        <div className="container mx-auto px-1 sm:px-2 lg:px-4">
-          <div className="bg-white rounded-2xl p-1 sm:p-2 lg:p-3 shadow-lg border border-gray-100 overflow-hidden">
+      {/* GST Banner with Enhanced Styling */}
+      <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 via-teal-50/50 to-cyan-50/50"></div>
+        <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-cyan-400/20 to-blue-400/20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
+        <div className="relative container mx-auto px-2 sm:px-4 lg:px-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-2 sm:p-3 lg:p-4 shadow-xl border border-white/60 hover:shadow-2xl transition-all duration-300 overflow-hidden">
             <GSTBanner />
           </div>
         </div>
       </div>
 
-      {/* Category Banner */}
-      <div className="bg-gradient-to-br from-gray-50 to-gray-100 py-2 sm:py-4 lg:py-6">
-        <div className="container mx-auto px-1 sm:px-2 lg:px-4">
-          <div className="bg-white rounded-2xl p-1 sm:p-2 lg:p-3 shadow-lg border border-gray-100 overflow-hidden">
+      {/* Category Banner with Modern Design */}
+      <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-50/50 via-orange-50/50 to-rose-50/50"></div>
+        <div className="absolute top-1/2 left-1/4 w-96 h-96 bg-gradient-to-br from-amber-400/20 to-orange-400/20 rounded-full blur-3xl -translate-y-1/2"></div>
+        <div className="relative container mx-auto px-2 sm:px-4 lg:px-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-2 sm:p-3 lg:p-4 shadow-xl border border-white/60 hover:shadow-2xl transition-all duration-300 overflow-hidden">
             <CategoryBanner />
           </div>
         </div>
@@ -181,10 +249,13 @@ const HomePage = () => {
       {/* Popular Categories */}
       <PopularCategories />
 
-      {/* Festive Banner */}
-      <div className="bg-gradient-to-br from-gray-50 to-gray-100 py-2 sm:py-4 lg:py-6">
-        <div className="container mx-auto px-1 sm:px-2 lg:px-4">
-          <div className="bg-white rounded-2xl p-1 sm:p-2 lg:p-3 shadow-lg border border-gray-100 overflow-hidden">
+      {/* Festive Banner with Vibrant Gradient */}
+      <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
+        <div className="absolute inset-0 bg-gradient-to-br from-pink-50/50 via-rose-50/50 to-red-50/50"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-pink-400/20 to-rose-400/20 rounded-full blur-3xl translate-x-1/4 -translate-y-1/4"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-br from-red-400/20 to-orange-400/20 rounded-full blur-3xl -translate-x-1/4 translate-y-1/4"></div>
+        <div className="relative container mx-auto px-2 sm:px-4 lg:px-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-2 sm:p-3 lg:p-4 shadow-xl border border-white/60 hover:shadow-2xl transition-all duration-300 overflow-hidden">
             <FestiveBanner />
           </div>
         </div>
@@ -193,52 +264,73 @@ const HomePage = () => {
       {/* Festive Specials */}
       <FestiveSpecials />
 
-      {/* Offer Banner */}
-      <div className="bg-gradient-to-br from-gray-50 to-gray-100 py-2 sm:py-4 lg:py-6">
-        <div className="container mx-auto px-1 sm:px-2 lg:px-4">
-          <div className="bg-white rounded-2xl p-1 sm:p-2 lg:p-3 shadow-lg border border-gray-100 overflow-hidden">
+      {/* Offer Banner with Modern Gradient */}
+      <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 via-blue-50/50 to-sky-50/50"></div>
+        <div className="absolute top-1/2 right-1/4 w-96 h-96 bg-gradient-to-br from-indigo-400/20 to-blue-400/20 rounded-full blur-3xl -translate-y-1/2"></div>
+        <div className="relative container mx-auto px-2 sm:px-4 lg:px-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-2 sm:p-3 lg:p-4 shadow-xl border border-white/60 hover:shadow-2xl transition-all duration-300 overflow-hidden">
             <OfferBanner />
           </div>
         </div>
       </div>
 
-      {/* Seasonal Offer Banner */}
-      <div className="bg-gradient-to-br from-gray-50 to-gray-100 py-2 sm:py-4 lg:py-6">
-        <div className="container mx-auto px-1 sm:px-2 lg:px-4">
-          <div className="bg-white rounded-2xl p-1 sm:p-2 lg:p-3 shadow-lg border border-gray-100 overflow-hidden">
+      {/* Seasonal Offer Banner with Elegant Design */}
+      <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 via-fuchsia-50/50 to-pink-50/50"></div>
+        <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-fuchsia-400/20 rounded-full blur-3xl -translate-x-1/4 -translate-y-1/4"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-fuchsia-400/20 to-pink-400/20 rounded-full blur-3xl translate-x-1/4 translate-y-1/4"></div>
+        <div className="relative container mx-auto px-2 sm:px-4 lg:px-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-2 sm:p-3 lg:p-4 shadow-xl border border-white/60 hover:shadow-2xl transition-all duration-300 overflow-hidden">
             <SeasonalOfferBanner />
           </div>
         </div>
       </div>
 
-      {/* Products Section */}
-      <div className="bg-gradient-to-br from-gray-50 to-gray-100 py-8 sm:py-12 lg:py-16" id="products">
-        <div className="container mx-auto px-1 sm:px-2 lg:px-4">
-          <div className="bg-white rounded-2xl p-1 sm:p-2 lg:p-3 shadow-lg border border-gray-100">
+      {/* Products Section with Modern Gradient Design */}
+      <div className="relative overflow-hidden py-8 sm:py-12 lg:py-16" id="products">
+        {/* Animated Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50"></div>
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-emerald-200/30 to-teal-200/30 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-blue-200/30 to-cyan-200/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        </div>
+        
+        <div className="relative container mx-auto px-2 sm:px-4 lg:px-6">
+          <div className="bg-white/90 backdrop-blur-lg rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl border border-white/60">
+            {/* Section Header with Modern Design */}
             <div className="text-center mb-8 sm:mb-10 lg:mb-12">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Fresh Products</h2>
-              <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto px-4">
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-full text-sm font-semibold mb-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <SparklesIcon className="w-4 h-4 animate-pulse" />
+                <span>Fresh & Premium Quality</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+                <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">
+                  Fresh Products
+                </span>
+              </h2>
+              <p className="text-gray-600 text-base sm:text-lg lg:text-xl max-w-3xl mx-auto px-4 leading-relaxed">
                 Discover our wide range of fresh groceries, household items, and daily essentials
               </p>
 
-              {/* Offline/Cache/Fallback Status Indicators */}
+              {/* Enhanced Status Indicators with Modern Design */}
               {(isOffline || isDataFromCache || isFallbackData) && (
-                <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2 px-2">
+                <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 px-2">
                   {isOffline && (
-                    <div className="flex items-center gap-2 bg-red-100 text-red-700 px-3 py-2 rounded-full text-xs sm:text-sm font-medium min-h-[32px]">
-                      <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse flex-shrink-0"></div>
+                    <div className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-rose-500 text-white px-4 py-2.5 rounded-full text-xs sm:text-sm font-semibold shadow-lg min-h-[36px]">
+                      <div className="w-2.5 h-2.5 bg-white rounded-full animate-pulse flex-shrink-0"></div>
                       <span className="whitespace-nowrap">Offline Mode</span>
                     </div>
                   )}
                   {isDataFromCache && !isFallbackData && (
-                    <div className="flex items-center gap-2 bg-yellow-100 text-yellow-700 px-3 py-2 rounded-full text-xs sm:text-sm font-medium min-h-[32px]">
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full flex-shrink-0"></div>
+                    <div className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2.5 rounded-full text-xs sm:text-sm font-semibold shadow-lg min-h-[36px]">
+                      <div className="w-2.5 h-2.5 bg-white rounded-full flex-shrink-0"></div>
                       <span className="whitespace-nowrap">Cached Data</span>
                     </div>
                   )}
                   {isFallbackData && (
-                    <div className="flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-2 rounded-full text-xs sm:text-sm font-medium min-h-[32px]">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                    <div className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-2.5 rounded-full text-xs sm:text-sm font-semibold shadow-lg min-h-[36px]">
+                      <div className="w-2.5 h-2.5 bg-white rounded-full flex-shrink-0"></div>
                       <span className="whitespace-nowrap">Demo Data</span>
                     </div>
                   )}
@@ -246,9 +338,26 @@ const HomePage = () => {
               )}
             </div>
             
+            {/* Search Results Info */}
+            {searchQuery && (
+              <div className="mb-6 text-center">
+                <p className="text-sm sm:text-base text-gray-600">
+                  {filteredProducts.length > 0 ? (
+                    <>
+                      Found <span className="font-bold text-emerald-600">{filteredProducts.length}</span> {filteredProducts.length === 1 ? 'result' : 'results'} for "{searchQuery}"
+                    </>
+                  ) : (
+                    <>
+                      No results found for "<span className="font-bold">{searchQuery}</span>"
+                    </>
+                  )}
+                </p>
+              </div>
+            )}
+
             {/* Products Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 justify-items-center">
-              {products.map(product => (
+              {paginatedProducts.map(product => (
                 <ProductCard
                   key={product._id || product.id}
                   product={product}
@@ -257,75 +366,82 @@ const HomePage = () => {
               ))}
             </div>
 
-            {products.length === 0 && !loading && (
-              <div className="text-center py-16">
-                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-4xl text-gray-400">📦</span>
+            {paginatedProducts.length === 0 && !loading && (
+              <div className="text-center py-20">
+                <div className="relative inline-block mb-6">
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-full blur-2xl opacity-30 animate-pulse"></div>
+                  <div className="relative w-32 h-32 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center mx-auto shadow-xl">
+                    <span className="text-5xl">📦</span>
+                  </div>
                 </div>
-                <p className="text-gray-500 text-lg mb-4">No products found.</p>
-                <p className="text-gray-400 text-sm">Check back later for fresh products!</p>
+                <h3 className="text-2xl font-bold text-gray-800 mb-3">No products found</h3>
+                <p className="text-gray-500 text-base">
+                  {searchQuery ? `Try searching with different keywords` : 'Check back later for fresh products!'}
+                </p>
               </div>
             )}
 
-            {/* Pagination Controls */}
-            {pagination && pagination.total_pages > 1 && (
-              <div className="mt-8 flex flex-col lg:flex-row items-center justify-between gap-4">
-                <div className="text-xs sm:text-sm text-gray-600 text-center lg:text-left">
-                  Showing {((currentPage - 1) * 20) + 1} to {Math.min(currentPage * 20, pagination.total_products)} of {pagination.total_products} products
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-                  {/* Previous Button */}
-                  <Button
-                    onClick={handlePrevPage}
-                    disabled={!pagination.has_prev}
-                    className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] touch-manipulation ${
-                      !pagination.has_prev
-                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 active:bg-gray-100'
-                    }`}
-                  >
-                    <ChevronLeftIcon className="w-4 h-4" />
-                    <span className="hidden xs:inline">Previous</span>
-                    <span className="xs:hidden">Prev</span>
-                  </Button>
-
-                  {/* Page Numbers */}
-                  <div className="flex items-center gap-1 overflow-x-auto">
-                    {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
-                      const pageNum = Math.max(1, currentPage - 2) + i;
-                      if (pageNum > pagination.total_pages) return null;
-
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => handlePageChange(pageNum)}
-                          className={`px-3 py-2 min-h-[44px] min-w-[44px] text-sm rounded-md transition-colors touch-manipulation flex-shrink-0 ${
-                            pageNum === currentPage
-                              ? 'bg-green-600 text-white'
-                              : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 active:bg-gray-100'
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
+            {/* Modern Pagination Controls */}
+            {filteredPagination && filteredPagination.total_pages > 1 && (
+              <div className="mt-10 pt-8 border-t border-gray-200">
+                <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+                  <div className="text-sm sm:text-base text-gray-600 text-center lg:text-left font-medium">
+                    Showing <span className="text-emerald-600 font-bold">{((currentPage - 1) * 20) + 1}</span> to <span className="text-emerald-600 font-bold">{Math.min(currentPage * 20, filteredPagination.total_products)}</span> of <span className="text-emerald-600 font-bold">{filteredPagination.total_products}</span> products
                   </div>
 
-                  {/* Next Button */}
-                  <Button
-                    onClick={handleNextPage}
-                    disabled={!pagination.has_next}
-                    className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] touch-manipulation ${
-                      !pagination.has_next
-                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 active:bg-gray-100'
-                    }`}
-                  >
-                    <span className="hidden xs:inline">Next</span>
-                    <span className="xs:hidden">Next</span>
-                    <ChevronRightIcon className="w-4 h-4" />
-                  </Button>
+                  <div className="flex flex-col sm:flex-row items-center gap-3">
+                    {/* Previous Button with Gradient */}
+                    <button
+                      onClick={handlePrevPage}
+                      disabled={!filteredPagination.has_prev}
+                      className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-3 min-h-[48px] rounded-xl font-semibold transition-all duration-300 touch-manipulation ${
+                        !filteredPagination.has_prev
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95'
+                      }`}
+                    >
+                      <ChevronLeftIcon className="w-5 h-5" />
+                      <span className="hidden xs:inline">Previous</span>
+                      <span className="xs:hidden">Prev</span>
+                    </button>
+
+                    {/* Page Numbers with Modern Design */}
+                    <div className="flex items-center gap-2 overflow-x-auto">
+                      {Array.from({ length: Math.min(5, filteredPagination.total_pages) }, (_, i) => {
+                        const pageNum = Math.max(1, currentPage - 2) + i;
+                        if (pageNum > filteredPagination.total_pages) return null;
+
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => handlePageChange(pageNum)}
+                            className={`px-4 py-3 min-h-[48px] min-w-[48px] text-sm font-bold rounded-xl transition-all duration-300 touch-manipulation flex-shrink-0 ${
+                              pageNum === currentPage
+                                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg scale-110'
+                                : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-emerald-400 hover:scale-105 active:scale-95'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Next Button with Gradient */}
+                    <button
+                      onClick={handleNextPage}
+                      disabled={!filteredPagination.has_next}
+                      className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-3 min-h-[48px] rounded-xl font-semibold transition-all duration-300 touch-manipulation ${
+                        !filteredPagination.has_next
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95'
+                      }`}
+                    >
+                      <span className="hidden xs:inline">Next</span>
+                      <span className="xs:hidden">Next</span>
+                      <ChevronRightIcon className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

@@ -18,6 +18,7 @@ import {
   ChevronDownIcon,
   UserIcon,
   HeartIcon,
+  InformationCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useFavorite } from '../context/FavoriteContext';
 
@@ -316,6 +317,21 @@ const Header = () => {
 
                       {/* Divider */}
                       <div className="border-t border-gray-200 my-2"></div>
+                      
+                      {/* About Us Section */}
+                      <div className="px-4 py-2">
+                        <Link
+                          to="/about"
+                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors flex items-center gap-2"
+                          onClick={() => setIsAccountDropdownOpen(false)}
+                        >
+                          <InformationCircleIcon className="w-4 h-4 text-gray-500" />
+                          About Us
+                        </Link>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="border-t border-gray-200 my-2"></div>
 
                       {/* Logout Section */}
                       <div className="px-4 py-2">
@@ -431,6 +447,21 @@ const Header = () => {
 
                       {/* Divider */}
                       <div className="border-t border-gray-200 my-2"></div>
+                      
+                      {/* About Us Section */}
+                      <div className="px-4 py-2">
+                        <Link
+                          to="/about"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors flex items-center gap-2"
+                        >
+                          <InformationCircleIcon className="w-4 h-4 text-gray-500" />
+                          About Us
+                        </Link>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="border-t border-gray-200 my-2"></div>
 
                       {/* Logout Section */}
                       <div className="px-4 py-2">
@@ -461,6 +492,14 @@ const Header = () => {
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
                       >
                         Register
+                      </Link>
+                      <Link
+                        to="/about"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 flex items-center gap-2"
+                      >
+                        <InformationCircleIcon className="w-4 h-4 text-gray-500" />
+                        About Us
                       </Link>
                     </>
                   )}

@@ -132,9 +132,9 @@ const ProductCard = ({ product, onAddToCart }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 w-full max-w-sm mx-auto flex flex-col group" style={{ minHeight: '420px' }}>
-      {/* Image Container - Optimized for 1:1 aspect ratio */}
-      <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 aspect-square w-full flex items-center justify-center p-3 sm:p-4 flex-shrink-0 overflow-hidden">
+    <div className="bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-white/60 w-full max-w-sm mx-auto flex flex-col group hover:scale-105" style={{ minHeight: '420px' }}>
+      {/* Image Container - Optimized for 1:1 aspect ratio with Modern Gradient */}
+      <div className="relative bg-gradient-to-br from-gray-50 via-white to-gray-100 aspect-square w-full flex items-center justify-center p-3 sm:p-4 flex-shrink-0 overflow-hidden">
         {/* Favorite Button */}
         <button
           onClick={(e) => {
@@ -163,23 +163,23 @@ const ProductCard = ({ product, onAddToCart }) => {
           )}
         </button>
 
-        {/* Stock Status Badge */}
+        {/* Stock Status Badge with Gradient */}
         <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-20">
           {safeStoreQuantity > 0 ? (
-            <div className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-semibold shadow-sm">
+            <div className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg backdrop-blur-sm">
               In Stock
             </div>
           ) : (
-            <div className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full font-semibold shadow-sm">
+            <div className="bg-gradient-to-r from-red-500 to-rose-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg backdrop-blur-sm">
               Out of Stock
             </div>
           )}
         </div>
 
-        {/* Discount Badge */}
+        {/* Discount Badge with Modern Gradient */}
         {safeDiscountPercentage > 0 && (
           <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 z-20">
-            <div className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold shadow-lg">
+            <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-xl animate-pulse">
               {safeDiscountPercentage}% OFF
             </div>
           </div>
@@ -240,9 +240,9 @@ const ProductCard = ({ product, onAddToCart }) => {
         {/* Content area */}
         <div className="flex flex-col justify-between flex-1">
           <div className="space-y-2 sm:space-y-2.5 flex-shrink-0">
-            {/* Brand Name */}
+            {/* Brand Name with Gradient */}
             {safeBrandName && (
-              <div className="text-xs text-orange-600 font-semibold uppercase tracking-wide">
+              <div className="text-xs bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent font-bold uppercase tracking-wider">
                 {safeBrandName}
               </div>
             )}

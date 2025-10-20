@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import Card from '../components/Card';
-import Button from '../components/Button';
-import Input from '../components/Input';
-import { PhoneIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, PhoneIcon } from '@heroicons/react/24/outline';
 
 const OtpInputPage = () => {
   const navigate = useNavigate();
@@ -57,10 +54,15 @@ const OtpInputPage = () => {
         }
       });
     }
-  }, [otpSent, otpMobile, navigate, from]);
+  }, [otpSent, otpMobile, navigate, from, isRegistration]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    // Only allow numeric input for mobile number
+    if (name === 'mobileNo' && value && !/^\d*$/.test(value)) {
+      return;
+    }
+
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -121,89 +123,164 @@ const OtpInputPage = () => {
     navigate('/login');
   };
 
+  const handleClose = () => {
+    navigate('/login');
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-4 px-4 sm:py-8 sm:px-6 lg:py-12 lg:px-8">
-      <div className="w-full max-w-md mx-auto">
-        <div className="text-center mb-8">
-          <div className="mx-auto h-12 w-12 bg-primary-100 rounded-full flex items-center justify-center mb-4">
-            <PhoneIcon className="h-6 w-6 text-primary-600" />
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900">
-            {isRegistration ? 'Create your account' : 'Enter your mobile number'}
-          </h2>
-          <p className="mt-2 text-gray-600">
-            We'll send you a verification code
-            {isRegistration ? ' to complete your registration' : ' to sign in'}
-          </p>
-        </div>
-
-        <Card>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {otpError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-800 text-sm">{otpError}</p>
+    <div className="min-h-screen flex flex-col lg:flex-row">
+      {/* Left side - Illustration (hidden on mobile) */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.1)_0%,transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(14,165,233,0.1)_0%,transparent_50%)]"></div>
+        
+        <div className="flex items-center justify-center w-full p-12 relative z-10">
+          <div className="max-w-md text-center">
+            {/* Phone Icon Illustration */}
+            <div className="mb-8">
+              <div className="mx-auto w-48 h-48 bg-white rounded-full shadow-lg flex items-center justify-center">
+                <PhoneIcon className="w-24 h-24 text-emerald-600" />
               </div>
-            )}
+            </div>
 
-            <Input
-              label="Mobile Number"
-              name="mobileNo"
-              type="tel"
-              value={formData.mobileNo}
-              onChange={handleChange}
-              error={errors.mobileNo}
-              placeholder="Enter 10-digit mobile number"
-              required
-              maxLength={10}
-            />
+            {/* Message */}
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">
+              {isRegistration ? 'Welcome to D-Mart!' : 'Secure Verification'}
+            </h3>
+            <p className="text-lg text-gray-600">
+              {isRegistration 
+                ? 'Complete your registration with OTP verification'
+                : 'We\'ll send you a one-time password to verify your identity'}
+            </p>
+          </div>
+        </div>
+      </div>
 
-            <Button
-              type="submit"
-              disabled={otpLoading || countdown > 0}
-              className="w-full"
-              size="large"
-            >
-              {otpLoading ? 'Sending OTP...' : 'Send OTP'}
-            </Button>
-          </form>
+      {/* Right side - Form */}
+      <div className="flex-1 lg:w-1/2 bg-white flex items-center justify-center p-4 sm:p-8 relative">
+        {/* Close Button */}
+        <button
+          onClick={handleClose}
+          className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 rounded-full hover:bg-gray-100 transition-colors duration-200 z-10"
+          aria-label="Close"
+        >
+          <XMarkIcon className="w-6 h-6 sm:w-8 sm:h-8 text-gray-500 hover:text-gray-700" />
+        </button>
 
-          {/* Resend OTP section */}
-          {otpSent && (
-            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-green-800 text-sm text-center">
-                OTP sent successfully to {otpMobile}
-              </p>
-              <button
-                onClick={handleResendOtp}
-                disabled={countdown > 0}
-                className="mt-2 w-full text-primary-600 hover:text-primary-500 text-sm font-medium disabled:text-gray-400 disabled:cursor-not-allowed"
-              >
-                {countdown > 0 ? `Resend OTP in ${countdown}s` : 'Resend OTP'}
-              </button>
+        <div className="w-full max-w-md mx-auto">
+          {/* Mobile Logo (visible only on mobile) */}
+          <div className="lg:hidden flex justify-center mb-6">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-br from-emerald-50 to-teal-50 px-6 py-3 rounded-2xl shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold text-emerald-600">D</span>
+                <div className="flex flex-col items-start">
+                  <span className="text-lg font-bold text-gray-800 leading-none">Mart</span>
+                  <span className="text-xs font-medium text-rose-500 leading-none">Ready</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Title */}
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 text-center lg:text-left">
+            {isRegistration ? 'Create Your Account' : 'Request OTP'}
+          </h1>
+          <p className="text-sm text-gray-600 mb-6 text-center lg:text-left">
+            {isRegistration 
+              ? 'Enter your mobile number to complete registration'
+              : 'We\'ll send a verification code to your mobile number'}
+          </p>
+
+          {/* Error Message */}
+          {otpError && (
+            <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-red-800 text-sm">{otpError}</p>
             </div>
           )}
-        </Card>
 
-        <div className="mt-8 text-center">
-          <button
-            onClick={handleBackToLogin}
-            className="text-sm text-gray-600 hover:text-primary-600 font-medium"
-          >
-            ← Back to Login Options
-          </button>
-        </div>
+          {/* Success Message */}
+          {otpSent && (
+            <div className="mb-4 bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+              <p className="text-emerald-800 text-sm">
+                ✓ OTP sent successfully to +91 {otpMobile}
+              </p>
+            </div>
+          )}
 
-        <div className="mt-4 text-center">
-          <p className="text-xs text-gray-500">
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Mobile Number Input */}
+            <div>
+              <label htmlFor="mobileNo" className="block text-sm font-medium text-gray-500 mb-3">
+                Enter your 10 digit mobile number
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                  <span className="text-gray-700 text-base font-medium">+91</span>
+                </div>
+                <input
+                  id="mobileNo"
+                  name="mobileNo"
+                  type="tel"
+                  value={formData.mobileNo}
+                  onChange={handleChange}
+                  maxLength={10}
+                  placeholder=""
+                  className={`block w-full pl-16 pr-4 py-3.5 text-base border-2 rounded-lg focus:outline-none transition-colors duration-200 ${
+                    errors.mobileNo 
+                      ? 'border-red-300 focus:border-red-500' 
+                      : 'border-gray-200 focus:border-emerald-500'
+                  }`}
+                  required
+                />
+              </div>
+              {errors.mobileNo && (
+                <p className="mt-2 text-sm text-red-600">{errors.mobileNo}</p>
+              )}
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={otpLoading || countdown > 0}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3.5 px-6 rounded-lg transition-all duration-200 uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {otpLoading ? 'SENDING...' : countdown > 0 ? `RESEND IN ${countdown}S` : 'SEND OTP'}
+            </button>
+
+            {/* Resend Button */}
+            {otpSent && countdown === 0 && (
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                className="w-full text-emerald-600 hover:text-emerald-700 font-medium py-2 transition-colors"
+              >
+                Didn't receive? Resend OTP
+              </button>
+            )}
+          </form>
+
+          {/* Back to Login */}
+          <div className="mt-6 text-center">
+            <button
+              onClick={handleBackToLogin}
+              className="text-sm text-gray-600 hover:text-emerald-600 font-medium transition-colors"
+            >
+              ← Back to Login
+            </button>
+          </div>
+
+          {/* Terms */}
+          <div className="mt-6 text-center text-xs text-gray-500">
             By continuing, you agree to our{' '}
-            <Link to="/terms" className="text-primary-600 hover:text-primary-500">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link to="/privacy" className="text-primary-600 hover:text-primary-500">
+            <Link to="/terms" className="text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
+              Terms
+            </Link>
+            {' '}and{' '}
+            <Link to="/privacy" className="text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
               Privacy Policy
             </Link>
-          </p>
+          </div>
         </div>
       </div>
     </div>

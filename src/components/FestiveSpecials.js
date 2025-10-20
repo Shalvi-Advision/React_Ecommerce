@@ -96,17 +96,30 @@ const FestiveSpecials = () => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-50 to-gray-100 py-2 sm:py-3 lg:py-4">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-2xl p-2 sm:p-3 lg:p-4 shadow-lg border border-pink-200">
-          {/* Section Header */}
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
-              Festive Specials
-            </h2>
+    <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
+      {/* Vibrant Festive Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-orange-50/50 via-amber-50/50 to-yellow-50/50"></div>
+      <div className="absolute top-0 right-1/4 w-96 h-96 bg-gradient-to-br from-orange-400/20 to-amber-400/20 rounded-full blur-3xl -translate-y-1/4"></div>
+      <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-gradient-to-br from-amber-400/20 to-yellow-400/20 rounded-full blur-3xl translate-y-1/4"></div>
+      
+      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-gradient-to-br from-orange-50/80 to-amber-50/80 backdrop-blur-sm rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl border border-orange-200/60 hover:shadow-2xl transition-all duration-300">
+          {/* Enhanced Section Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full animate-pulse"></div>
+                <span className="text-xs sm:text-sm font-semibold text-orange-600 uppercase tracking-wider">Limited Time</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold">
+                <span className="bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-600 bg-clip-text text-transparent">
+                  Festive Specials
+                </span>
+              </h2>
+            </div>
             <button
               onClick={handleViewAll}
-              className="flex items-center gap-2 text-green-600 hover:text-green-700 font-semibold text-sm sm:text-base transition-colors duration-200 group"
+              className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-2.5 rounded-full font-semibold text-sm sm:text-base shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 group"
             >
               <span>View All</span>
               <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform duration-200" />
