@@ -438,13 +438,31 @@ const CategoryPage = () => {
                         : 'bg-white hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 text-gray-700 hover:shadow-md hover:scale-102 border border-gray-100'
                     }`}
                   >
-                    <span className={`font-semibold text-sm ${
-                      selectedCategory?.category_id === category.category_id
-                        ? 'text-white'
-                        : 'text-gray-800 group-hover:text-emerald-700'
-                    }`}>
-                      {category.category_name}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex items-center justify-center overflow-hidden shadow-sm">
+                        {category.image_link ? (
+                          <img 
+                            src={category.image_link} 
+                            alt={category.category_name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.style.display = 'none';
+                              e.target.parentElement.innerHTML = '<span class="text-lg">📦</span>';
+                            }}
+                          />
+                        ) : (
+                          <span className="text-lg">📦</span>
+                        )}
+                      </div>
+                      <span className={`font-semibold text-sm ${
+                        selectedCategory?.category_id === category.category_id
+                          ? 'text-white'
+                          : 'text-gray-800 group-hover:text-emerald-700'
+                      }`}>
+                        {category.category_name}
+                      </span>
+                    </div>
                     {category.product_count && category.product_count > 0 && (
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                         selectedCategory?.category_id === category.category_id

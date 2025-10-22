@@ -7,6 +7,7 @@ import { useResponsive } from '../hooks/useResponsive';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import OrderSuccessModal from '../components/OrderSuccessModal';
 
 // Indian States constant
 const INDIAN_STATES = [
@@ -46,6 +47,43 @@ const PICKUP_POINTS = [
     distance: '5.2 km',
     timings: '9:00 AM - 10:00 PM',
     isAvailable: false
+  }
+];
+
+// Mock data for saved addresses (from Address Book)
+const SAVED_ADDRESSES = [
+  {
+    id: 1,
+    name: 'Rajesh Kumar',
+    phone: '9876543210',
+    addressLine1: 'Plot No 15, Sector 3',
+    addressLine2: 'Near City Mall',
+    city: 'Navi Mumbai',
+    pinCode: '410206',
+    isDefault: true,
+    type: 'Home'
+  },
+  {
+    id: 2,
+    name: 'Rajesh Kumar',
+    phone: '9876543210',
+    addressLine1: 'Office 402, Tower B, Tech Park',
+    addressLine2: 'Seawoods',
+    city: 'Navi Mumbai',
+    pinCode: '400706',
+    isDefault: false,
+    type: 'Office'
+  },
+  {
+    id: 3,
+    name: 'Priya Sharma',
+    phone: '9123456789',
+    addressLine1: 'Flat 301, Lotus Residency',
+    addressLine2: 'Kharghar',
+    city: 'Navi Mumbai',
+    pinCode: '410210',
+    isDefault: false,
+    type: 'Home'
   }
 ];
 
@@ -126,6 +164,8 @@ const CheckoutPage = () => {
 
   // Modal states
   const [showTimeSlotModal, setShowTimeSlotModal] = useState(false);
+  const [showOrderSuccessModal, setShowOrderSuccessModal] = useState(false);
+  const [orderNumber, setOrderNumber] = useState(null);
   const [selectedShipment, setSelectedShipment] = useState(null);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -179,7 +219,6 @@ const CheckoutPage = () => {
       if (!/^\d{10}$/.test(formData.phone.replace(/\s/g, ''))) newErrors.phone = 'Phone number must be exactly 10 digits';
       if (!formData.address.trim()) newErrors.address = 'Address is required';
       if (!formData.city.trim()) newErrors.city = 'City is required';
-      if (!formData.state.trim()) newErrors.state = 'State is required';
       if (!formData.zipCode.trim()) newErrors.zipCode = 'ZIP code is required';
       if (!/^\d{6}$/.test(formData.zipCode.replace(/\s/g, ''))) newErrors.zipCode = 'ZIP code must be 6 digits';
     } else if (step === 2) {
@@ -242,6 +281,27 @@ const CheckoutPage = () => {
       ...prev,
       selectedAddress: address
     }));
+  };
+
+  const handleSavedAddressSelect = (e) => {
+    const addressId = parseInt(e.target.value);
+    if (!addressId) {
+      // Reset form if "Select an address" is chosen
+      return;
+    }
+    
+    const selectedAddress = SAVED_ADDRESSES.find(addr => addr.id === addressId);
+    if (selectedAddress) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: selectedAddress.name.split(' ')[0] || '',
+        lastName: selectedAddress.name.split(' ').slice(1).join(' ') || '',
+        phone: selectedAddress.phone,
+        address: `${selectedAddress.addressLine1}${selectedAddress.addressLine2 ? ', ' + selectedAddress.addressLine2 : ''}`,
+        city: selectedAddress.city,
+        zipCode: selectedAddress.pinCode
+      }));
+    }
   };
 
   const handleTimeSlotSelect = (date, timeSlot) => {
@@ -310,12 +370,13 @@ const CheckoutPage = () => {
 
       // Clear cart
       clearUserCart();
-
-      // Show success message
+      
+      // Set order number and show success modal
+      setOrderNumber(savedOrder.id);
+      setShowOrderSuccessModal(true);
+      
+      // Also set success message (for backup/fallback)
       setSuccessMessage(`Order #${savedOrder.id} placed successfully! Check your orders for details.`);
-
-      // Redirect to home page
-      navigate('/');
     } catch (error) {
       console.error('Checkout error:', error);
     } finally {
@@ -391,6 +452,46 @@ const CheckoutPage = () => {
                 <div className="space-y-6">
                   <h2 className="text-2xl font-semibold text-gray-900">Shipping Information</h2>
 
+                  {/* Saved Addresses Dropdown */}
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Select from Saved Addresses
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => navigate('/address')}
+                        className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                      >
+                        Manage Addresses
+                      </button>
+                    </div>
+                    <select
+                      onChange={handleSavedAddressSelect}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
+                    >
+                      <option value="">Choose a saved address...</option>
+                      {SAVED_ADDRESSES.map((address) => (
+                        <option key={address.id} value={address.id}>
+                          {address.type === 'Home' ? '🏠' : address.type === 'Office' ? '💼' : '📍'} {address.name} - {address.addressLine1}, {address.city} - {address.pinCode}
+                          {address.isDefault ? ' (Default)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-600 mt-2">
+                      Select an address to auto-fill the form below
+                    </p>
+                  </div>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-white text-gray-500">Or enter manually</span>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <Input
                       label="First Name"
@@ -437,57 +538,24 @@ const CheckoutPage = () => {
                     required
                   />
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input
-                      label="City"
-                      name="city"
-                      value={formData.city}
-                      onChange={handleInputChange}
-                      error={errors.city}
-                      required
-                    />
-                    <div className="w-full">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        State <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        name="state"
-                        value={formData.state}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors duration-200 ${
-                          errors.state ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'
-                        }`}
-                        required
-                      >
-                        <option value="">Select State</option>
-                        {INDIAN_STATES.map(state => (
-                          <option key={state} value={state}>{state}</option>
-                        ))}
-                      </select>
-                      {errors.state && (
-                        <p className="mt-1 text-sm text-red-600">{errors.state}</p>
-                      )}
-                    </div>
-                  </div>
+                  <Input
+                    label="City"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleInputChange}
+                    error={errors.city}
+                    required
+                  />
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input
-                      label="ZIP Code"
-                      name="zipCode"
-                      value={formData.zipCode}
-                      onChange={handleInputChange}
-                      error={errors.zipCode}
-                      required
-                      placeholder="6-digit PIN code"
-                    />
-                    <Input
-                      label="Country"
-                      name="country"
-                      value={formData.country}
-                      readOnly
-                      className="bg-gray-50 cursor-not-allowed"
-                    />
-                  </div>
+                  <Input
+                    label="PIN Code"
+                    name="zipCode"
+                    value={formData.zipCode}
+                    onChange={handleInputChange}
+                    error={errors.zipCode}
+                    required
+                    placeholder="6-digit PIN code"
+                  />
                 </div>
               )}
 
@@ -630,57 +698,88 @@ const CheckoutPage = () => {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <h3 className="text-lg font-semibold text-gray-900">Saved addresses</h3>
-                        <button className="text-green-600 hover:text-green-700 text-sm font-medium">
+                        <button 
+                          onClick={() => navigate('/address')}
+                          className="text-green-600 hover:text-green-700 text-sm font-medium"
+                        >
                           + Add New Address
                         </button>
                       </div>
                       
                       <div className="space-y-3">
-                        <label className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                          checkoutData.selectedAddress?.id === 'shipping-address'
-                            ? 'border-green-500 bg-green-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}>
-                          <input
-                            type="radio"
-                            name="address"
-                            value="shipping-address"
-                            checked={checkoutData.selectedAddress?.id === 'shipping-address'}
-                            onChange={() => handleAddressSelect({
-                              id: 'shipping-address',
-                              name: `${formData.firstName} ${formData.lastName}`,
-                              address: `${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
-                              landmark: formData.address, // Using address as landmark for now
-                              phone: formData.phone
-                            })}
-                            className="text-green-600 focus:ring-green-500 mt-1"
-                          />
-                          <div className="ml-3 flex-1">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center">
-                                  <svg className="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        {SAVED_ADDRESSES.map((address) => (
+                          <label 
+                            key={address.id}
+                            className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                              checkoutData.selectedAddress?.id === address.id
+                                ? 'border-green-500 bg-green-50'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="address"
+                              value={address.id}
+                              checked={checkoutData.selectedAddress?.id === address.id}
+                              onChange={() => handleAddressSelect({
+                                id: address.id,
+                                name: address.name,
+                                address: `${address.addressLine1}${address.addressLine2 ? ', ' + address.addressLine2 : ''}, ${address.city} ${address.pinCode}`,
+                                phone: address.phone,
+                                type: address.type,
+                                isDefault: address.isDefault
+                              })}
+                              className="text-green-600 focus:ring-green-500 mt-1"
+                            />
+                            <div className="ml-3 flex-1">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <p className="font-medium text-gray-900">{address.name}</p>
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                      address.type === 'Home' ? 'bg-blue-100 text-blue-800' :
+                                      address.type === 'Office' ? 'bg-purple-100 text-purple-800' :
+                                      'bg-gray-100 text-gray-800'
+                                    }`}>
+                                      {address.type === 'Home' ? '🏠' : address.type === 'Office' ? '💼' : '📍'} {address.type}
+                                    </span>
+                                    {address.isDefault && (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Default
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-gray-600">
+                                    {address.addressLine1}
+                                    {address.addressLine2 && <>, {address.addressLine2}</>}
+                                  </p>
+                                  <p className="text-sm text-gray-600">
+                                    {address.city} - {address.pinCode}
+                                  </p>
+                                  <div className="mt-2">
+                                    <p className="text-sm text-gray-500">Phone: {address.phone}</p>
+                                  </div>
+                                </div>
+                                <button 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    navigate('/address');
+                                  }}
+                                  className="text-blue-600 hover:text-blue-700 text-sm flex items-center ml-2"
+                                >
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                   </svg>
-                                  <p className="font-medium text-gray-900">{formData.firstName} {formData.lastName}</p>
-                                </div>
-                                <p className="text-sm text-gray-600 mt-1">
-                                  {formData.address}, {formData.city}, {formData.state} {formData.zipCode}
-                                </p>
-                                <div className="mt-2 space-y-1">
-                                  <p className="text-sm text-gray-500">Phone: {formData.phone}</p>
-                                </div>
+                                  Edit
+                                </button>
                               </div>
-                              <button className="text-blue-600 hover:text-blue-700 text-sm flex items-center">
-                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                                Edit
-                              </button>
                             </div>
-                          </div>
-                        </label>
+                          </label>
+                        ))}
                       </div>
                       
                       <Button 
@@ -1039,7 +1138,7 @@ const CheckoutPage = () => {
                         <p className="text-sm text-gray-600">
                           {formData.firstName} {formData.lastName}<br />
                           {formData.address}<br />
-                          {formData.city}, {formData.state} {formData.zipCode}
+                          {formData.city} {formData.zipCode}
                         </p>
                       </div>
                     </div>
@@ -1230,6 +1329,13 @@ const CheckoutPage = () => {
           </div>
         </div>
       )}
+
+      {/* Order Success Modal */}
+      <OrderSuccessModal 
+        isVisible={showOrderSuccessModal} 
+        onClose={() => setShowOrderSuccessModal(false)} 
+        orderNumber={orderNumber}
+      />
 
     </div>
   );
