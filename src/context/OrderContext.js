@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 // Order Context
 const OrderContext = createContext();
@@ -43,18 +44,28 @@ export const OrderProvider = ({ children }) => {
   const [state, dispatch] = useReducer(orderReducer, initialOrderState);
   const [currentUserId, setCurrentUserId] = React.useState(null);
 
-  // Get current user from localStorage
+  // Get authenticated user from AuthContext
+  const { user } = useAuth();
+
+  // Sync currentUserId with authenticated user or localStorage fallback
   useEffect(() => {
-    const user = localStorage.getItem('user');
-    if (user) {
-      try {
-        const userData = JSON.parse(user);
-        setCurrentUserId(userData.id);
-      } catch (error) {
-        console.error('Error parsing user data:', error);
+    if (user?.id) {
+      setCurrentUserId(user.id);
+    } else {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const userData = JSON.parse(storedUser);
+          setCurrentUserId(userData.id);
+        } catch (error) {
+          console.error('Error parsing user data from localStorage:', error);
+          setCurrentUserId(null);
+        }
+      } else {
+        setCurrentUserId(null);
       }
     }
-  }, []);
+  }, [user]);
 
   // Load orders from localStorage on mount and when user changes
   useEffect(() => {

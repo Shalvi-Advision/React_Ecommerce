@@ -5,10 +5,10 @@ const AccountSidebar = () => {
   const location = useLocation();
 
   const menuItems = [
-    { path: '/profile', label: 'My Profile' },
-    { path: '/address', label: 'My Address' },
+    { path: '/profile', label: ' Profile' },
+    { path: '/address', label: 'Address' },
     { path: '/ready-list', label: 'Ready List' },
-    { path: '/orders', label: 'My Orders' },
+    { path: '/orders', label: 'Orders' },
   ];
 
   return (

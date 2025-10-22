@@ -9,7 +9,7 @@ const OrdersPage = () => {
   const { orders, getOrdersByUser } = useOrders();
   const navigate = useNavigate();
 
-  const userOrders = user ? getOrdersByUser(user.id) : orders;
+  const userOrders = user ? getOrdersByUser(user.id ?? user.mobile_no) : orders;
 
   const getStatusColor = (status) => {
     switch (status) {

@@ -87,35 +87,48 @@ const SAVED_ADDRESSES = [
   }
 ];
 
-// Mock data for time slots
-const TIME_SLOTS = [
-  {
-    date: 'Friday 19-September-2025',
-    slots: [
-      { id: 1, time: '07:00 AM - 10:00 AM', available: true },
-      { id: 2, time: '10:00 AM - 12:30 PM', available: true },
-      { id: 3, time: '11:00 AM - 02:00 PM', available: false },
-      { id: 4, time: '12:00 PM - 03:00 PM', available: true },
-      { id: 5, time: '02:00 PM - 05:00 PM', available: true },
-      { id: 6, time: '04:30 PM - 07:30 PM', available: true },
-      { id: 7, time: '07:30 PM - 10:00 PM', available: true },
-      { id: 8, time: '08:00 PM - 11:00 PM', available: true }
-    ]
-  },
-  {
-    date: 'Saturday 20-September-2025',
-    slots: [
-      { id: 9, time: '07:00 AM - 10:00 AM', available: true },
-      { id: 10, time: '10:00 AM - 12:30 PM', available: true },
-      { id: 11, time: '11:00 AM - 02:00 PM', available: true },
-      { id: 12, time: '12:00 PM - 03:00 PM', available: false },
-      { id: 13, time: '02:00 PM - 05:00 PM', available: true },
-      { id: 14, time: '04:30 PM - 07:30 PM', available: true },
-      { id: 15, time: '07:30 PM - 10:00 PM', available: true },
-      { id: 16, time: '08:00 PM - 11:00 PM', available: true }
-    ]
+// Function to generate dynamic time slots for next two days
+const generateTimeSlots = () => {
+  const today = new Date();
+  const timeSlots = [];
+  let slotId = 1;
+
+  // Generate slots for next 2 days
+  for (let i = 1; i <= 2; i++) {
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + i);
+    
+    const dayName = targetDate.toLocaleDateString('en-US', { weekday: 'long' });
+    const day = targetDate.getDate();
+    const month = targetDate.toLocaleDateString('en-US', { month: 'long' });
+    const year = targetDate.getFullYear();
+    
+    const dateString = `${dayName} ${day}-${month}-${year}`;
+    
+    // Define available time slots with realistic availability
+    const availableSlots = [
+      { time: '07:00 AM - 10:00 AM', available: true },
+      { time: '10:00 AM - 12:30 PM', available: true },
+      { time: '11:00 AM - 02:00 PM', available: Math.random() > 0.2 }, // 20% chance unavailable
+      { time: '12:00 PM - 03:00 PM', available: true },
+      { time: '02:00 PM - 05:00 PM', available: true },
+      { time: '04:30 PM - 07:30 PM', available: Math.random() > 0.1 }, // 10% chance unavailable
+      { time: '07:30 PM - 10:00 PM', available: true },
+      { time: '08:00 PM - 11:00 PM', available: Math.random() > 0.15 } // 15% chance unavailable
+    ];
+
+    timeSlots.push({
+      date: dateString,
+      slots: availableSlots.map(slot => ({
+        id: slotId++,
+        time: slot.time,
+        available: slot.available
+      }))
+    });
   }
-];
+
+  return timeSlots;
+};
 
 const CheckoutPage = () => {
   const { items, totalItems, totalPrice, clearCart, clearUserCart } = useCart();
@@ -123,6 +136,9 @@ const CheckoutPage = () => {
   const { addOrder } = useOrders();
   const navigate = useNavigate();
   const { isMobile, isTablet, getResponsiveValue } = useResponsive();
+
+  // State for dynamic time slots
+  const [timeSlots, setTimeSlots] = useState(generateTimeSlots());
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -314,8 +330,12 @@ const CheckoutPage = () => {
 
   const handleConfirmLocation = () => {
     if (checkoutData.deliveryMode === 'pickup' && checkoutData.selectedPickupPoint) {
+      // Generate fresh time slots when opening modal
+      setTimeSlots(generateTimeSlots());
       setShowTimeSlotModal(true);
     } else if (checkoutData.deliveryMode === 'home' && checkoutData.selectedAddress) {
+      // Generate fresh time slots when opening modal
+      setTimeSlots(generateTimeSlots());
       setShowTimeSlotModal(true);
     }
   };
@@ -340,7 +360,7 @@ const CheckoutPage = () => {
 
       // Create order object
       const order = {
-        userId: user?.id || 'guest',
+        userId: user?.id ?? user?.mobile_no ?? 'guest',
         items: items,
         shippingInfo: {
           firstName: formData.firstName,
@@ -1263,7 +1283,7 @@ const CheckoutPage = () => {
             {/* Modal Content */}
             <div className="p-6 overflow-y-auto max-h-[60vh]">
               <div className="space-y-6">
-                {TIME_SLOTS.map((dateSlot, dateIndex) => (
+                {timeSlots.map((dateSlot, dateIndex) => (
                   <div key={dateIndex} className="space-y-4">
                     {/* Date Header */}
                     <div className="flex items-center justify-between">
