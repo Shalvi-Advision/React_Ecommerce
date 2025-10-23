@@ -1,6 +1,6 @@
 import React from 'react';
 
-const LoadingScreen = ({ message = 'Loading...' }) => {
+const LoadingScreen = ({ message = "Loading..." }) => {
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center z-40">
       <div className="text-center">

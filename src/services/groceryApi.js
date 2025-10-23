@@ -24,6 +24,7 @@ const fetchWithTimeout = async (url, options = {}, timeout = 10000) => {
 
 // Import constants
 import { API_BASE_URL, PROJECT_CODE } from '../constants';
+import { processProductData } from './api';
 
 class GroceryApiService {
   // Get active departments
@@ -82,7 +83,7 @@ class GroceryApiService {
 
       // Get store_code from localStorage (PincodeContext)
       const locationData = localStorage.getItem('confirmedLocation');
-      const storeCode = locationData ? JSON.parse(locationData)?.store?.storeCode : null;
+      const storeCode = locationData ? JSON.parse(locationData)?.store?.storeCode || JSON.parse(locationData)?.store?.store_code : null;
 
       // If no store is selected, return a special error
       if (!storeCode) {
@@ -180,7 +181,7 @@ class GroceryApiService {
 
       // Get store_code from localStorage (PincodeContext)
       const locationData = localStorage.getItem('confirmedLocation');
-      const storeCode = locationData ? JSON.parse(locationData)?.store?.storeCode : null;
+      const storeCode = locationData ? JSON.parse(locationData)?.store?.storeCode || JSON.parse(locationData)?.store?.store_code : null;
 
       // If no store is selected, return a special error
       if (!storeCode) {
@@ -259,9 +260,12 @@ class GroceryApiService {
 
       const data = await response.json();
 
+      // Process product data to ensure proper field mapping
+      const processedData = data.data ? data.data.map(processProductData) : [];
+
       return {
         success: data.success,
-        data: data.data || [],
+        data: processedData,
         message: data.message,
         count: data.count
       };
@@ -301,9 +305,12 @@ class GroceryApiService {
 
       const data = await response.json();
 
+      // Process product data to ensure proper field mapping
+      const processedData = data.data ? data.data.map(processProductData) : [];
+
       return {
         success: data.success,
-        data: data.data || [],
+        data: processedData,
         message: data.message,
         count: data.count
       };

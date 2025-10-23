@@ -64,10 +64,14 @@ export const PincodeProvider = ({ children }) => {
   useEffect(() => {
     if (!hasCheckedInitialLocation) {
       setHasCheckedInitialLocation(true);
-      if (!confirmedLocation) {
-        setIsLocationRequired(true);
-        setIsPincodeModalOpen(true);
-      }
+    }
+  }, [hasCheckedInitialLocation]);
+
+  // Check if location is required after initial load
+  useEffect(() => {
+    if (hasCheckedInitialLocation && !confirmedLocation) {
+      setIsLocationRequired(true);
+      setIsPincodeModalOpen(true);
     }
   }, [hasCheckedInitialLocation, confirmedLocation]);
 
@@ -266,7 +270,7 @@ export const PincodeProvider = ({ children }) => {
 
   // Get current store code for API calls
   const getCurrentStoreCode = () => {
-    return confirmedLocation?.store?.storeCode || null;
+    return confirmedLocation?.store?.storeCode || confirmedLocation?.store?.store_code || null;
   };
 
   const value = {
@@ -282,6 +286,7 @@ export const PincodeProvider = ({ children }) => {
 
     // Mandatory location states
     isLocationRequired,
+    hasCheckedInitialLocation,
 
     // Loading states
     isCheckingServiceability,

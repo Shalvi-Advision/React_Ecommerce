@@ -139,7 +139,7 @@ const CategoryPage = () => {
     try {
       // Don't set loading state - only affects subcategories list, not whole page
       const locationData = localStorage.getItem('confirmedLocation');
-      const storeCode = locationData ? JSON.parse(locationData)?.store?.storeCode : null;
+      const storeCode = locationData ? JSON.parse(locationData)?.store?.storeCode || JSON.parse(locationData)?.store?.store_code : null;
 
       if (!storeCode) {
         setError('Please select a store to view subcategories');
@@ -193,7 +193,10 @@ const CategoryPage = () => {
       setError(null);
 
       const locationData = localStorage.getItem('confirmedLocation');
-      const storeCode = locationData ? JSON.parse(locationData)?.store?.storeCode : null;
+      const storeCode = locationData ? JSON.parse(locationData)?.store?.storeCode || JSON.parse(locationData)?.store?.store_code : null;
+
+      console.log('🏪 CategoryPage loadProducts - storeCode:', storeCode);
+      console.log('🏪 CategoryPage loadProducts - locationData:', locationData);
 
       if (!storeCode) {
         setError('Please select a store to view products');

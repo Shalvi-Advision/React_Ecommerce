@@ -587,4 +587,5 @@ export const getProductDetails = async (p_code, store_code, project_code) => {
   }
 };
 
+export { processProductData };
 export default api;
