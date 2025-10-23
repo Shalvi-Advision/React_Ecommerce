@@ -5,7 +5,6 @@ import { optimizedFetch, generateCacheKey, cacheResponse, getCachedResponse } fr
 import { throttle } from '../utils/asyncUtils';
 
 // OTP Authentication Configuration
-const OTP_PROJECT_CODE = "RET90";
 const API_BASE_URL = APP_CONSTANTS.API_BASE_URL;
 
 // Create axios instance with base configuration
@@ -285,22 +284,22 @@ export const apiDelete = async (endpoint) => {
 
 // OTP Authentication API Methods
 export const otpAuth = {
-  // Get OTP for mobile number
+  // Send OTP to mobile number
   getOtp: async (mobileNo) => {
     try {
-      return await postWithProjectCode('/auth/get_otp', {
-        mobileNo: mobileNo.replace(/\s+/g, ''), // Remove spaces
+      return await apiPost('/auth/send-otp', {
+        mobile: mobileNo.replace(/\s+/g, ''), // Remove spaces
       });
     } catch (error) {
       throw error.response?.data || error;
     }
   },
 
-  // Validate OTP and get token
+  // Verify OTP and get authentication token
   validateOtp: async (mobileNo, otp) => {
     try {
-      return await postWithProjectCode('/auth/validate_otp', {
-        mobileNo: mobileNo.replace(/\s+/g, ''), // Remove spaces
+      return await apiPost('/auth/verify-otp', {
+        mobile: mobileNo.replace(/\s+/g, ''), // Remove spaces
         otp: otp.replace(/\s+/g, ''), // Remove spaces
       });
     } catch (error) {
@@ -308,7 +307,43 @@ export const otpAuth = {
     }
   },
 
-  // Verify token validity
+  // Get user profile
+  getProfile: async () => {
+    try {
+      return await apiGet('/auth/profile');
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Update user profile
+  updateProfile: async (profileData) => {
+    try {
+      return await apiPut('/auth/profile', profileData);
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Logout user
+  logout: async () => {
+    try {
+      return await apiPost('/auth/logout', {});
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Update user activity / is active
+  isActive: async (sessionData = {}) => {
+    try {
+      return await apiPost('/auth/is-active', sessionData);
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Verify token validity (legacy method for backward compatibility)
   verifyToken: async (token) => {
     try {
       const response = await api.post('/auth/verify_token', {
@@ -320,7 +355,7 @@ export const otpAuth = {
     }
   },
 
-  // Refresh token
+  // Refresh token (legacy method for backward compatibility)
   refreshToken: async (token) => {
     try {
       const response = await api.post('/auth/refresh_token', {
