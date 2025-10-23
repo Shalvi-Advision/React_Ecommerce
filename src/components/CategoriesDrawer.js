@@ -1,17 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { XMarkIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
-import { getActiveDepartments, getActiveCategories } from '../services/groceryApi';
+import { getActiveDepartments, getActiveCategories, getActiveSubcategories } from '../services/groceryApi';
 import { APP_CONSTANTS } from '../constants';
+import { usePincode } from '../context/PincodeContext';
 
 const CategoriesDrawer = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
+  const { openPincodeModal } = usePincode();
   const [departments, setDepartments] = useState([]);
   const [categories, setCategories] = useState({});
   const [expandedDepartment, setExpandedDepartment] = useState(null);
   const [loading, setLoading] = useState(false);
   const [categoriesLoading, setCategoriesLoading] = useState({});
   const [error, setError] = useState(null);
+  const [requiresStoreSelection, setRequiresStoreSelection] = useState(false);
+  const [requiresStoreChange, setRequiresStoreChange] = useState(false);
   
   const handleCategoryClick = (categoryName) => {
     const categorySlug = categoryName.toLowerCase().replace(/\s+/g, '-');
@@ -96,16 +100,27 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
   useEffect(() => {
     const loadDepartments = async () => {
       if (!isOpen) return;
-      
+
       setLoading(true);
       setError(null);
-      
+      setRequiresStoreSelection(false);
+      setRequiresStoreChange(false);
+
       try {
         const response = await getActiveDepartments();
         if (response.success) {
           setDepartments(response.data || []);
         } else {
-          setError(response.message || 'Failed to load departments');
+          // Check if store selection is required
+          if (response.requiresStoreSelection) {
+            setRequiresStoreSelection(true);
+            setError(response.message || 'Please select a store to continue');
+          } else if (response.requiresStoreChange) {
+            setRequiresStoreChange(true);
+            setError(response.message || 'No departments available for your store');
+          } else {
+            setError(response.message || 'Failed to load departments');
+          }
         }
       } catch (err) {
         setError('Failed to load departments');
@@ -117,193 +132,6 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
 
     loadDepartments();
   }, [isOpen]);
-
-  // Fallback categories for when API fails
-  const fallbackCategories = [
-    {
-      name: "GROCERY & STAPLES",
-      icon: "🛒",
-      subcategories: [
-        "Dals & Pulses", "Rice & Rice Products", "Wheat & Other Grains",
-        "Cooking Oil", "Ghee & Vanaspati", "Masala & Spices", "Salt & Sugar",
-        "Jaggery & Sweeteners", "Flours & Atta", "Cereals & Muesli",
-        "Dry Fruits & Nuts", "Seeds & Nuts", "Organic Staples"
-      ]
-    },
-    {
-      name: "FRUITS & VEGETABLES",
-      icon: "🥕",
-      subcategories: [
-        "Fresh Fruits", "Fresh Vegetables", "Exotic Fruits", "Exotic Vegetables",
-        "Leafy Vegetables", "Cut Fruits & Veggies", "Frozen Vegetables",
-        "Frozen Fruits", "Seasonal Fruits", "Organic Fruits & Vegetables",
-        "Hydroponic Vegetables", "Sprouts", "Herbs & Spices"
-      ]
-    },
-    {
-      name: "DAIRY & BEVERAGES",
-      icon: "🥛",
-      subcategories: [
-        "Milk & Milk Products", "Cheese & Butter", "Yogurt & Curd",
-        "Ice Cream & Frozen Desserts", "Soft Drinks", "Juices & Nectars",
-        "Energy Drinks", "Tea & Coffee", "Health Drinks", "Water & Soda",
-        "Sports Drinks", "Alcoholic Beverages"
-      ]
-    },
-    {
-      name: "PACKAGED FOOD",
-      icon: "📦",
-      subcategories: [
-        "Biscuits & Cookies", "Snacks & Namkeen", "Breakfast Cereals",
-        "Chocolates & Candies", "Ketchup & Sauces", "Jams & Spreads",
-        "Pasta & Noodles", "Ready To Cook", "Gourmet Food", "Sweets & Mithai",
-        "Pickles & Chutneys", "Health Food", "Mukhwas & Supari",
-        "Bakery Products", "Canned Food", "Frozen Foods", "Instant Mixes"
-      ]
-    },
-    {
-      name: "PERSONAL CARE",
-      icon: "💄",
-      subcategories: [
-        "Skin Care", "Hair Care", "Bath & Body", "Makeup & Cosmetics",
-        "Personal Hygiene", "Oral Care", "Men's Grooming", "Fragrances",
-        "Baby Care", "Feminine Care", "Health & Wellness", "Shaving & Grooming"
-      ]
-    },
-    {
-      name: "HOME & KITCHEN",
-      icon: "🏠",
-      subcategories: [
-        "Cookware", "Serveware", "Cutlery", "Kitchen Tools", "Storage & Organizers",
-        "Kitchen Appliances", "Bakeware", "Drinkware", "Tableware", "Jars & Containers",
-        "Kitchen Accessories", "Dining & Serving", "Pooja Needs"
-      ]
-    },
-    {
-      name: "CLEANING SUPPLIES",
-      icon: "🧽",
-      subcategories: [
-        "Detergent & Fabric Care", "Floor Cleaners", "Utensil Cleaners",
-        "Bathroom Cleaners", "Glass Cleaners", "Disinfectants", "Fresheners",
-        "Tissue Paper & Napkins", "Cleaning Tools", "Trash Bags", "Air Fresheners"
-      ]
-    },
-    {
-      name: "BABY CARE",
-      icon: "👶",
-      subcategories: [
-        "Baby Food", "Baby Care", "Diapers & Wipes", "Baby Clothes",
-        "Baby Toys", "Feeding Accessories", "Baby Health", "Nursing & Feeding"
-      ]
-    },
-    {
-      name: "PET CARE",
-      icon: "🐕",
-      subcategories: [
-        "Pet Food", "Pet Care", "Pet Toys", "Pet Accessories", "Pet Health",
-        "Pet Grooming", "Pet Litter", "Pet Treats"
-      ]
-    },
-    {
-      name: "HEALTH & WELLNESS",
-      icon: "💊",
-      subcategories: [
-        "Vitamins & Supplements", "Health Monitors", "First Aid", "Medical Supplies",
-        "Fitness & Sports", "Yoga & Meditation", "Health Drinks", "Protein Supplements"
-      ]
-    },
-    {
-      name: "STATIONERY & OFFICE",
-      icon: "✏️",
-      subcategories: [
-        "Pens & Pencils", "Notebooks & Diaries", "Art & Craft", "Office Supplies",
-        "Gift Bags & Boxes", "School Supplies", "Computer Accessories", "Filing & Storage"
-      ]
-    },
-    {
-      name: "AUTOMOTIVE",
-      icon: "🚗",
-      subcategories: [
-        "Car Care", "Motor Oil", "Car Accessories", "Tire Care", "Car Cleaning",
-        "Car Maintenance", "Car Electronics", "Car Safety"
-      ]
-    },
-    {
-      name: "ELECTRONICS",
-      icon: "📱",
-      subcategories: [
-        "Mobile Accessories", "Computer Accessories", "Audio & Video", "Gaming",
-        "Home Appliances", "Kitchen Appliances", "Personal Care Appliances",
-        "Chargers & Cables", "Storage Devices"
-      ]
-    },
-    {
-      name: "FASHION & CLOTHING",
-      icon: "👕",
-      subcategories: [
-        "Men's Clothing", "Women's Clothing", "Kids Clothing", "Footwear",
-        "Accessories", "Jewelry", "Watches", "Bags & Luggage", "Underwear",
-        "Sleepwear", "Activewear", "Traditional Wear"
-      ]
-    },
-    {
-      name: "HOME FURNISHING",
-      icon: "🛏️",
-      subcategories: [
-        "Bedsheets & Bedding", "Bath Range", "Curtains & Blinds", "Home Decor",
-        "Door Mats & Carpets", "Table Covers", "Home Furniture", "Lighting",
-        "Wall Decor", "Garden & Outdoor", "Storage Solutions"
-      ]
-    },
-    {
-      name: "BOOKS & MEDIA",
-      icon: "📚",
-      subcategories: [
-        "Fiction Books", "Non-Fiction Books", "Children's Books", "Educational Books",
-        "Cookbooks", "Magazines", "Newspapers", "E-books", "Audiobooks",
-        "Music & Movies", "Gaming", "Art & Photography"
-      ]
-    },
-    {
-      name: "SPORTS & FITNESS",
-      icon: "⚽",
-      subcategories: [
-        "Outdoor Sports", "Indoor Sports", "Fitness Equipment", "Sports Clothing",
-        "Sports Accessories", "Water Sports", "Winter Sports", "Adventure Sports",
-        "Team Sports", "Individual Sports", "Fitness Supplements"
-      ]
-    },
-    {
-      name: "GARDEN & OUTDOOR",
-      icon: "🌱",
-      subcategories: [
-        "Plants & Seeds", "Garden Tools", "Outdoor Furniture", "BBQ & Grilling",
-        "Outdoor Lighting", "Pest Control", "Plant Care", "Garden Decor",
-        "Outdoor Storage", "Landscaping", "Watering & Irrigation"
-      ]
-    },
-    {
-      name: "TOYS & GAMES",
-      icon: "🎮",
-      subcategories: [
-        "Action Figures", "Board Games", "Puzzles", "Educational Toys",
-        "Outdoor Toys", "Electronic Toys", "Arts & Crafts", "Building Sets",
-        "Dolls & Accessories", "Sports Toys", "Baby Toys"
-      ]
-    },
-    {
-      name: "JEWELRY & WATCHES",
-      icon: "💍",
-      subcategories: [
-        "Rings", "Necklaces", "Earrings", "Bracelets", "Watches",
-        "Jewelry Boxes", "Jewelry Care", "Fashion Jewelry", "Precious Metals",
-        "Gemstones", "Vintage Jewelry"
-      ]
-    }
-  ];
-
-  // Use API data if available, otherwise fallback to hardcoded categories
-  const displayCategories = departments.length > 0 ? departments : fallbackCategories;
 
   if (!isOpen) return null;
 
@@ -360,26 +188,56 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
           ) : error ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center bg-white/80 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-white/60 mx-4">
-                <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-4xl">⚠️</span>
+                <div className={`w-20 h-20 bg-gradient-to-br ${
+                  requiresStoreSelection ? 'from-blue-100 to-cyan-100' :
+                  requiresStoreChange ? 'from-amber-100 to-orange-100' :
+                  'from-red-100 to-rose-100'
+                } rounded-full flex items-center justify-center mx-auto mb-4`}>
+                  <span className="text-4xl">{
+                    requiresStoreSelection ? '🏪' :
+                    requiresStoreChange ? '📦' :
+                    '⚠️'
+                  }</span>
                 </div>
-                <p className="text-red-600 mb-2 text-base font-semibold">Failed to load categories</p>
+                <p className={`${
+                  requiresStoreSelection ? 'text-blue-600' :
+                  requiresStoreChange ? 'text-amber-600' :
+                  'text-red-600'
+                } mb-2 text-base font-semibold`}>
+                  {requiresStoreSelection ? 'Store Selection Required' :
+                   requiresStoreChange ? 'No Products Available' :
+                   'Failed to load categories'}
+                </p>
                 <p className="text-gray-500 text-sm mb-4">{error}</p>
-                <button 
-                  onClick={() => window.location.reload()} 
-                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300"
-                >
-                  Retry
-                </button>
+                {requiresStoreSelection || requiresStoreChange ? (
+                  <button
+                    onClick={() => {
+                      openPincodeModal();
+                      onClose();
+                    }}
+                    className={`px-6 py-3 bg-gradient-to-r ${
+                      requiresStoreSelection ? 'from-blue-500 to-cyan-500' : 'from-amber-500 to-orange-500'
+                    } text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300`}
+                  >
+                    {requiresStoreSelection ? 'Select Store' : 'Change Store'}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300"
+                  >
+                    Retry
+                  </button>
+                )}
               </div>
             </div>
           ) : (
             <div className="p-4 sm:p-6 lg:p-8">
               {/* Departments Grid - Modern Card Layout */}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 sm:gap-4 lg:gap-6">
-                {displayCategories.map((department, index) => {
-                  const departmentId = department.department_id || department.name;
-                  const departmentName = department.department_name || department.name;
+                {departments.map((department, index) => {
+                  const departmentId = department.department_id;
+                  const departmentName = department.department_name;
                   const departmentImage = department.image_link || getDefaultImage();
                   const isExpanded = expandedDepartment === departmentId;
                   const departmentCategories = categories[departmentId] || [];
@@ -458,15 +316,15 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
                                 {departmentCategories
                                   .filter((category, index, self) => {
                                     // Remove duplicates by checking if this is the first occurrence
-                                    // Use category_id if available, otherwise use category_name
-                                    const identifier = category.category_id || category.category_name;
-                                    return index === self.findIndex(c => 
-                                      (c.category_id || c.category_name) === identifier
+                                    // Use idcategory_master if available, otherwise use category_name
+                                    const identifier = category.idcategory_master || category.category_name;
+                                    return index === self.findIndex(c =>
+                                      (c.idcategory_master || c.category_name) === identifier
                                     );
                                   })
                                   .map((category) => (
-                                    <button 
-                                      key={category.category_id || category.category_name}
+                                    <button
+                                      key={category.idcategory_master || category.category_name}
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleCategoryClick(category.category_name);
@@ -508,9 +366,9 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
                   );
                 })}
               </div>
-              
+
               {/* Empty State if no categories */}
-              {displayCategories.length === 0 && !loading && (
+              {departments.length === 0 && !loading && !error && (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center bg-white/80 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-white/60">
                     <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">

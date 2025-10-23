@@ -17,7 +17,7 @@ const api = axios.create({
   timeout: 15000,
 });
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token and store_code
 api.interceptors.request.use(
   (config) => {
     // Get token from storage
@@ -25,6 +25,35 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Add store_code from localStorage to all API requests
+    const locationData = localStorage.getItem('confirmedLocation');
+    if (locationData) {
+      try {
+        const location = JSON.parse(locationData);
+        const storeCode = location?.store?.store_code;
+
+        if (storeCode) {
+          // Add to POST/PUT/PATCH request body
+          if (['post', 'put', 'patch'].includes(config.method?.toLowerCase())) {
+            config.data = {
+              ...config.data,
+              store_code: storeCode
+            };
+          }
+          // Add to GET/DELETE as query param
+          else if (['get', 'delete'].includes(config.method?.toLowerCase())) {
+            config.params = {
+              ...config.params,
+              store_code: storeCode
+            };
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to add store_code to request:', error);
+      }
+    }
+
     return config;
   },
   (error) => {

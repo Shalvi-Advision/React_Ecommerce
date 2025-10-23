@@ -60,8 +60,8 @@ const CategoryPage = () => {
           const department = departmentsResponse.data.find(
             dept => dept.department_name.toLowerCase() === departmentName.toLowerCase()
           );
-          if (department && department.image_url) {
-            setDepartmentImage(department.image_url);
+          if (department && department.image_link) {
+            setDepartmentImage(department.image_link);
           }
         }
       } catch (e) {
@@ -91,7 +91,7 @@ const CategoryPage = () => {
       const response = await groceryApiService.getActiveCategoriesByDepartmentName(departmentName);
       if (response.success) {
         setCategories(response.data);
-        
+
         // Cache the categories
         try {
           localStorage.setItem(`categories_${departmentName}`, JSON.stringify(response.data));
@@ -100,42 +100,13 @@ const CategoryPage = () => {
           console.error('Error caching categories:', e);
         }
       } else {
-        // Fallback to dummy categories if API fails
-        const fallbackCategories = [
-          { category_name: 'Cooker', category_id: 1, product_count: 45 },
-          { category_name: 'Kadai / Handi / Pans', category_id: 2, product_count: 78 },
-          { category_name: 'Cookware Sets', category_id: 3, product_count: 32 },
-          { category_name: 'Pressure Cookers', category_id: 4, product_count: 56 },
-          { category_name: 'Non-Stick Cookware', category_id: 5, product_count: 67 },
-          { category_name: 'Stainless Steel Cookware', category_id: 6, product_count: 43 }
-        ];
-        setCategories(fallbackCategories);
-        
-        // Cache the fallback categories too
-        try {
-          localStorage.setItem(`categories_${departmentName}`, JSON.stringify(fallbackCategories));
-          localStorage.setItem(`categories_timestamp_${departmentName}`, Date.now().toString());
-        } catch (e) {
-          console.error('Error caching fallback categories:', e);
-        }
+        setCategories([]);
+        setError('Failed to load categories');
       }
     } catch (err) {
       console.error('Error loading department data:', err);
       setError('Failed to load department data');
-      
-      // If offline, use fallback categories
-      if (!navigator.onLine) {
-        const fallbackCategories = [
-          { category_name: 'Cooker', category_id: 1, product_count: 45 },
-          { category_name: 'Kadai / Handi / Pans', category_id: 2, product_count: 78 },
-          { category_name: 'Cookware Sets', category_id: 3, product_count: 32 },
-          { category_name: 'Pressure Cookers', category_id: 4, product_count: 56 },
-          { category_name: 'Non-Stick Cookware', category_id: 5, product_count: 67 },
-          { category_name: 'Stainless Steel Cookware', category_id: 6, product_count: 43 }
-        ];
-        setCategories(fallbackCategories);
-        setError('You are offline. Showing cached categories.');
-      }
+      setCategories([]);
     } finally {
       setLoading(false);
     }
@@ -159,7 +130,7 @@ const CategoryPage = () => {
         page: currentPage,
         limit: 20,
         dept_id: "2", // Default department ID
-        category_id: selectedCategory?.category_id?.toString() || "72", // Use selected category or default
+        category_id: selectedCategory?.idcategory_master?.toString() || "72", // Use selected category or default
         sub_category_id: "391" // Default sub-category ID
       });
 
