@@ -43,11 +43,13 @@ const CartPage = () => {
 
   // Calculate savings (assuming 20% discount for demo purposes)
   const calculateSavings = (price) => {
-    return Math.round(price * 0.2);
+    const validPrice = Number(price) || 0;
+    return Math.round(validPrice * 0.2);
   };
 
   const totalSavings = items.reduce((total, item) => {
-    return total + (calculateSavings(item.price) * item.quantity);
+    const validPrice = Number(item.price) || 0;
+    return total + (calculateSavings(validPrice) * item.quantity);
   }, 0);
 
   const handleQuantityChange = (itemId, newQuantity) => {
@@ -204,7 +206,8 @@ const CartPage = () => {
                 {/* Cart Items */}
                 <div className="divide-y divide-gray-200">
                   {items.map((item, index) => {
-                    const itemSavings = calculateSavings(item.price);
+                    const itemPrice = Number(item.price) || 0;
+                    const itemSavings = calculateSavings(itemPrice);
                     const variant = item.quantity > 1 ? `${item.quantity} units` : '1 unit';
                     
                     return (
@@ -230,7 +233,7 @@ const CartPage = () => {
                               <div className="flex items-center justify-between">
                                 <div>
                                   <span className="text-sm font-semibold text-gray-900">
-                                    ₹{item.price}
+                                    ₹{itemPrice}
                                   </span>
                                   <span className="text-xs text-green-600 ml-2">
                                     Save ₹{itemSavings}
@@ -293,7 +296,7 @@ const CartPage = () => {
                           {/* You Pay */}
                           <div className="col-span-2 text-center">
                             <span className="text-xs lg:text-sm font-semibold text-gray-900">
-                              ₹{item.price}
+                              ₹{itemPrice}
                             </span>
                           </div>
 

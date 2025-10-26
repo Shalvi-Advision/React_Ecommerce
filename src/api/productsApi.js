@@ -485,15 +485,24 @@ export const searchProductsAPI = async (searchTerm) => {
     }
 
     // Get store_code from localStorage
-    let storeCode = 'AVB'; // Default store code
+    let storeCode = null;
     const locationData = localStorage.getItem('confirmedLocation');
     if (locationData) {
       try {
         const location = JSON.parse(locationData);
-        storeCode = location?.store?.store_code || 'AVB';
+        // Try both storeCode and store_code (for backwards compatibility)
+        storeCode = location?.store?.storeCode || location?.store?.store_code;
       } catch (error) {
-        console.warn('Failed to parse location data:', error);
+        console.error('Failed to parse location data:', error);
       }
+    }
+    
+    // Validate that store code exists in localStorage
+    if (!storeCode) {
+      const error = new Error('Store code not found. Please select a location first.');
+      error.code = 'STORE_CODE_MISSING';
+      console.error('❌ Store code validation failed:', error);
+      throw error;
     }
 
     const url = `${API_BASE_URL}/products/search-products`;
@@ -625,6 +634,49 @@ export const getProductByPcode = async (pcode, dept_id, category_id, sub_categor
     throw new Error(data.message || 'Product not found');
   } catch (error) {
     console.error('❌ getProductByPcode error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get product details by p_code using the productdetails endpoint
+ * @param {string} p_code - Product code
+ * @param {string} store_code - Store code
+ * @returns {Promise<Object>} - Product details response
+ */
+export const getProductDetailsByPcode = async (p_code, store_code) => {
+  try {
+    const url = `${API_BASE_URL}/products/productdetails`;
+    const requestBody = {
+      store_code,
+      p_code
+    };
+    
+    console.log('🔍 getProductDetailsByPcode called with:', requestBody);
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch product details: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log('📦 getProductDetailsByPcode response:', data);
+    
+    if (data.success && data.data) {
+      return {
+        success: true,
+        data: processProductData(data.data)
+      };
+    }
+    
+    throw new Error(data.message || 'Product not found');
+  } catch (error) {
+    console.error('❌ getProductDetailsByPcode error:', error);
     throw error;
   }
 };

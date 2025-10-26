@@ -4,12 +4,13 @@ import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { HeartIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
-import { getFavoritesAPI } from '../api/favoritesApi';
+import { getFavorites } from '../api/favoritesApi';
+import { getProductDetailsByPcode } from '../api/productsApi';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 
 const FavoritesPage = () => {
-  const { favorites: favoriteContext, isAuthenticated: contextAuthenticated, isFavorite, toggleFavorite } = useFavorite();
+  const { isFavorite, toggleFavorite } = useFavorite();
   const { isAuthenticated, user } = useAuth();
   const { addItem } = useCart();
   const { showError } = useToast();
@@ -18,29 +19,145 @@ const FavoritesPage = () => {
   const [loading, setLoading] = useState(true);
   const [addingToCart, setAddingToCart] = useState({});
 
-  // Fetch favorite products details
+  // Helper to get store code
+  const getStoreCode = () => {
+    const locationData = localStorage.getItem('confirmedLocation');
+    if (locationData) {
+      try {
+        const location = JSON.parse(locationData);
+        return location?.store?.store_code || location?.store?.storeCode || 'AVB';
+      } catch (error) {
+        console.error('Error parsing location data:', error);
+        return 'AVB';
+      }
+    }
+    return 'AVB';
+  };
+
+  // Fetch favorite products from API
   useEffect(() => {
     const loadFavoriteProducts = async () => {
       setLoading(true);
       try {
-        // Use favorites from context - they now contain full product data
-        if (favoriteContext && Array.isArray(favoriteContext) && favoriteContext.length > 0) {
-          // Filter out any non-object items (legacy p_code strings)
-          const products = favoriteContext.filter(item => typeof item === 'object' && item !== null);
-          setFavoriteProducts(products);
+        if (!isAuthenticated) {
+          // For guest users, use localStorage
+          const savedFavorites = localStorage.getItem('favorites');
+          if (savedFavorites) {
+            const products = JSON.parse(savedFavorites).filter(item => typeof item === 'object' && item !== null);
+            setFavoriteProducts(products);
+          } else {
+            setFavoriteProducts([]);
+          }
+          setLoading(false);
+          return;
+        }
+
+        // For authenticated users, fetch from API
+        console.log('🔍 Fetching favorites from API...');
+        const response = await getFavorites();
+        
+        if (response.success && response.data && response.data.length > 0) {
+          console.log('✅ Favorites API response:', response);
+          
+          // Extract p_codes from API response
+          const favoriteData = response.data;
+          console.log('📝 Extracted favorites data:', favoriteData);
+
+          const storeCodeFromStorage = getStoreCode();
+
+          // Fetch each favorite product individually using getProductDetailsByPcode
+          console.log('🛍️ Fetching product details for each favorite...');
+          const productPromises = favoriteData.map(async (favorite) => {
+            try {
+              console.log(`🔍 Fetching product details for p_code: ${favorite.p_code}`);
+              
+              // Use the store_code from the favorite item (saved when it was favorited)
+              // This is the correct store where the product exists
+              const favoriteStoreCode = favorite.store_code || storeCodeFromStorage;
+              
+              console.log(`📍 Using store_code: ${favoriteStoreCode} for p_code: ${favorite.p_code}`);
+              
+              const productResponse = await getProductDetailsByPcode(
+                favorite.p_code,
+                favoriteStoreCode
+              );
+              
+              if (productResponse.success && productResponse.data) {
+                console.log(`✅ Found product details for p_code: ${favorite.p_code}`);
+                console.log('📦 Product data:', productResponse.data);
+                
+                // Ensure the product has the required fields for display
+                const product = productResponse.data;
+                
+                // Map image_url to use pcode_img if available
+                if (product.pcode_img && !product.image_url) {
+                  product.image_url = product.pcode_img;
+                }
+                
+                // Ensure price field is set for cart compatibility
+                if (!product.price && product.our_price) {
+                  product.price = product.our_price;
+                }
+                
+                // Ensure package_size and package_unit are properly set
+                if (product.package_size && typeof product.package_size === 'string') {
+                  const parts = product.package_size.split(/\s+/);
+                  product.package_size = parseFloat(parts[0]) || product.package_size;
+                  product.package_unit = parts[1] || product.package_unit || 'GM';
+                }
+                
+                console.log('🔧 Processed product for display:', product);
+                return product;
+              } else {
+                console.warn(`⚠️ No product found for p_code: ${favorite.p_code} in store: ${favoriteStoreCode}`);
+                console.warn('API Response:', productResponse);
+              }
+              return null;
+            } catch (error) {
+              console.error(`❌ Error fetching product for p_code ${favorite.p_code}:`, error);
+              return null;
+            }
+          });
+
+          const fetchedProducts = await Promise.all(productPromises);
+          const validProducts = fetchedProducts.filter(p => p !== null);
+          
+          console.log(`✅ Loaded ${validProducts.length} products out of ${favoriteData.length} favorites`);
+          console.log('📋 Products array being set:', validProducts);
+          
+          if (validProducts.length > 0) {
+            console.log('🔍 First product sample:', validProducts[0]);
+            console.log('🔍 Product keys:', Object.keys(validProducts[0]));
+          }
+          
+          setFavoriteProducts(validProducts);
+          
+          // Debug: Log state after setting
+          setTimeout(() => {
+            console.log('🔄 favoriteProducts state updated:', validProducts.length, 'products');
+          }, 100);
         } else {
+          console.log('ℹ️ No favorites found in API response');
           setFavoriteProducts([]);
         }
       } catch (error) {
         console.error('Error loading favorite products:', error);
-        setFavoriteProducts([]);
+        
+        // Fallback to localStorage if API fails
+        const savedFavorites = localStorage.getItem('favorites');
+        if (savedFavorites) {
+          const products = JSON.parse(savedFavorites).filter(item => typeof item === 'object' && item !== null);
+          setFavoriteProducts(products);
+        } else {
+          setFavoriteProducts([]);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     loadFavoriteProducts();
-  }, [favoriteContext]);
+  }, [isAuthenticated]);
 
   if (loading) {
     return (
@@ -55,7 +172,7 @@ const FavoritesPage = () => {
     );
   }
 
-  if ((favoriteContext?.length === 0 || !favoriteContext) && favoriteProducts.length === 0) {
+  if (favoriteProducts.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto text-center">

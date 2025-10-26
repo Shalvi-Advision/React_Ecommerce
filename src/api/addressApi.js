@@ -9,12 +9,15 @@ const getStoreCode = () => {
     const locationData = localStorage.getItem('confirmedLocation');
     if (locationData) {
       const location = JSON.parse(locationData);
-      return location?.store?.store_code || APP_CONSTANTS.DEFAULT_STORE_CODE;
+      // Try both storeCode and store_code (for backwards compatibility)
+      return location?.store?.storeCode || location?.store?.store_code;
     }
   } catch (error) {
-    console.warn('Failed to get store_code:', error);
+    console.error('Failed to get store_code from localStorage:', error);
   }
-  return APP_CONSTANTS.DEFAULT_STORE_CODE;
+  // Return null to indicate no store code is available
+  // This will cause the API call to fail gracefully with a proper error message
+  return null;
 };
 
 // Helper to get auth token
@@ -43,6 +46,15 @@ const getMobileNumber = () => {
 export const getAddresses = async () => {
   try {
     const storeCode = getStoreCode();
+    
+    // Validate that store code exists in localStorage
+    if (!storeCode) {
+      const error = new Error('Store code not found. Please select a location first.');
+      error.code = 'STORE_CODE_MISSING';
+      console.error('❌ Store code validation failed:', error);
+      throw error;
+    }
+    
     const projectCode = APP_CONSTANTS.PROJECT_CODE;
     const token = getAuthToken();
 
@@ -96,6 +108,15 @@ export const getAddresses = async () => {
 export const addAddress = async (addressData) => {
   try {
     const storeCode = getStoreCode();
+    
+    // Validate that store code exists in localStorage
+    if (!storeCode) {
+      const error = new Error('Store code not found. Please select a location first.');
+      error.code = 'STORE_CODE_MISSING';
+      console.error('❌ Store code validation failed:', error);
+      throw error;
+    }
+    
     const projectCode = APP_CONSTANTS.PROJECT_CODE;
     const token = getAuthToken();
 
@@ -240,6 +261,15 @@ const updateAddressWithId = async (addressId, addressData, storeCode, projectCod
 export const updateAddress = async (addressId, addressData) => {
   try {
     const storeCode = getStoreCode();
+    
+    // Validate that store code exists in localStorage
+    if (!storeCode) {
+      const error = new Error('Store code not found. Please select a location first.');
+      error.code = 'STORE_CODE_MISSING';
+      console.error('❌ Store code validation failed:', error);
+      throw error;
+    }
+    
     const projectCode = APP_CONSTANTS.PROJECT_CODE;
     const token = getAuthToken();
 
@@ -390,6 +420,15 @@ export const updateAddress = async (addressId, addressData) => {
 export const deleteAddress = async (addressId) => {
   try {
     const storeCode = getStoreCode();
+    
+    // Validate that store code exists in localStorage
+    if (!storeCode) {
+      const error = new Error('Store code not found. Please select a location first.');
+      error.code = 'STORE_CODE_MISSING';
+      console.error('❌ Store code validation failed:', error);
+      throw error;
+    }
+    
     const projectCode = APP_CONSTANTS.PROJECT_CODE;
     const token = getAuthToken();
 

@@ -44,17 +44,50 @@ export const FavoriteProvider = ({ children }) => {
     }
   }, [favorites, isAuthenticated]);
 
-  // Load favorites from API for authenticated users
+  // Load favorites from API for authenticated users and sync localStorage favorites
   useEffect(() => {
     const loadFavorites = async () => {
       if (isAuthenticated) {
         setLoading(true);
         try {
+          // Check for localStorage favorites to sync on login
+          const savedFavorites = localStorage.getItem('favorites');
+          const localStorageProducts = savedFavorites ? JSON.parse(savedFavorites).filter(item => typeof item === 'object' && item !== null) : [];
+          
+          // Fetch favorites from API
           const response = await getFavoritesAPI();
           if (response.success && response.data) {
             // Store only p_code values for authenticated users
-            // We'll fetch full product details when displaying on FavoritesPage
             const favoriteIds = response.data.map(item => item.p_code);
+            
+            // If there are localStorage favorites, sync them to API
+            if (localStorageProducts.length > 0) {
+              console.log(`🔄 Syncing ${localStorageProducts.length} localStorage favorites to API...`);
+              const syncPromises = localStorageProducts.map(async (product) => {
+                const p_code = product.p_code || product._id;
+                if (p_code && !favoriteIds.includes(p_code)) {
+                  try {
+                    await addToFavoritesAPI(p_code);
+                    console.log(`✅ Synced favorite: ${p_code}`);
+                  } catch (error) {
+                    console.error(`❌ Failed to sync favorite ${p_code}:`, error);
+                  }
+                }
+              });
+              
+              await Promise.all(syncPromises);
+              
+              // Clear localStorage favorites after sync
+              localStorage.removeItem('favorites');
+              console.log('✅ localStorage favorites cleared after sync');
+            }
+            
+            // Store the current favorites from API
+            setFavorites(favoriteIds);
+          } else if (localStorageProducts.length > 0) {
+            // If API has no favorites but localStorage does, use localStorage
+            console.log('📦 Using localStorage favorites (no API favorites)');
+            const favoriteIds = localStorageProducts.map(item => item.p_code || item._id);
             setFavorites(favoriteIds);
           }
         } catch (error) {

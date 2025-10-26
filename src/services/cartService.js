@@ -31,12 +31,15 @@ class CartService {
       const locationData = localStorage.getItem('confirmedLocation');
       if (locationData) {
         const location = JSON.parse(locationData);
-        return location?.store?.store_code || APP_CONSTANTS.DEFAULT_STORE_CODE;
+        // Try both storeCode and store_code (for backwards compatibility)
+        return location?.store?.storeCode || location?.store?.store_code;
       }
     } catch (error) {
       console.error('Error getting store code:', error);
     }
-    return APP_CONSTANTS.DEFAULT_STORE_CODE;
+    // Return null to indicate no store code is available
+    // This will cause the API call to fail gracefully with a proper error message
+    return null;
   }
 
   // Check if user is authenticated
@@ -123,11 +126,21 @@ class CartService {
         return { success: true, message: 'Guest user - cart saved locally only' };
       }
 
+      const storeCode = this.getStoreCode();
+      
+      // Validate that store code exists in localStorage
+      if (!storeCode) {
+        const error = new Error('Store code not found. Please select a location first.');
+        error.code = 'STORE_CODE_MISSING';
+        console.error('❌ Store code validation failed:', error);
+        throw error;
+      }
+
       const apiItems = this.transformCartToApiFormat(cartItems);
       const totals = this.calculateCartTotals(cartItems);
 
       const requestBody = {
-        store_code: this.getStoreCode(),
+        store_code: storeCode,
         project_code: this.projectCode,
         items: apiItems
       };
@@ -166,8 +179,18 @@ class CartService {
         return { success: true, message: 'Guest user - validation skipped' };
       }
 
+      const storeCode = this.getStoreCode();
+      
+      // Validate that store code exists in localStorage
+      if (!storeCode) {
+        const error = new Error('Store code not found. Please select a location first.');
+        error.code = 'STORE_CODE_MISSING';
+        console.error('❌ Store code validation failed:', error);
+        throw error;
+      }
+
       const requestBody = {
-        store_code: this.getStoreCode(),
+        store_code: storeCode,
         project_code: this.projectCode
       };
 
@@ -202,8 +225,18 @@ class CartService {
         return { success: true, data: { items: [], subtotal: 0, total_items: 0, total_quantity: 0 } };
       }
 
+      const storeCode = this.getStoreCode();
+      
+      // Validate that store code exists in localStorage
+      if (!storeCode) {
+        const error = new Error('Store code not found. Please select a location first.');
+        error.code = 'STORE_CODE_MISSING';
+        console.error('❌ Store code validation failed:', error);
+        throw error;
+      }
+
       const requestBody = {
-        store_code: this.getStoreCode(),
+        store_code: storeCode,
         project_code: this.projectCode
       };
 
@@ -241,8 +274,18 @@ class CartService {
         return { success: true, message: 'Guest user - cart cleared locally only' };
       }
 
+      const storeCode = this.getStoreCode();
+      
+      // Validate that store code exists in localStorage
+      if (!storeCode) {
+        const error = new Error('Store code not found. Please select a location first.');
+        error.code = 'STORE_CODE_MISSING';
+        console.error('❌ Store code validation failed:', error);
+        throw error;
+      }
+
       const requestBody = {
-        store_code: this.getStoreCode(),
+        store_code: storeCode,
         project_code: this.projectCode
       };
 
@@ -280,12 +323,22 @@ class CartService {
         return { success: true, message: 'Guest user - item added locally only' };
       }
 
+      const storeCode = this.getStoreCode();
+      
+      // Validate that store code exists in localStorage
+      if (!storeCode) {
+        const error = new Error('Store code not found. Please select a location first.');
+        error.code = 'STORE_CODE_MISSING';
+        console.error('❌ Store code validation failed:', error);
+        throw error;
+      }
+
       // Transform cart item to API format
       const apiItem = this.transformToApiFormat(item);
       
       // Create request body matching the new API structure
       const requestBody = {
-        store_code: this.getStoreCode(),
+        store_code: storeCode,
         project_code: this.projectCode,
         p_code: apiItem.p_code,
         product_name: apiItem.product_name,

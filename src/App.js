@@ -41,7 +41,6 @@ import SuccessToast from './components/SuccessToast';
 import LoginSuccessModal from './components/LoginSuccessModal';
 import DevTools from './components/DevTools';
 //import DebugInfo from './components/';
-import CartDebugTools from './components/CartDebugTools';
 import LocationGuard from './components/LocationGuard';
 import ToastContainer from './components/Toast';
 import { useToast } from './context/ToastContext';
@@ -162,7 +161,6 @@ function AppContent() {
         <PWAStatus />
         <DevTools />
         {/* <DebugInfo /> */}
-        <CartDebugTools />
 
         {/* Success Toast - for non-login success messages */}
         <SuccessToast

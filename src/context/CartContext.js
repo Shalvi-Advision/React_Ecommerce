@@ -343,11 +343,15 @@ export const CartProvider = ({ children }) => {
       p_code: product.p_code || product.id,
       title: product.title || product.product_name,
       product_name: product.product_name || product.title,
-      price: product.price || product.unit_price,
-      unit_price: product.unit_price || product.price,
+      price: product.price || product.unit_price || product.our_price,
+      unit_price: product.unit_price || product.price || product.our_price,
+      our_price: product.our_price || product.price || product.unit_price,
+      product_mrp: product.product_mrp || product.mrp,
+      mrp: product.mrp || product.product_mrp,
       quantity: quantity,
-      image: product.image || product.pcode_img,
-      pcode_img: product.pcode_img || product.image,
+      image: product.image || product.pcode_img || product.image_url,
+      pcode_img: product.pcode_img || product.image || product.image_url,
+      image_url: product.image_url || product.pcode_img || product.image,
       brand: product.brand || product.brand_name,
       brand_name: product.brand_name || product.brand,
       packageSize: product.packageSize || `${product.package_size || 1} ${product.package_unit || 'GM'}`,
@@ -439,7 +443,11 @@ export const CartProvider = ({ children }) => {
 
   // Computed values
   const totalItems = state.items.reduce((total, item) => total + item.quantity, 0);
-  const totalPrice = state.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const totalPrice = state.items.reduce((total, item) => {
+    const price = Number(item.price) || 0;
+    const quantity = Number(item.quantity) || 0;
+    return total + (price * quantity);
+  }, 0);
 
   const value = {
     // State

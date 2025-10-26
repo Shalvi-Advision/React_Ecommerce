@@ -27,47 +27,6 @@ const INDIAN_STATES = [
   'Lakshadweep'
 ];
 
-// Fallback pickup points for when API is unavailable
-const FALLBACK_PICKUP_POINTS = [
-  {
-    id: 'fallback_1',
-    name: 'DMart Store - Panvel',
-    address: 'Sector 3, Road No 2, New Panvel, Navi Mumbai - 410206',
-    distance: '0.5 km',
-    timings: '9:00 AM - 10:00 PM',
-    isAvailable: true,
-    storeCode: 'PAN001',
-    contactNumber: '+91-9876543210',
-    homeDelivery: false,
-    selfPickup: true
-  },
-  {
-    id: 'fallback_2',
-    name: 'DMart Store - Kharghar',
-    address: 'Plot No 1, Sector 12, Kharghar, Navi Mumbai - 410210',
-    distance: '2.1 km',
-    timings: '9:00 AM - 10:00 PM',
-    isAvailable: true,
-    storeCode: 'KHA001',
-    contactNumber: '+91-9876543211',
-    homeDelivery: false,
-    selfPickup: true
-  },
-  {
-    id: 'fallback_3',
-    name: 'DMart Store - Vashi',
-    address: 'Sector 17, Vashi, Navi Mumbai - 400703',
-    distance: '5.2 km',
-    timings: '9:00 AM - 10:00 PM',
-    isAvailable: false,
-    storeCode: 'VAS001',
-    contactNumber: '+91-9876543212',
-    homeDelivery: false,
-    selfPickup: true
-  }
-];
-
-
 // This function is replaced by generateDefaultTimeSlots from the API
 
 const CheckoutPage = () => {
@@ -107,7 +66,22 @@ const CheckoutPage = () => {
     setStoresError(null);
 
     try {
+      // Get current store code from localStorage
+      const locationData = localStorage.getItem('confirmedLocation');
+      let currentStoreCode = null;
+      
+      if (locationData) {
+        try {
+          const location = JSON.parse(locationData);
+          currentStoreCode = location?.store?.storeCode || location?.store?.store_code;
+        } catch (error) {
+          console.error('Error parsing location data:', error);
+        }
+      }
+      
       console.log('🏪 Fetching pickup stores for pincode:', pincode);
+      console.log('🏪 Current store code from localStorage:', currentStoreCode);
+      
       const response = await getPincodeStores(pincode);
       console.log('🏪 API Response:', response);
       
@@ -118,61 +92,58 @@ const CheckoutPage = () => {
         const formattedStores = response.data.map(store => formatStoreData(store));
         
         console.log('🏪 Formatted stores:', formattedStores);
-        console.log('🏪 First store details:', formattedStores[0]);
         
-        // Log filtering criteria for each store
-        formattedStores.forEach((store, index) => {
-          console.log(`🏪 Store ${index}:`, {
-            name: store.storeName,
-            selfPickup: store.selfPickup,
-            isEnabled: store.isEnabled,
-            passesFilter: store.isEnabled === true
+        // Filter to only show the currently selected store (from localStorage)
+        const filteredStores = formattedStores.filter(store => {
+          const matchesCurrentStore = currentStoreCode && store.storeCode === currentStoreCode;
+          const isEnabled = store.isEnabled === true;
+          
+          console.log(`🏪 Store ${store.storeName}:`, {
+            storeCode: store.storeCode,
+            currentStoreCode: currentStoreCode,
+            matchesCurrentStore: matchesCurrentStore,
+            isEnabled: isEnabled,
+            willShow: matchesCurrentStore && isEnabled
           });
+          
+          return matchesCurrentStore && isEnabled;
         });
         
-        // Filter stores that are enabled
-        // Note: Currently showing all enabled stores regardless of self_pickup status
-        // as the API stores might not have self_pickup enabled
-        const pickupEnabledStores = formattedStores
-          .filter(store => {
-            const passes = store.isEnabled === true;
-            if (!passes) {
-              console.log(`❌ Store filtered out: ${store.storeName}`, {
-                isEnabled: store.isEnabled,
-                typeOfIsEnabled: typeof store.isEnabled
-              });
-            }
-            return passes;
-          })
-          .map(store => ({
-            id: store._id,
-            name: store.storeName,
-            address: store.storeAddress,
-            distance: '0.5 km', // This would be calculated based on user location in a real app
-            timings: `${store.storeOpenTime} - ${store.storeDeliveryTime}`,
-            isAvailable: store.isEnabled,
-            storeCode: store.storeCode,
-            contactNumber: store.contactNumber,
-            homeDelivery: store.homeDelivery,
-            selfPickup: store.selfPickup,
-            minOrderAmount: store.minOrderAmount,
-            storeMessage: store.storeMessage
-          }));
-          
-        console.log('✅ Filtered pickup-enabled stores:', pickupEnabledStores);
-        console.log('✅ Number of stores after filtering:', pickupEnabledStores.length);
+        console.log('✅ Filtered stores (matching current store code):', filteredStores);
+        console.log('✅ Number of stores after filtering:', filteredStores.length);
+        
+        // Map filtered stores to pickup point format
+        const pickupEnabledStores = filteredStores.map(store => ({
+          id: store._id,
+          name: store.storeName,
+          address: store.storeAddress,
+          distance: '0.5 km', // This would be calculated based on user location in a real app
+          timings: `${store.storeOpenTime} - ${store.storeDeliveryTime}`,
+          isAvailable: store.isEnabled,
+          storeCode: store.storeCode,
+          contactNumber: store.contactNumber,
+          homeDelivery: store.homeDelivery,
+          selfPickup: store.selfPickup,
+          minOrderAmount: store.minOrderAmount,
+          storeMessage: store.storeMessage
+        }));
+        
+        console.log('✅ Final pickup stores to display:', pickupEnabledStores);
         
         setPickupStores(pickupEnabledStores);
+        
+        if (pickupEnabledStores.length === 0 && currentStoreCode) {
+          setStoresError('The selected store does not support pickup. Please choose home delivery.');
+        }
       } else {
-        // Use fallback stores if no stores found
-        setPickupStores(FALLBACK_PICKUP_POINTS);
-        setStoresError('Using demo stores. Limited availability.');
+        // No stores found
+        setPickupStores([]);
+        setStoresError('No pickup stores available for this location.');
       }
     } catch (error) {
       console.error('Error fetching pickup stores:', error);
-      // Use fallback stores on error
-      setPickupStores(FALLBACK_PICKUP_POINTS);
-      setStoresError('Unable to load stores. Using demo data.');
+      setPickupStores([]);
+      setStoresError('Unable to load stores. Please try again.');
     } finally {
       setIsLoadingStores(false);
     }
@@ -226,8 +197,7 @@ const CheckoutPage = () => {
       if (currentPincode) {
         fetchPickupStores(currentPincode);
       } else {
-        // If no pincode is selected, use fallback stores
-        setPickupStores(FALLBACK_PICKUP_POINTS);
+        setPickupStores([]);
         setStoresError('Please select a location to see available stores.');
       }
     }
@@ -544,9 +514,35 @@ const CheckoutPage = () => {
   };
 
 
-  const shippingCost = totalPrice > 50 ? 0 : 9.99;
-  const taxAmount = totalPrice * 0.08;
-  const finalTotal = totalPrice + shippingCost + taxAmount;
+  // Calculate MRP from items (to show savings)
+  // If selling price = ₹100, MRP = ₹120 (20% savings = ₹20)
+  const mrpTotal = items.reduce((total, item) => {
+    const itemPrice = Number(item.price) || 0;
+    const itemQuantity = Number(item.quantity) || 1;
+    // MRP is 25% more than selling price to show 20% savings
+    // price = ₹100, MRP = ₹120, savings = 20% of ₹100 = ₹20
+    const itemMrp = itemPrice * 1.20;
+    return total + (itemMrp * itemQuantity);
+  }, 0);
+
+  // Calculate total savings (same as cart page - 20% discount)
+  const calculateSavings = (price) => {
+    const validPrice = Number(price) || 0;
+    return Math.round(validPrice * 0.2);
+  };
+
+  const totalSavings = items.reduce((total, item) => {
+    const validPrice = Number(item.price) || 0;
+    const itemQuantity = Number(item.quantity) || 1;
+    return total + (calculateSavings(validPrice) * itemQuantity);
+  }, 0);
+
+  const shippingCost = 0; // Free delivery
+  // Calculate tax from total price
+  // Assuming 8% tax, extract the tax amount from the final total
+  const taxPercent = 0.08;
+  const taxAmount = (totalPrice / (1 + taxPercent)) * taxPercent;
+  const finalTotal = totalPrice; // Total amount to pay (with tax included)
 
   if (!isAuthenticated || items.length === 0) {
     return null; // Will redirect in useEffect
@@ -597,9 +593,9 @@ const CheckoutPage = () => {
           </div>
         </div>
 
-        <div className={`grid grid-cols-1 ${isMobile ? 'gap-6' : 'lg:grid-cols-3 gap-8'}`}>
+        <div className={`grid grid-cols-1 ${isMobile ? 'gap-6' : 'lg:grid-cols-5 gap-8'}`}>
           {/* Main Content */}
-          <div className={`${isMobile ? 'order-2' : 'lg:col-span-2'}`}>
+          <div className={`${isMobile ? 'order-2' : 'lg:col-span-3'}`}>
             <Card>
               {/* Step 1: Checkout - Delivery Mode & Time Slot */}
               {currentStep === 1 && (
@@ -622,9 +618,6 @@ const CheckoutPage = () => {
                         1
                       </div>
                       <h3 className="text-lg font-semibold text-gray-900">Select a delivery mode</h3>
-                      <svg className="w-4 h-4 ml-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -694,12 +687,6 @@ const CheckoutPage = () => {
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          {storesError && (
-                            <div className="bg-amber-100 text-amber-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                              <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
-                              <span>Demo Mode</span>
-                            </div>
-                          )}
                           <button
                             onClick={() => {
                               const currentPincode = getCurrentPincode();
@@ -1262,49 +1249,56 @@ const CheckoutPage = () => {
           </div>
 
           {/* Order Summary */}
-          <div className={`${isMobile ? 'order-1' : 'lg:col-span-1'}`}>
+          <div className={`${isMobile ? 'order-1' : 'lg:col-span-2'}`}>
             <Card>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Bill Summary</h3>
               <p className="text-sm text-gray-600 mb-4">{totalItems} products</p>
 
               <div className="space-y-3 mb-6">
-                {items.map(item => (
-                  <div key={item.id} className="flex justify-between text-sm">
-                    <span className="text-gray-600">{item.title} (x{item.quantity})</span>
-                    <span className="text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</span>
-                  </div>
-                ))}
+                {items.map(item => {
+                  const itemPrice = Number(item.price) || 0;
+                  const itemQuantity = Number(item.quantity) || 1;
+                  return (
+                    <div key={item.id} className="flex justify-between text-sm">
+                      <span className="text-gray-600">{item.title} (x{item.quantity})</span>
+                      <span className="text-gray-900">₹{(itemPrice * itemQuantity).toFixed(2)}</span>
+                    </div>
+                  );
+                })}
               </div>
 
-              <div className="border-t pt-4 space-y-2">
+              <div className="border-t pt-4 space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">MRP</span>
-                  <span className="text-gray-900">₹ {totalPrice.toFixed(2)}</span>
+                  <span className="text-gray-700">MRP</span>
+                  <span className="text-gray-900">₹{mrpTotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Delivery charge</span>
-                  <div className="flex items-center">
-                    <span className="text-orange-600 text-xs mr-2">Special Offer Applied</span>
-                    <div className="flex items-center">
-                      <span className="text-gray-500 line-through mr-2">₹49</span>
-                      <span className="text-orange-600 font-semibold">₹0</span>
+                  <span className="text-gray-700">Delivery charge</span>
+                  <div className="flex items-center gap-2">
+                    <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">Special Offer Applied</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500 line-through">₹49</span>
+                      <span className="text-gray-900">₹0</span>
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-green-600 flex items-center">
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                <div className="bg-green-50 rounded-lg p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                     </svg>
-                    Total Savings
-                  </span>
-                  <span className="text-green-600 font-semibold">₹ 1919</span>
+                    <span className="text-green-600 font-semibold">Total Savings</span>
+                  </div>
+                  <span className="text-green-600 font-semibold">₹{totalSavings}</span>
                 </div>
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <div className="flex justify-between text-lg font-semibold">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <div className="flex justify-between text-lg font-bold text-gray-900">
                     <span>Total Amount to Pay</span>
                     <span>₹{finalTotal.toFixed(2)}</span>
                   </div>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Tax of ₹{taxAmount.toFixed(2)} incl.
+                  </p>
                 </div>
               </div>
 
