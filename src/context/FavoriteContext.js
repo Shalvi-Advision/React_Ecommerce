@@ -184,18 +184,40 @@ export const FavoriteProvider = ({ children }) => {
             localStorage.setItem('favorites', JSON.stringify(updated));
             return updated;
           });
-          return;
+          return { success: true };
         }
         
-        const response = await removeFromFavoritesAPI(p_code);
-        if (response.success) {
-          // Remove from local state (handle both object and string formats)
-          setFavorites((prev) => prev.filter(item => {
-            if (typeof item === 'object') {
-              return item.p_code !== p_code;
-            }
-            return item !== p_code;
-          }));
+        try {
+          const response = await removeFromFavoritesAPI(p_code);
+          if (response.success) {
+            console.log('✅ Removed from favorites API:', p_code);
+            // Remove from local state (handle both object and string formats)
+            setFavorites((prev) => prev.filter(item => {
+              if (typeof item === 'object') {
+                return item.p_code !== p_code;
+              }
+              return item !== p_code;
+            }));
+            return response;
+          }
+        } catch (apiError) {
+          // Check if error is "Product not found in favorites"
+          const errorMessage = apiError.response?.data?.error || apiError.message;
+          
+          if (errorMessage && (errorMessage.includes('not found') || errorMessage.includes('Not found'))) {
+            // Product doesn't exist in backend, but remove from UI anyway
+            console.warn('⚠️ Product not in backend favorites, removing from local state');
+            setFavorites((prev) => prev.filter(item => {
+              if (typeof item === 'object') {
+                return item.p_code !== p_code;
+              }
+              return item !== p_code;
+            }));
+            return { success: true, message: 'Removed from favorites (synced)' };
+          } else {
+            // Other errors - throw to outer catch
+            throw apiError;
+          }
         }
       } else {
         // Use localStorage for guest users
@@ -209,10 +231,12 @@ export const FavoriteProvider = ({ children }) => {
           localStorage.setItem('favorites', JSON.stringify(updated));
           return updated;
         });
+        return { success: true };
       }
     } catch (error) {
-      console.error('Error removing from favorites:', error);
-      // Fall back to localStorage on API error
+      console.error('❌ Error removing from favorites:', error);
+      // Fall back to localStorage on API error - still remove from UI
+      console.warn('⚠️ API error, falling back to localStorage removal');
       setFavorites((prev) => {
         const updated = prev.filter(item => {
           if (typeof item === 'object') {
@@ -223,6 +247,8 @@ export const FavoriteProvider = ({ children }) => {
         localStorage.setItem('favorites', JSON.stringify(updated));
         return updated;
       });
+      // Return success even on error so UI updates
+      return { success: true, message: 'Removed from favorites (local)' };
     }
   };
 

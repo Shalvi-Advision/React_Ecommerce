@@ -13,7 +13,7 @@ const FavoritesPage = () => {
   const { isFavorite, toggleFavorite } = useFavorite();
   const { isAuthenticated, user } = useAuth();
   const { addItem } = useCart();
-  const { showError } = useToast();
+  const { showError, showSuccess } = useToast();
   const navigate = useNavigate();
   const [favoriteProducts, setFavoriteProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -226,32 +226,10 @@ const FavoritesPage = () => {
               <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden p-4">
                 {/* Favorite Button */}
                 <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleFavorite({
-                      ...product,
-                      p_code: product.p_code || product._id,
-                      _id: product.p_code || product._id,
-                      product_name: product.product_name,
-                      our_price: product.our_price,
-                      image_url: product.image_url,
-                      brand_name: product.brand_name,
-                      package_size: product.package_size,
-                      package_unit: product.package_unit,
-                      product_mrp: product.product_mrp,
-                      discount_percentage: product.discount_percentage,
-                      store_quantity: product.store_quantity || 1,
-                      max_quantity_allowed: product.max_quantity_allowed || 10
-                    });
-                  }}
-                  className="absolute top-2 right-2 z-20 p-1.5 bg-white/95 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+                  disabled
+                  className="absolute top-2 right-2 z-20 p-1.5 bg-white/95 backdrop-blur-sm rounded-full shadow-lg opacity-70 cursor-not-allowed"
                 >
-                  {isFavorite(product.p_code || product._id) ? (
-                    <HeartSolid className="w-4 h-4 text-red-500" />
-                  ) : (
-                    <HeartIcon className="w-4 h-4 text-gray-400 group-hover:text-red-500 transition-colors duration-200" />
-                  )}
+                  <HeartSolid className="w-4 h-4 text-red-500" />
                 </button>
                 
                 <img
