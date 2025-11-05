@@ -82,3 +82,4 @@ window.debugFavorites = async function() {
 console.log('✅ Debug function loaded!');
 console.log('Run: debugFavorites()');
 
+
