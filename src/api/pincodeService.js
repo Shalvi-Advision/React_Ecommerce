@@ -1,5 +1,5 @@
 // API Base URL - Updated to use the new API structure
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://ecommerceapi-web.onrender.com/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://ecomretail.shalviadvision.com/api';
 
 // Cache configuration for enabled pincodes
 const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
