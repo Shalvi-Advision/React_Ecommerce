@@ -13,14 +13,14 @@ const AboutUsPage = () => {
   ];
 
   return (
-    <div className="bg-white min-h-screen">
-      <div className="w-full">
+    <div className="bg-gray-100 min-h-screen py-6">
+      <div className="w-full flex flex-col items-center">
         {images.map((image, index) => (
           <img
             key={index}
             src={image}
             alt={`Page ${index + 1}`}
-            className="w-full h-auto block"
+            className="w-full max-w-[250mm] aspect-[210/297] object-contain block"
             loading={index < 2 ? 'eager' : 'lazy'}
           />
         ))}

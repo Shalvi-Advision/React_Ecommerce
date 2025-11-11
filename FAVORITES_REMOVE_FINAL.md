@@ -309,3 +309,4 @@ fetch('{{baseUrl}}/api/favorites/get-favorites', {
 **The feature is ready to use!** 🚀
 
 
+
