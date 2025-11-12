@@ -1,83 +1,81 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import BestsellerProductCard from './BestsellerProductCard';
-
-// Dummy data for bestseller products
-const dummyBestsellerProducts = [
-  {
-    id: 'bs1',
-    p_code: 'BS001',
-    product_name: 'Ind Chska Kas Methi Mas 25gm',
-    image_url: '/images/logo.jpg',
-    product_mrp: 30,
-    our_price: 24,
-    discount_percentage: 20,
-    package_size: '25',
-    package_unit: 'GM',
-    brand_name: 'Indian-chaska'
-  },
-  {
-    id: 'bs2',
-    p_code: 'BS002',
-    product_name: 'Ind Chska Kanda Las Mas 500gm',
-    image_url: '/images/logo.jpg',
-    product_mrp: 175,
-    our_price: 150,
-    discount_percentage: 14,
-    package_size: '500',
-    package_unit: 'GM',
-    brand_name: 'Indian-chaska'
-  },
-  {
-    id: 'bs3',
-    p_code: 'BS003',
-    product_name: 'Ind Chska Chaat Masala 100gm',
-    image_url: '/images/logo.jpg',
-    product_mrp: 45,
-    our_price: 36,
-    discount_percentage: 20,
-    package_size: '100',
-    package_unit: 'GM',
-    brand_name: 'Indian-chaska'
-  },
-  {
-    id: 'bs4',
-    p_code: 'BS004',
-    product_name: 'Ind Chska Biryani Masala 200gm',
-    image_url: '/images/logo.jpg',
-    product_mrp: 80,
-    our_price: 68,
-    discount_percentage: 15,
-    package_size: '200',
-    package_unit: 'GM',
-    brand_name: 'Indian-chaska'
-  },
-  {
-    id: 'bs5',
-    p_code: 'BS005',
-    product_name: 'Ind Chska Kitchen King Masala 100gm',
-    image_url: '/images/logo.jpg',
-    product_mrp: 55,
-    our_price: 44,
-    discount_percentage: 20,
-    package_size: '100',
-    package_unit: 'GM',
-    brand_name: 'Indian-chaska'
-  },
-  {
-    id: 'bs6',
-    p_code: 'BS006',
-    product_name: 'Ind Chska Sambhar Masala 200gm',
-    image_url: '/images/logo.jpg',
-    product_mrp: 70,
-    our_price: 59,
-    discount_percentage: 16,
-    package_size: '200',
-    package_unit: 'GM',
-    brand_name: 'Indian-chaska'
-  }
-];
+import { getBestSellers } from '../api/merchandisingApi';
 
 const BestsellerProducts = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [sectionData, setSectionData] = useState(null);
+  const [bannerImage, setBannerImage] = useState('/images/seasonal_banner.jpg');
+
+  // Helper function to get store code
+  const getStoreCode = () => {
+    const locationData = localStorage.getItem('confirmedLocation');
+    if (locationData) {
+      try {
+        const location = JSON.parse(locationData);
+        return location?.store?.store_code || 'AVB';
+      } catch (error) {
+        console.warn('Failed to parse location data:', error);
+      }
+    }
+    return 'AVB';
+  };
+
+  useEffect(() => {
+    const fetchBestSellers = async () => {
+      try {
+        setLoading(true);
+        const storeCode = getStoreCode();
+        const response = await getBestSellers({ store_code: storeCode });
+
+        if (response.success && response.data && response.data.length > 0) {
+          // Get the first section
+          const section = response.data[0];
+          setSectionData(section);
+
+          // Set banner image if available
+          if (section.banner_urls?.desktop) {
+            setBannerImage(section.banner_urls.desktop);
+          } else if (section.banner_urls?.mobile) {
+            setBannerImage(section.banner_urls.mobile);
+          }
+
+          // Extract products from the section
+          const productsList = section.products?.map(item => ({
+            id: item.p_code || item.product_details?.p_code,
+            p_code: item.product_details?.p_code || item.p_code,
+            product_name: item.product_details?.product_name || '',
+            image_url: item.product_details?.pcode_img || item.product_details?.image_url || '/images/logo.jpg',
+            pcode_img: item.product_details?.pcode_img || item.product_details?.image_url || '/images/logo.jpg',
+            product_mrp: item.product_details?.product_mrp || 0,
+            our_price: item.product_details?.our_price || 0,
+            discount_percentage: item.product_details?.discount_percentage || 0,
+            package_size: item.product_details?.package_size || '',
+            package_unit: item.product_details?.package_unit || '',
+            brand_name: item.product_details?.brand_name || '',
+            store_quantity: item.product_details?.store_quantity || 0
+          })) || [];
+
+          setProducts(productsList);
+        } else {
+          setProducts([]);
+        }
+      } catch (error) {
+        console.error('Error fetching best sellers:', error);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBestSellers();
+  }, []);
+
+  // Don't render if no products
+  if (!loading && products.length === 0) {
+    return null;
+  }
   return (
     <div className="relative overflow-hidden py-3 sm:py-4 lg:py-5">
       {/* Vibrant Pink Background with Animated Gradients */}
@@ -91,7 +89,7 @@ const BestsellerProducts = () => {
         <div className="relative w-full">
           <div className="relative w-full h-[140px] sm:h-[160px] lg:h-[180px] xl:h-[200px] overflow-hidden" style={{ borderRadius: '0.75rem 0.75rem 0 0' }}>
             <img
-              src={`${process.env.PUBLIC_URL}/images/seasonal_banner.jpg`}
+              src={bannerImage.startsWith('http') ? bannerImage : `${process.env.PUBLIC_URL}${bannerImage}`}
               alt="Bestseller Products Banner"
               className="w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
               style={{
@@ -127,29 +125,38 @@ const BestsellerProducts = () => {
         >
           {/* Horizontal Scrollable Products with Enhanced Spacing */}
           <div className="p-4 sm:p-6 lg:p-8">
-            <div className="relative">
-              <div className="overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                <div className="flex gap-4 sm:gap-6 lg:gap-8" style={{ width: 'max-content' }}>
-                  {dummyBestsellerProducts.map((product, index) => (
-                    <div 
-                      key={product.id || product.p_code}
-                      className="transform transition-all duration-300 hover:scale-105"
-                      style={{ 
-                        animationDelay: `${index * 100}ms`,
-                        animation: 'fadeInUp 0.6s ease-out forwards',
-                        opacity: 0
-                      }}
-                    >
-                      <BestsellerProductCard product={product} />
-                    </div>
-                  ))}
+            {loading ? (
+              <div className="flex justify-center items-center py-10">
+                <div className="relative">
+                  <div className="w-12 h-12 border-4 border-transparent border-t-pink-500 border-r-rose-500 rounded-full animate-spin"></div>
+                  <div className="absolute inset-0 w-12 h-12 bg-gradient-to-r from-pink-400/20 to-rose-400/20 rounded-full blur-lg animate-pulse"></div>
                 </div>
               </div>
+            ) : (
+              <div className="relative">
+                <div className="overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                  <div className="flex gap-4 sm:gap-6 lg:gap-8" style={{ width: 'max-content' }}>
+                    {products.map((product, index) => (
+                      <div 
+                        key={product.id || product.p_code}
+                        className="transform transition-all duration-300 hover:scale-105"
+                        style={{ 
+                          animationDelay: `${index * 100}ms`,
+                          animation: 'fadeInUp 0.6s ease-out forwards',
+                          opacity: 0
+                        }}
+                      >
+                        <BestsellerProductCard product={product} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
               
-              {/* Scroll Indicators - Gradient edges */}
-              <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-pink-400/40 to-transparent pointer-events-none"></div>
-              <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-pink-500/40 to-transparent pointer-events-none"></div>
-            </div>
+                {/* Scroll Indicators - Gradient edges */}
+                <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-pink-400/40 to-transparent pointer-events-none"></div>
+                <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-pink-500/40 to-transparent pointer-events-none"></div>
+              </div>
+            )}
           </div>
         </div>
       </div>

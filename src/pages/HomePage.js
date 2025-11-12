@@ -16,6 +16,7 @@ import FestiveSpecials from '../components/FestiveSpecials';
 import OfferBanner from '../components/OfferBanner';
 import SeasonalOfferBanner from '../components/SeasonalOfferBanner';
 import BestsellerProducts from '../components/BestsellerProducts';
+import AdvertisementCarousel from '../components/AdvertisementCarousel';
 import ProductCard from '../components/ProductCard';
 import { ChevronLeftIcon, ChevronRightIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
@@ -328,6 +329,9 @@ const HomePage = () => {
           </div>
         </div>
       </div>
+
+      {/* Advertisement Carousel */}
+      <AdvertisementCarousel />
 
       {/* Products Section with Modern Gradient Design */}
       <div className="relative overflow-hidden py-8 sm:py-12 lg:py-16" id="products">
