@@ -168,7 +168,7 @@ const PopularCategories = () => {
                       className="flex-shrink-0 w-32 h-32 bg-gradient-to-br from-white to-gray-50 rounded-2xl border-2 border-gray-100/50 shadow-lg hover:shadow-2xl hover:border-cyan-300 hover:scale-110 transition-all duration-300 cursor-pointer group"
                     >
                       <div className="flex flex-col items-center justify-center h-full p-4">
-                        <div className={`w-16 h-16 rounded-2xl ${category.color} flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-md relative overflow-hidden`}>
+                        <div className={`w-16 h-16 ${category.color} flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-md relative overflow-hidden`}>
                           {category.image_link ? (
                             <img 
                               src={category.image_link} 

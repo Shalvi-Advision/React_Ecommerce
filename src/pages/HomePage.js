@@ -15,6 +15,7 @@ import FestiveBanner from '../components/FestiveBanner';
 import FestiveSpecials from '../components/FestiveSpecials';
 import OfferBanner from '../components/OfferBanner';
 import SeasonalOfferBanner from '../components/SeasonalOfferBanner';
+import BestsellerProducts from '../components/BestsellerProducts';
 import ProductCard from '../components/ProductCard';
 import { ChevronLeftIcon, ChevronRightIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
@@ -286,6 +287,9 @@ const HomePage = () => {
 
       {/* Popular Categories */}
       <PopularCategories />
+
+      {/* Bestseller Products */}
+      <BestsellerProducts />
 
       {/* Festive Banner with Vibrant Gradient */}
       <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">

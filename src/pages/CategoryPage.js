@@ -5,7 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { useFavorite } from '../context/FavoriteContext';
 import GroceryProductCard from '../components/GroceryProductCard';
-import { ChevronDownIcon, Bars3Icon, XMarkIcon, HeartIcon as HeartOutline } from '@heroicons/react/24/outline';
+import { ChevronDownIcon, Bars3Icon, XMarkIcon, HeartIcon as HeartOutline, MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
 import { getProductsOptimized } from '../api/productsApi';
 import groceryApiService from '../services/groceryApi';
@@ -16,7 +16,7 @@ const CategoryPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isMobile, isTablet, isDesktop } = useResponsive();
-  const { addItem } = useCart();
+  const { addItem, updateQuantity, items: cartItems } = useCart();
   const { showError } = useToast();
   const { isFavorite, toggleFavorite } = useFavorite();
   
@@ -55,6 +55,23 @@ const CategoryPage = () => {
   const [departmentId, setDepartmentId] = useState(null);
   const [usingFallbackData, setUsingFallbackData] = useState(false);
   const [addingToCart, setAddingToCart] = useState({});
+  const [showQuantitySelector, setShowQuantitySelector] = useState({});
+  const [quantities, setQuantities] = useState({});
+
+  // Sync quantity selector state with cart items
+  useEffect(() => {
+    const newQuantities = {};
+    const newShowQuantitySelector = {};
+    
+    cartItems.forEach(item => {
+      const productId = item.p_code || item.id;
+      newQuantities[productId] = item.quantity;
+      newShowQuantitySelector[productId] = true; // Show selector if item is in cart
+    });
+    
+    setQuantities(newQuantities);
+    setShowQuantitySelector(newShowQuantitySelector);
+  }, [cartItems]);
 
   // Convert category slug back to department name
   const getDepartmentNameFromSlug = (slug) => {
@@ -545,11 +562,18 @@ const CategoryPage = () => {
     try {
       setAddingToCart(prev => ({ ...prev, [productId]: true }));
       
+      // Initialize quantity to 1 if not set
+      const currentQuantity = quantities[productId] || 1;
+      
       // Create cart item from product
-      const cartItem = createCartItemFromProduct(product, 1);
+      const cartItem = createCartItemFromProduct(product, currentQuantity);
       
       // Add to cart using context
-      await addItem(cartItem, 1);
+      await addItem(cartItem, currentQuantity);
+      
+      // Show quantity selector after adding to cart
+      setShowQuantitySelector(prev => ({ ...prev, [productId]: true }));
+      setQuantities(prev => ({ ...prev, [productId]: currentQuantity }));
       
       // Success - no toast message
     } catch (error) {
@@ -557,6 +581,24 @@ const CategoryPage = () => {
       showError('Failed to add item to cart. Please try again.');
     } finally {
       setAddingToCart(prev => ({ ...prev, [productId]: false }));
+    }
+  };
+
+  // Handle quantity change
+  const handleQuantityChange = async (product, newQuantity) => {
+    const productId = product.p_code || product._id;
+    const maxQuantity = product.max_quantity_allowed || 10;
+    
+    if (newQuantity >= 1 && newQuantity <= maxQuantity) {
+      setQuantities(prev => ({ ...prev, [productId]: newQuantity }));
+      
+      try {
+        // Update cart with exact quantity (not adding to existing)
+        updateQuantity(productId, newQuantity);
+      } catch (error) {
+        console.error('Error updating cart quantity:', error);
+        showError('Failed to update quantity');
+      }
     }
   };
 
@@ -928,33 +970,79 @@ const CategoryPage = () => {
                           </select>
                         )}
 
-                        {/* Add to Cart Button */}
-                        <button 
-                          className={`w-full py-2 px-4 rounded text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-1 ${
-                            addingToCart[product.p_code || product._id] 
-                              ? 'bg-gray-400 cursor-not-allowed' 
-                              : 'bg-green-600 hover:bg-green-700 text-white'
-                          }`}
-                          onClick={(e) => {
-                            e.stopPropagation(); // Prevent navigation when clicking the button
-                            handleAddToCart(product);
-                          }}
-                          disabled={addingToCart[product.p_code || product._id]}
-                        >
-                          {addingToCart[product.p_code || product._id] ? (
-                            <>
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                              ADDING...
-                            </>
-                          ) : (
-                            <>
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                              </svg>
-                              ADD TO CART
-                            </>
-                          )}
-                        </button>
+                        {/* Add to Cart Button or Quantity Selector */}
+                        {!showQuantitySelector[product.p_code || product._id] ? (
+                          <button 
+                            className={`w-full py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-md ${
+                              addingToCart[product.p_code || product._id] 
+                                ? 'bg-gray-400 cursor-not-allowed' 
+                                : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-lg transform hover:scale-105 active:scale-95'
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent navigation when clicking the button
+                              handleAddToCart(product);
+                            }}
+                            disabled={addingToCart[product.p_code || product._id]}
+                          >
+                            {addingToCart[product.p_code || product._id] ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <span>ADDING...</span>
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                <span>ADD</span>
+                              </>
+                            )}
+                          </button>
+                        ) : (
+                          <div className="w-full" onClick={(e) => e.stopPropagation()}>
+                            {/* Quantity Selector */}
+                            <div className="flex items-stretch bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg overflow-hidden shadow-md w-full hover:shadow-lg transition-all duration-200">
+                              {/* Minus Button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleQuantityChange(product, (quantities[product.p_code || product._id] || 1) - 1);
+                                }}
+                                disabled={(quantities[product.p_code || product._id] || 1) <= 1}
+                                className={`flex items-center justify-center px-3 py-2 transition-all duration-200 ${
+                                  (quantities[product.p_code || product._id] || 1) <= 1
+                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                    : 'bg-gradient-to-br from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-md active:scale-95'
+                                }`}
+                              >
+                                <MinusIcon className="w-4 h-4 font-bold" strokeWidth={3} />
+                              </button>
+
+                              {/* Quantity Display */}
+                              <div className="bg-white px-4 py-2 flex-1 flex items-center justify-center border-x-2 border-green-200">
+                                <span className="text-base font-bold text-green-700">
+                                  {quantities[product.p_code || product._id] || 1}
+                                </span>
+                              </div>
+
+                              {/* Plus Button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleQuantityChange(product, (quantities[product.p_code || product._id] || 1) + 1);
+                                }}
+                                disabled={(quantities[product.p_code || product._id] || 1) >= (product.max_quantity_allowed || 10)}
+                                className={`flex items-center justify-center px-3 py-2 transition-all duration-200 ${
+                                  (quantities[product.p_code || product._id] || 1) >= (product.max_quantity_allowed || 10)
+                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                    : 'bg-gradient-to-br from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-md active:scale-95'
+                                }`}
+                              >
+                                <PlusIcon className="w-4 h-4 font-bold" strokeWidth={3} />
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                     );
