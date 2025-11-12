@@ -159,41 +159,59 @@ const CategoryPage = () => {
         return;
       }
 
-      const response = await groceryApiService.getActiveSubcategories(deptId, categoryId);
-      if (response.success && response.data && response.data.length > 0) {
-        setSubcategories(response.data);
-        // Auto-select first subcategory if available
-        console.log('✅ Auto-selecting first subcategory:', response.data[0].sub_category_name);
-        setSelectedSubcategory(response.data[0]);
-      } else {
-        // Create a fallback subcategory if none exist
-        console.log('No subcategories found, creating fallback subcategory');
-        const fallbackSubcategory = {
-          id: 'fallback',
-          idsub_category_master: 'fallback',
-          sub_category_name: 'All Products',
-          category_id: categoryId,
-          main_category_name: selectedCategory?.category_name || 'Products'
-        };
-        setSubcategories([fallbackSubcategory]);
-        console.log('✅ Auto-selecting fallback subcategory:', fallbackSubcategory.sub_category_name);
-        setSelectedSubcategory(fallbackSubcategory);
-      }
-    } catch (err) {
-      console.error('Error loading subcategories:', err);
-      // Create a fallback subcategory on error
-      const fallbackSubcategory = {
-        id: 'fallback',
-        idsub_category_master: 'fallback',
+      // Create "All Products" sentinel that will always be first
+      const allProductsSentinel = {
+        id: 'all-products',
+        idsub_category_master: 'all-products',
         sub_category_name: 'All Products',
         category_id: categoryId,
         main_category_name: selectedCategory?.category_name || 'Products'
       };
-      setSubcategories([fallbackSubcategory]);
-      console.log('✅ Auto-selecting error fallback subcategory:', fallbackSubcategory.sub_category_name);
-      setSelectedSubcategory(fallbackSubcategory);
+
+      const response = await groceryApiService.getActiveSubcategories(deptId, categoryId);
+      if (response.success && response.data && response.data.length > 0) {
+        // Always prepend "All Products" sentinel to the subcategories list
+        const subcategoriesWithAll = [allProductsSentinel, ...response.data];
+        setSubcategories(subcategoriesWithAll);
+
+        // Preserve current selection if it exists and is still valid, otherwise default to "All Products"
+        if (selectedSubcategory) {
+          const stillExists = subcategoriesWithAll.find(
+            sub => sub.idsub_category_master === selectedSubcategory.idsub_category_master
+          );
+          if (stillExists) {
+            console.log('✅ Preserving selected subcategory:', selectedSubcategory.sub_category_name);
+            // Keep the current selection
+          } else {
+            console.log('✅ Previous selection no longer exists, defaulting to All Products');
+            setSelectedSubcategory(allProductsSentinel);
+          }
+        } else {
+          console.log('✅ Auto-selecting All Products sentinel');
+          setSelectedSubcategory(allProductsSentinel);
+        }
+      } else {
+        // Only "All Products" sentinel if no real subcategories exist
+        console.log('No subcategories found, using All Products sentinel only');
+        setSubcategories([allProductsSentinel]);
+        console.log('✅ Auto-selecting All Products sentinel');
+        setSelectedSubcategory(allProductsSentinel);
+      }
+    } catch (err) {
+      console.error('Error loading subcategories:', err);
+      // Create "All Products" sentinel on error
+      const allProductsSentinel = {
+        id: 'all-products',
+        idsub_category_master: 'all-products',
+        sub_category_name: 'All Products',
+        category_id: categoryId,
+        main_category_name: selectedCategory?.category_name || 'Products'
+      };
+      setSubcategories([allProductsSentinel]);
+      console.log('✅ Auto-selecting All Products sentinel after error');
+      setSelectedSubcategory(allProductsSentinel);
     }
-  }, [selectedCategory]);
+  }, [selectedCategory, selectedSubcategory]);
 
   // Load department and categories on component mount
   useEffect(() => {
@@ -234,11 +252,13 @@ const CategoryPage = () => {
         return;
       }
 
-      // Check if this is a fallback subcategory
+      // Check if this is a special subcategory (all-products sentinel or old fallback)
+      const isAllProductsSentinel = selectedSubcategory.idsub_category_master === 'all-products';
       const isFallbackSubcategory = selectedSubcategory.idsub_category_master === 'fallback';
+      const isAggregatedView = isAllProductsSentinel || isFallbackSubcategory;
 
-      if (!isFallbackSubcategory) {
-        // Try the new hierarchy-based endpoint first
+      if (!isAggregatedView) {
+        // Try the new hierarchy-based endpoint first for specific subcategories
         const response = await groceryApiService.getProducts(
           storeCode,
           departmentId,
@@ -254,9 +274,37 @@ const CategoryPage = () => {
         }
       }
 
-      // Fallback to old API (either because hierarchy API failed or it's a fallback subcategory)
+      // For "All Products" sentinel or fallback, use search endpoint with category-level filters
+      if (isAllProductsSentinel) {
+        console.log('Using category-level search for All Products');
+
+        // Call search endpoint WITHOUT sub_category_id to get all products in category
+        const categoryResponse = await groceryApiService.searchProducts(
+          'a', // Generic search term to get products
+          storeCode,
+          {
+            dept_id: departmentId,
+            category_id: selectedCategory.idcategory_master
+            // Explicitly NOT including sub_category_id to get all category products
+          }
+        );
+
+        if (categoryResponse && categoryResponse.data) {
+          // Deduplicate products based on p_code or _id
+          const uniqueProducts = categoryResponse.data.filter((product, index, self) => {
+            const identifier = product.p_code || product._id;
+            return identifier && index === self.findIndex(p => (p.p_code || p._id) === identifier);
+          });
+
+          setProducts(uniqueProducts);
+          setUsingFallbackData(true);
+          return;
+        }
+      }
+
+      // Fallback to old API (either because hierarchy API failed or it's the old fallback subcategory)
       console.log('Using fallback API for products');
-      
+
       // Use search endpoint as fallback with a generic search term
       const fallbackResponse = await groceryApiService.searchProducts(
         'a', // Generic search term to get products
@@ -269,7 +317,13 @@ const CategoryPage = () => {
       );
 
       if (fallbackResponse && fallbackResponse.data) {
-        setProducts(fallbackResponse.data);
+        // Deduplicate products
+        const uniqueProducts = fallbackResponse.data.filter((product, index, self) => {
+          const identifier = product.p_code || product._id;
+          return identifier && index === self.findIndex(p => (p.p_code || p._id) === identifier);
+        });
+
+        setProducts(uniqueProducts);
         setUsingFallbackData(true);
       } else {
         // If no products found, show mock data for demonstration
@@ -426,7 +480,16 @@ const CategoryPage = () => {
   // Handle category selection - subcategories will be loaded automatically via useEffect
   const handleCategorySelect = useCallback((category) => {
     setSelectedCategory(category);
-    setSelectedSubcategory(null); // Reset subcategory
+    // Set to "All Products" sentinel - loadSubcategories will update with actual sentinel
+    const allProductsSentinel = {
+      id: 'all-products',
+      idsub_category_master: 'all-products',
+      sub_category_name: 'All Products',
+      category_id: category.idcategory_master,
+      main_category_name: category.category_name
+    };
+    setSelectedSubcategory(allProductsSentinel); // Default to "All Products" sentinel
+    setProductsLoading(true); // Set loading state to show loader instead of "No products found"
     setProducts([]); // Clear products - wait for subcategory selection
     setCurrentPage(1); // Reset to first page when category changes
     // Subcategories will be loaded automatically via useEffect when both selectedCategory and departmentId are available
@@ -435,6 +498,7 @@ const CategoryPage = () => {
   // Handle subcategory selection - load products only when subcategory is clicked
   const handleSubcategorySelect = useCallback((subcategory) => {
     setSelectedSubcategory(subcategory);
+    setProductsLoading(true); // Set loading state to show loader instead of "No products found"
     setCurrentPage(1); // Reset to first page
     // Products will load automatically via useEffect
   }, []);
@@ -740,10 +804,9 @@ const CategoryPage = () => {
                   <option value="">Category</option>
                 </select>
 
-                
-
-
                
+
+                
 
                 
               </div>
@@ -855,11 +918,14 @@ const CategoryPage = () => {
 
                         <h3 className="text-sm text-gray-900 mb-2 line-clamp-2 min-h-[2.5rem]">{product.product_name}</h3>
 
-                        {/* Package Size Display */}
+                        {/* Package Size Selector */}
                         {product.package_size && (
-                          <div className="w-full text-xs border border-gray-300 rounded px-2 py-1.5 mb-2 text-gray-700">
-                            {product.package_size} {product.package_unit || 'GM'}
-                          </div>
+                          <select 
+                            className="w-full text-xs border border-gray-300 rounded px-2 py-1.5 mb-2 focus:outline-none focus:ring-1 focus:ring-green-500"
+                            onClick={(e) => e.stopPropagation()} // Prevent navigation when clicking the select
+                          >
+                            <option>{product.package_size}</option>
+                          </select>
                         )}
 
                         {/* Add to Cart Button */}
@@ -942,7 +1008,7 @@ const CategoryPage = () => {
                   </div>
                 )}
               </>
-            ) : (
+            ) : !productsLoading && (
               <div className="text-center py-20">
                 <div className="relative inline-block mb-6">
                   <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-full blur-2xl opacity-30 animate-pulse"></div>
