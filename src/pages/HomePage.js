@@ -260,8 +260,8 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* GST Banner with Enhanced Styling */}
-      <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
+      {/* GSTBanner in a styled container */}
+      {/* <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 via-teal-50/50 to-cyan-50/50"></div>
         <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-cyan-400/20 to-blue-400/20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
@@ -270,7 +270,7 @@ const HomePage = () => {
             <GSTBanner />
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Category Banner with Modern Design */}
       <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
@@ -283,8 +283,8 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Deals Section */}
-      <DealsSection />
+      {/* DealsSection */}
+      {/* <DealsSection /> */}
 
       {/* Popular Categories */}
       <PopularCategories />
@@ -292,8 +292,8 @@ const HomePage = () => {
       {/* Bestseller Products */}
       <BestsellerProducts />
 
-      {/* Festive Banner with Vibrant Gradient */}
-      <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
+      {/* FestiveBanner */}
+      {/* <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
         <div className="absolute inset-0 bg-gradient-to-br from-pink-50/50 via-rose-50/50 to-red-50/50"></div>
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-pink-400/20 to-rose-400/20 rounded-full blur-3xl translate-x-1/4 -translate-y-1/4"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-br from-red-400/20 to-orange-400/20 rounded-full blur-3xl -translate-x-1/4 translate-y-1/4"></div>
@@ -302,10 +302,10 @@ const HomePage = () => {
             <FestiveBanner />
           </div>
         </div>
-      </div>
+      </div> */}
 
-      {/* Festive Specials */}
-      <FestiveSpecials />
+      {/* FestiveSpecials */}
+      {/* <FestiveSpecials /> */}
 
       {/* Offer Banner with Modern Gradient */}
       <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
@@ -333,192 +333,8 @@ const HomePage = () => {
       {/* Advertisement Carousel */}
       <AdvertisementCarousel />
 
-      {/* Products Section with Modern Gradient Design */}
-      <div className="relative overflow-hidden py-8 sm:py-12 lg:py-16" id="products">
-        {/* Animated Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50"></div>
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-emerald-200/30 to-teal-200/30 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-blue-200/30 to-cyan-200/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        </div>
-        
-        <div className="relative container mx-auto px-2 sm:px-4 lg:px-6">
-          <div className="bg-white/90 backdrop-blur-lg rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl border border-white/60">
-            {/* Section Header with Modern Design */}
-            <div className="text-center mb-8 sm:mb-10 lg:mb-12">
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-full text-sm font-semibold mb-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <SparklesIcon className="w-4 h-4 animate-pulse" />
-                <span>Fresh & Premium Quality</span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
-                <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">
-                  Fresh Products
-                </span>
-              </h2>
-              <p className="text-gray-600 text-base sm:text-lg lg:text-xl max-w-3xl mx-auto px-4 leading-relaxed">
-                Discover our wide range of fresh groceries, household items, and daily essentials
-              </p>
-
-              {/* Enhanced Status Indicators with Modern Design */}
-              {(isOffline || isDataFromCache || isFallbackData) && (
-                <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 px-2">
-                  {isOffline && (
-                    <div className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-rose-500 text-white px-4 py-2.5 rounded-full text-xs sm:text-sm font-semibold shadow-lg min-h-[36px]">
-                      <div className="w-2.5 h-2.5 bg-white rounded-full animate-pulse flex-shrink-0"></div>
-                      <span className="whitespace-nowrap">Offline Mode</span>
-                    </div>
-                  )}
-                  {isDataFromCache && !isFallbackData && (
-                    <div className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2.5 rounded-full text-xs sm:text-sm font-semibold shadow-lg min-h-[36px]">
-                      <div className="w-2.5 h-2.5 bg-white rounded-full flex-shrink-0"></div>
-                      <span className="whitespace-nowrap">Cached Data</span>
-                    </div>
-                  )}
-                  {isFallbackData && (
-                    <div className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-2.5 rounded-full text-xs sm:text-sm font-semibold shadow-lg min-h-[36px]">
-                      <div className="w-2.5 h-2.5 bg-white rounded-full flex-shrink-0"></div>
-                      <span className="whitespace-nowrap">Demo Data</span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-            
-            {/* Search Results Info */}
-            {searchQuery && (
-              <div className="mb-6 text-center">
-                <p className="text-sm sm:text-base text-gray-600">
-                  {filteredProducts.length > 0 ? (
-                    <>
-                      Found <span className="font-bold text-emerald-600">{filteredProducts.length}</span> {filteredProducts.length === 1 ? 'result' : 'results'} for "{searchQuery}"
-                    </>
-                  ) : (
-                    <>
-                      No results found for "<span className="font-bold">{searchQuery}</span>"
-                    </>
-                  )}
-                </p>
-              </div>
-            )}
-
-            {/* Search Results Header */}
-            {searchQuery && searchQuery.trim().length >= 2 && (
-              <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      Search results for: "{searchQuery}"
-                    </h2>
-                    <p className="text-sm text-gray-600">
-                      Found {filteredProducts.length} products
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => navigate('/')}
-                    className="text-blue-600 hover:text-blue-800 font-medium px-3 py-1 rounded-md hover:bg-blue-100 transition-colors"
-                  >
-                    Clear search
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Products Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 justify-items-center">
-              {paginatedProducts.map(product => (
-                <ProductCard
-                  key={product._id || product.id}
-                  product={product}
-                  onAddToCart={handleAddToCart}
-                />
-              ))}
-            </div>
-
-            {paginatedProducts.length === 0 && !loading && (
-              <div className="text-center py-20">
-                <div className="relative inline-block mb-6">
-                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-full blur-2xl opacity-30 animate-pulse"></div>
-                  <div className="relative w-32 h-32 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center mx-auto shadow-xl">
-                    <span className="text-5xl">📦</span>
-                  </div>
-                </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-3">No products found</h3>
-                <p className="text-gray-500 text-base">
-                  {searchQuery ? `Try searching with different keywords` : 'Check back later for fresh products!'}
-                </p>
-              </div>
-            )}
-
-            {/* Modern Pagination Controls */}
-            {filteredPagination && filteredPagination.total_pages > 1 && (
-              <div className="mt-10 pt-8 border-t border-gray-200">
-                <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
-                  <div className="text-sm sm:text-base text-gray-600 text-center lg:text-left font-medium">
-                    Showing <span className="text-emerald-600 font-bold">{((currentPage - 1) * 20) + 1}</span> to <span className="text-emerald-600 font-bold">{Math.min(currentPage * 20, filteredPagination.total_products)}</span> of <span className="text-emerald-600 font-bold">{filteredPagination.total_products}</span> products
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row items-center gap-3">
-                    {/* Previous Button with Gradient */}
-                    <button
-                      onClick={handlePrevPage}
-                      disabled={!filteredPagination.has_prev}
-                      className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-3 min-h-[48px] rounded-xl font-semibold transition-all duration-300 touch-manipulation ${
-                        !filteredPagination.has_prev
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95'
-                      }`}
-                    >
-                      <ChevronLeftIcon className="w-5 h-5" />
-                      <span className="hidden xs:inline">Previous</span>
-                      <span className="xs:hidden">Prev</span>
-                    </button>
-
-                    {/* Page Numbers with Modern Design */}
-                    <div className="flex items-center gap-2 overflow-x-auto">
-                      {Array.from({ length: Math.min(5, filteredPagination.total_pages) }, (_, i) => {
-                        const pageNum = Math.max(1, currentPage - 2) + i;
-                        if (pageNum > filteredPagination.total_pages) return null;
-
-                        return (
-                          <button
-                            key={pageNum}
-                            onClick={() => handlePageChange(pageNum)}
-                            className={`px-4 py-3 min-h-[48px] min-w-[48px] text-sm font-bold rounded-xl transition-all duration-300 touch-manipulation flex-shrink-0 ${
-                              pageNum === currentPage
-                                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg scale-110'
-                                : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-emerald-400 hover:scale-105 active:scale-95'
-                            }`}
-                          >
-                            {pageNum}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Next Button with Gradient */}
-                    <button
-                      onClick={handleNextPage}
-                      disabled={!filteredPagination.has_next}
-                      className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-3 min-h-[48px] rounded-xl font-semibold transition-all duration-300 touch-manipulation ${
-                        !filteredPagination.has_next
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95'
-                      }`}
-                    >
-                      <span className="hidden xs:inline">Next</span>
-                      <span className="xs:hidden">Next</span>
-                      <ChevronRightIcon className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
-
-    </div>
   );
-};
+}; 
 
 export default HomePage;
