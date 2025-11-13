@@ -248,6 +248,8 @@ const getFallbackPopularCategories = () => {
           mobile: null
         },
         redirect_url: '#',
+        is_active: true,
+        sequence: 0,
         subcategories: [
           {
             sub_category_id: '349',

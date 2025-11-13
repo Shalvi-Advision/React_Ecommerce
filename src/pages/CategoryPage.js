@@ -982,14 +982,14 @@ const CategoryPage = () => {
 
                         <h3 className="text-sm text-gray-900 mb-2 line-clamp-2 min-h-[2.5rem]">{product.product_name}</h3>
 
-                        {/* Package Size Selector */}
+                        {/* Package Size Display */}
                         {product.package_size && (
-                          <select 
-                            className="w-full text-xs border border-gray-300 rounded px-2 py-1.5 mb-2 focus:outline-none focus:ring-1 focus:ring-green-500"
-                            onClick={(e) => e.stopPropagation()} // Prevent navigation when clicking the select
-                          >
-                            <option>{product.package_size}</option>
-                          </select>
+                          <div className="w-full text-xs border border-gray-300 rounded px-2 py-1.5 mb-2 bg-white">
+                            {product.package_unit && product.package_size.includes(product.package_unit)
+                              ? product.package_size
+                              : `${product.package_size}${product.package_unit ? ` ${product.package_unit}` : ''}`
+                            }
+                          </div>
                         )}
 
                         {/* Add to Cart Button or Quantity Selector */}

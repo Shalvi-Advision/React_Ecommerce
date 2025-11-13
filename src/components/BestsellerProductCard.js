@@ -1,15 +1,20 @@
-import React, { useState } from 'react';
-import { HeartIcon as HeartOutline } from '@heroicons/react/24/outline';
+import React, { useState, useEffect } from 'react';
+import { HeartIcon as HeartOutline, MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
 import { ShoppingCartIcon } from '@heroicons/react/24/outline';
 import { useFavorite } from '../context/FavoriteContext';
 import { useCart } from '../context/CartContext';
+import { useToast } from '../context/ToastContext';
 import { createCartItemFromProduct } from '../utils/cartUtils';
 
 const BestsellerProductCard = ({ product }) => {
   const [isFavorite, setIsFavorite] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [showQuantitySelector, setShowQuantitySelector] = useState(false);
+  const [quantity, setQuantity] = useState(1);
   const { toggleFavorite, isFavorite: checkFavorite } = useFavorite();
-  const { addItem } = useCart();
+  const { addItem, updateQuantity, items: cartItems } = useCart();
+  const { showError } = useToast();
 
   // Extract product data with safe defaults
   const {
@@ -32,6 +37,19 @@ const BestsellerProductCard = ({ product }) => {
   const displayMrp = product_mrp || 0;
   const displayPrice = our_price || 0;
   const discount = discount_percentage || 0;
+  const maxQuantity = product?.max_quantity_allowed || 10;
+
+  // Sync quantity selector state with cart items
+  useEffect(() => {
+    const cartItem = cartItems.find(item => (item.p_code || item.id) === productId);
+    if (cartItem) {
+      setShowQuantitySelector(true);
+      setQuantity(cartItem.quantity);
+    } else {
+      setShowQuantitySelector(false);
+      setQuantity(1);
+    }
+  }, [cartItems, productId]);
   // Format weight with decimal (e.g., "25.0 GM", "500.0 GM")
   const weight = package_size && package_unit 
     ? `${parseFloat(package_size).toFixed(1)} ${package_unit.toUpperCase()}` 
@@ -67,11 +85,41 @@ const BestsellerProductCard = ({ product }) => {
   const handleAddToCart = async (e) => {
     e.preventDefault();
     e.stopPropagation();
+    
     try {
+      setAddingToCart(true);
+      
+      // Create cart item from product
       const cartItem = createCartItemFromProduct(product, 1);
+      
+      // Add to cart using context
       await addItem(cartItem, 1);
+      
+      // Show quantity selector after adding to cart
+      setShowQuantitySelector(true);
+      setQuantity(1);
+      
+      // Success - no toast message (same as CategoryPage)
     } catch (error) {
       console.error('Error adding to cart:', error);
+      showError('Failed to add item to cart. Please try again.');
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
+  // Handle quantity change
+  const handleQuantityChange = async (newQuantity) => {
+    if (newQuantity >= 1 && newQuantity <= maxQuantity) {
+      setQuantity(newQuantity);
+      
+      try {
+        // Update cart with exact quantity (not adding to existing)
+        updateQuantity(productId, newQuantity);
+      } catch (error) {
+        console.error('Error updating cart quantity:', error);
+        showError('Failed to update quantity');
+      }
     }
   };
 
@@ -136,14 +184,74 @@ const BestsellerProductCard = ({ product }) => {
           </div>
         </div>
 
-        {/* Add Button */}
-        <button
-          onClick={handleAddToCart}
-          className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-3 rounded text-xs font-medium transition-colors duration-200 flex items-center justify-center gap-1.5 mt-auto"
-        >
-          <ShoppingCartIcon className="w-4 h-4" />
-          <span>ADD</span>
-        </button>
+        {/* Add to Cart Button or Quantity Selector */}
+        {!showQuantitySelector ? (
+          <button
+            onClick={handleAddToCart}
+            disabled={addingToCart}
+            className={`w-full py-2 px-3 rounded text-xs font-medium transition-colors duration-200 flex items-center justify-center gap-1.5 mt-auto ${
+              addingToCart 
+                ? 'bg-gray-400 cursor-not-allowed text-white' 
+                : 'bg-purple-600 hover:bg-purple-700 text-white'
+            }`}
+          >
+            {addingToCart ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>ADDING...</span>
+              </>
+            ) : (
+              <>
+                <ShoppingCartIcon className="w-4 h-4" />
+                <span>ADD</span>
+              </>
+            )}
+          </button>
+        ) : (
+          <div className="w-full mt-auto" onClick={(e) => e.stopPropagation()}>
+            {/* Quantity Selector */}
+            <div className="flex items-stretch bg-gradient-to-r from-purple-50 to-purple-100 border-2 border-purple-200 rounded-lg overflow-hidden shadow-md w-full hover:shadow-lg transition-all duration-200">
+              {/* Minus Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleQuantityChange(quantity - 1);
+                }}
+                disabled={quantity <= 1}
+                className={`flex items-center justify-center px-3 py-2 transition-all duration-200 ${
+                  quantity <= 1
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white hover:shadow-md active:scale-95'
+                }`}
+              >
+                <MinusIcon className="w-4 h-4 font-bold" strokeWidth={3} />
+              </button>
+
+              {/* Quantity Display */}
+              <div className="bg-white px-4 py-2 flex-1 flex items-center justify-center border-x-2 border-purple-200">
+                <span className="text-base font-bold text-purple-700">
+                  {quantity}
+                </span>
+              </div>
+
+              {/* Plus Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleQuantityChange(quantity + 1);
+                }}
+                disabled={quantity >= maxQuantity}
+                className={`flex items-center justify-center px-3 py-2 transition-all duration-200 ${
+                  quantity >= maxQuantity
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white hover:shadow-md active:scale-95'
+                }`}
+              >
+                <PlusIcon className="w-4 h-4 font-bold" strokeWidth={3} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
