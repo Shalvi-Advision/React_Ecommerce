@@ -5,9 +5,7 @@ import BestsellerProductCard from './BestsellerProductCard';
 
 const AdvertisementCarousel = () => {
   const [advertisements, setAdvertisements] = useState([]);
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [isPaused, setIsPaused] = useState(false);
   const [storeCode, setStoreCode] = useState(null);
 
   console.log('🎬 AdvertisementCarousel: Component mounted/rendered');
@@ -97,8 +95,11 @@ const AdvertisementCarousel = () => {
         console.log('📥 AdvertisementCarousel: API response received:', response);
 
         if (response.success && response.data && response.data.length > 0) {
-          console.log(`✅ AdvertisementCarousel: Found ${response.data.length} advertisements`);
-          setAdvertisements(response.data);
+          // Sort advertisements by sequence
+          const sortedAds = response.data.sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+
+          console.log(`✅ AdvertisementCarousel: Found ${sortedAds.length} advertisement(s), rendering in sequence order`);
+          setAdvertisements(sortedAds);
         } else {
           console.warn('⚠️ AdvertisementCarousel: No advertisements found or invalid response');
           setAdvertisements([]);
@@ -113,33 +114,6 @@ const AdvertisementCarousel = () => {
 
     fetchAdvertisements();
   }, [storeCode]);
-
-  // Auto-rotation effect
-  useEffect(() => {
-    if (advertisements.length <= 1 || isPaused) return;
-
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % advertisements.length);
-    }, 5000); // 5 seconds
-
-    return () => clearInterval(interval);
-  }, [advertisements.length, isPaused]);
-
-  const goToSlide = useCallback((index) => {
-    setCurrentSlide(index);
-  }, []);
-
-  const goToPrevious = useCallback(() => {
-    setCurrentSlide((prev) => 
-      prev === 0 ? advertisements.length - 1 : prev - 1
-    );
-  }, [advertisements.length]);
-
-  const goToNext = useCallback(() => {
-    setCurrentSlide((prev) => 
-      (prev + 1) % advertisements.length
-    );
-  }, [advertisements.length]);
 
   const handleRedirect = (redirectUrl) => {
     if (!redirectUrl || redirectUrl === '#') return;
@@ -166,28 +140,25 @@ const AdvertisementCarousel = () => {
     return null;
   }
 
-  if (loading) {
-    return (
-      <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 via-fuchsia-50/50 to-pink-50/50"></div>
-        <div className="relative container mx-auto px-2 sm:px-4 lg:px-6">
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 sm:p-8 lg:p-10 shadow-xl border border-white/60">
-            <div className="flex justify-center items-center py-20">
-              <div className="relative">
-                <div className="w-12 h-12 border-4 border-transparent border-t-purple-500 border-r-fuchsia-500 rounded-full animate-spin"></div>
-                <div className="absolute inset-0 w-12 h-12 bg-gradient-to-r from-purple-400/20 to-fuchsia-400/20 rounded-full blur-lg animate-pulse"></div>
+  return (
+    <>
+      {loading ? (
+        <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 via-fuchsia-50/50 to-pink-50/50"></div>
+          <div className="relative container mx-auto px-2 sm:px-4 lg:px-6">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 sm:p-8 lg:p-10 shadow-xl border border-white/60">
+              <div className="flex justify-center items-center py-20">
+                <div className="relative">
+                  <div className="w-12 h-12 border-4 border-transparent border-t-purple-500 border-r-fuchsia-500 rounded-full animate-spin"></div>
+                  <div className="absolute inset-0 w-12 h-12 bg-gradient-to-r from-purple-400/20 to-fuchsia-400/20 rounded-full blur-lg animate-pulse"></div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    );
-  }
-
-  const currentAd = advertisements[currentSlide];
-
-  return (
-    <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
+      ) : (
+        advertisements.map((ad, adIndex) => (
+          <div key={ad._id || adIndex} className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
       {/* Purple/Indigo Gradient Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 via-fuchsia-50/50 to-pink-50/50"></div>
       <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-fuchsia-400/20 rounded-full blur-3xl -translate-x-1/4 -translate-y-1/4"></div>
@@ -205,90 +176,48 @@ const AdvertisementCarousel = () => {
               </div>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold">
                 <span className="bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 bg-clip-text text-transparent">
-                  Featured Promotions
+                  {ad.title || 'Featured Promotions'}
                 </span>
               </h2>
             </div>
           </div>
 
-          {/* Carousel Container */}
-          <div 
-            className="relative"
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
-          >
+          {/* Advertisement Container */}
+          <div className="relative">
             {/* Banner Section */}
             <div className="relative w-full h-[200px] sm:h-[250px] lg:h-[300px] rounded-2xl overflow-hidden shadow-lg mb-6">
               <img
-                src={currentAd.banner_url.startsWith('http') ? currentAd.banner_url : `${process.env.PUBLIC_URL}${currentAd.banner_url}`}
-                alt={currentAd.title || 'Advertisement'}
-                className="w-full h-full object-cover transition-transform duration-700"
+                src={ad.banner_url.startsWith('http') ? ad.banner_url : `${process.env.PUBLIC_URL}${ad.banner_url}`}
+                alt={ad.title || 'Advertisement'}
+                className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                 onError={(e) => {
                   e.target.src = `${process.env.PUBLIC_URL}/images/offer banner.png`;
                 }}
               />
-              
+
               {/* Overlay with Title and Description */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex flex-col justify-end p-4 sm:p-6 lg:p-8">
                 <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2 drop-shadow-lg">
-                  {currentAd.title}
+                  {ad.title}
                 </h3>
-                {currentAd.description && (
+                {ad.description && (
                   <p className="text-sm sm:text-base text-white/90 mb-4 line-clamp-2 drop-shadow-md">
-                    {currentAd.description}
+                    {ad.description}
                   </p>
                 )}
-                {currentAd.redirect_url && currentAd.redirect_url !== '#' && (
+                {ad.redirect_url && ad.redirect_url !== '#' && (
                   <button
-                    onClick={() => handleRedirect(currentAd.redirect_url)}
+                    onClick={() => handleRedirect(ad.redirect_url)}
                     className="self-start bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white px-6 py-2.5 rounded-full font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
                   >
                     Shop Now
                   </button>
                 )}
               </div>
-
-              {/* Navigation Arrows */}
-              {advertisements.length > 1 && (
-                <>
-                  <button
-                    onClick={goToPrevious}
-                    className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 rounded-full p-2 sm:p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 z-10"
-                    aria-label="Previous slide"
-                  >
-                    <ChevronLeftIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                  </button>
-                  <button
-                    onClick={goToNext}
-                    className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 rounded-full p-2 sm:p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 z-10"
-                    aria-label="Next slide"
-                  >
-                    <ChevronRightIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                  </button>
-                </>
-              )}
             </div>
 
-            {/* Slide Indicators */}
-            {advertisements.length > 1 && (
-              <div className="flex justify-center gap-2 mb-6">
-                {advertisements.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => goToSlide(index)}
-                    className={`transition-all duration-300 rounded-full ${
-                      index === currentSlide
-                        ? 'w-8 h-2 bg-gradient-to-r from-purple-500 to-fuchsia-500'
-                        : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
-                    }`}
-                    aria-label={`Go to slide ${index + 1}`}
-                  />
-                ))}
-              </div>
-            )}
-
             {/* Products Section */}
-            {currentAd.products && currentAd.products.length > 0 && (
+            {ad.products && ad.products.length > 0 && (
               <div>
                 <h4 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                   <span className="w-1 h-6 bg-gradient-to-b from-purple-500 to-fuchsia-500 rounded-full"></span>
@@ -297,7 +226,7 @@ const AdvertisementCarousel = () => {
                 <div className="relative">
                   <div className="overflow-x-auto scrollbar-hide pb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     <div className="flex gap-4 sm:gap-6" style={{ width: 'max-content' }}>
-                      {currentAd.products.map((product, index) => {
+                      {ad.products.map((product, index) => {
                         const productData = {
                           id: product.p_code || product.product_details?.p_code,
                           p_code: product.product_details?.p_code || product.p_code,
@@ -349,7 +278,7 @@ const AdvertisementCarousel = () => {
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
-        
+
         @keyframes fadeInUp {
           from {
             opacity: 0;
@@ -362,6 +291,9 @@ const AdvertisementCarousel = () => {
         }
       `}</style>
     </div>
+        ))
+      )}
+    </>
   );
 };
 

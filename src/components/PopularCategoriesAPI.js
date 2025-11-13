@@ -4,10 +4,8 @@ import { ChevronRightIcon } from '@heroicons/react/24/outline';
 import { getPopularCategories } from '../api/merchandisingApi';
 
 const PopularCategoriesAPI = () => {
-  const [categories, setCategories] = useState([]);
+  const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sectionData, setSectionData] = useState(null);
-  const [backgroundColor, setBackgroundColor] = useState('#EFEFEF');
   const [storeCode, setStoreCode] = useState(null);
 
   console.log('🎬 PopularCategoriesAPI: Component mounted/rendered');
@@ -142,38 +140,43 @@ const PopularCategoriesAPI = () => {
         console.log('📥 PopularCategoriesAPI: API response received:', response);
 
         if (response.success && response.data && response.data.length > 0) {
-          // Get the first section
-          const section = response.data[0];
-          setSectionData(section);
+          // Sort sections by sequence
+          const sortedSections = response.data.sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
 
-          // Set background color if available
-          if (section.background_color) {
-            setBackgroundColor(section.background_color);
-          }
+          console.log(`✅ PopularCategoriesAPI: Found ${sortedSections.length} section(s), rendering in sequence order`);
 
-          // Extract and format subcategories
-          const categoriesList = section.subcategories?.map((item, index) => {
-            const colorMapping = colorMappings[index % colorMappings.length];
-            const details = item.subcategory_details || {};
+          // Process each section
+          const processedSections = sortedSections.map(section => {
+            // Extract and format subcategories
+            const categoriesList = section.subcategories?.map((item, index) => {
+              const colorMapping = colorMappings[index % colorMappings.length];
+              const details = item.subcategory_details || {};
+
+              return {
+                id: item.sub_category_id || details.idsub_category_master,
+                name: details.sub_category_name || 'Category',
+                icon: getCategoryIcon(details.sub_category_name),
+                image_link: details.image_link || null,
+                color: colorMapping.color,
+                iconColor: colorMapping.iconColor,
+                redirect_url: item.redirect_url || '#'
+              };
+            }) || [];
 
             return {
-              id: item.sub_category_id || details.idsub_category_master,
-              name: details.sub_category_name || 'Category',
-              icon: getCategoryIcon(details.sub_category_name),
-              image_link: details.image_link || null,
-              color: colorMapping.color,
-              iconColor: colorMapping.iconColor,
-              redirect_url: item.redirect_url || '#'
+              ...section,
+              backgroundColor: section.background_color || '#EFEFEF',
+              categoriesList
             };
-          }) || [];
+          });
 
-          setCategories(categoriesList);
+          setSections(processedSections);
         } else {
-          setCategories([]);
+          setSections([]);
         }
       } catch (error) {
         console.error('Error fetching popular categories:', error);
-        setCategories([]);
+        setSections([]);
       } finally {
         setLoading(false);
       }
@@ -182,49 +185,58 @@ const PopularCategoriesAPI = () => {
     fetchPopularCategories();
   }, [storeCode]);
 
-  // Don't render if no categories
-  if (!loading && categories.length === 0) {
+  // Don't render if no sections
+  if (!loading && sections.length === 0) {
     return null;
   }
 
   return (
-    <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
-      {/* Modern Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/50 via-blue-50/50 to-indigo-50/50"></div>
-      <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-gradient-to-br from-cyan-400/20 to-blue-400/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-      
-      <div className="relative container mx-auto px-4">
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 sm:p-8 lg:p-10 shadow-xl border border-white/60 hover:shadow-2xl transition-all duration-300">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full animate-pulse"></div>
-                <span className="text-xs sm:text-sm font-semibold text-cyan-600 uppercase tracking-wider">Trending</span>
+    <>
+      {loading ? (
+        <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/50 via-blue-50/50 to-indigo-50/50"></div>
+          <div className="relative container mx-auto px-4">
+            <div className="flex justify-center items-center py-20">
+              <div className="relative">
+                <div className="w-12 h-12 border-4 border-transparent border-t-cyan-500 border-r-blue-500 rounded-full animate-spin"></div>
+                <div className="absolute inset-0 w-12 h-12 bg-gradient-to-r from-cyan-400/20 to-blue-400/20 rounded-full blur-lg animate-pulse"></div>
               </div>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
-                <span className="bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  {sectionData?.title || 'Popular Categories'}
-                </span>
-              </h2>
-              <p className="text-gray-600 text-sm sm:text-base">Shop from our most loved categories</p>
-            </div>
-            <div className="hidden md:flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
-              <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-              <span>Fresh & Fast Delivery</span>
             </div>
           </div>
-          
-          <div className="relative">
-            {loading ? (
-              <div className="flex justify-center items-center py-10">
-                <div className="relative">
-                  <div className="w-12 h-12 border-4 border-transparent border-t-cyan-500 border-r-blue-500 rounded-full animate-spin"></div>
-                  <div className="absolute inset-0 w-12 h-12 bg-gradient-to-r from-cyan-400/20 to-blue-400/20 rounded-full blur-lg animate-pulse"></div>
+        </div>
+      ) : (
+        sections.map((section, sectionIndex) => (
+          <div key={section._id || sectionIndex} className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
+            {/* Modern Gradient Background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/50 via-blue-50/50 to-indigo-50/50"></div>
+            <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-gradient-to-br from-cyan-400/20 to-blue-400/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+
+            <div className="relative container mx-auto px-4">
+              <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 sm:p-8 lg:p-10 shadow-xl border border-white/60 hover:shadow-2xl transition-all duration-300">
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-2 h-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full animate-pulse"></div>
+                      <span className="text-xs sm:text-sm font-semibold text-cyan-600 uppercase tracking-wider">Trending</span>
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
+                      <span className="bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                        {section.title || 'Popular Categories'}
+                      </span>
+                    </h2>
+                    {section.description && (
+                      <p className="text-gray-600 text-sm sm:text-base">{section.description}</p>
+                    )}
+                  </div>
+                  <div className="hidden md:flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
+                    <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                    <span>Fresh & Fast Delivery</span>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="flex gap-5 overflow-x-auto scrollbar-hide pb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                {categories.map((category, index) => {
+
+                <div className="relative">
+                  <div className="flex gap-5 overflow-x-auto scrollbar-hide pb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    {section.categoriesList.map((category, index) => {
                   // Handle redirect URLs
                   const handleClick = (e) => {
                     if (category.redirect_url && category.redirect_url !== '#') {
@@ -280,31 +292,33 @@ const PopularCategoriesAPI = () => {
                       </div>
                     </CategoryComponent>
                   );
-                })}
-              </div>
-            )}
-            
-            {/* Enhanced Scroll Arrow with Gradient */}
-            {!loading && categories.length > 0 && (
-              <button className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full p-3 shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 group">
-                <ChevronRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+                    })}
+                  </div>
 
-      {/* Hide scrollbar */}
-      <style jsx>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
-    </div>
+                  {/* Enhanced Scroll Arrow with Gradient */}
+                  {section.categoriesList.length > 0 && (
+                    <button className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full p-3 shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 group">
+                      <ChevronRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Hide scrollbar */}
+            <style jsx>{`
+              .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+              }
+              .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+              }
+            `}</style>
+          </div>
+        ))
+      )}
+    </>
   );
 };
 
