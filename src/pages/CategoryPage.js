@@ -117,8 +117,25 @@ const CategoryPage = () => {
       if (cachedCategories && cacheValid) {
         try {
           // Use cached categories
-          setCategories(JSON.parse(cachedCategories));
+          const parsedCategories = JSON.parse(cachedCategories);
+          setCategories(parsedCategories);
           console.log('Using cached categories data for', departmentName);
+
+          // Auto-select category if coming from drawer navigation
+          if (location.state?.selectedCategoryName && parsedCategories) {
+            const categoryToSelect = parsedCategories.find(
+              cat => cat.category_name === location.state.selectedCategoryName ||
+                     cat.idcategory_master === location.state.selectedCategoryId
+            );
+            if (categoryToSelect) {
+              setSelectedCategory(categoryToSelect);
+            }
+          } else if (parsedCategories && parsedCategories.length > 0) {
+            // Auto-select first category if no specific category was requested
+            console.log('✅ Auto-selecting first category from cache:', parsedCategories[0].category_name);
+            setSelectedCategory(parsedCategories[0]);
+          }
+
           setLoading(false);
           return;
         } catch (e) {
@@ -142,6 +159,10 @@ const CategoryPage = () => {
             setSelectedCategory(categoryToSelect);
             // Load subcategories for this category - will be handled by useEffect after departmentId is set
           }
+        } else if (response.data && response.data.length > 0) {
+          // Auto-select first category if no specific category was requested
+          console.log('✅ Auto-selecting first category:', response.data[0].category_name);
+          setSelectedCategory(response.data[0]);
         }
 
         // Cache the categories
@@ -874,17 +895,18 @@ const CategoryPage = () => {
 
           {/* Products Grid */}
           <div className="p-4 sm:p-6 bg-gray-50 relative min-h-screen">
-            {/* Products Loading Overlay - Only shows when switching categories/subcategories */}
-            {productsLoading && (
-              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
+            {/* Centered Loading State - Shows when loading or no subcategory selected yet */}
+            {(productsLoading || !selectedSubcategory) ? (
+              <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
-                  <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                  <p className="text-gray-600 font-medium">Loading products...</p>
+                  <div className="relative inline-block mb-4">
+                    <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 w-16 h-16 bg-green-400/20 rounded-full blur-lg animate-pulse"></div>
+                  </div>
+                  <p className="text-gray-600 font-medium text-lg">Loading products...</p>
                 </div>
               </div>
-            )}
-
-            {filteredProducts.length > 0 ? (
+            ) : filteredProducts.length > 0 ? (
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
                   {/* Product Cards */}
@@ -1096,24 +1118,26 @@ const CategoryPage = () => {
                   </div>
                 )}
               </>
-            ) : !productsLoading && (
-              <div className="text-center py-20">
-                <div className="relative inline-block mb-6">
-                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-full blur-2xl opacity-30 animate-pulse"></div>
-                  <div className="relative w-32 h-32 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center mx-auto shadow-xl">
-                    <span className="text-6xl">📦</span>
+            ) : (
+              <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="text-center">
+                  <div className="relative inline-block mb-6">
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-full blur-2xl opacity-30 animate-pulse"></div>
+                    <div className="relative w-32 h-32 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center mx-auto shadow-xl">
+                      <span className="text-6xl">📦</span>
+                    </div>
                   </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">No Products Found</h3>
+                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                    Try adjusting your filters or browse different subcategories to find what you're looking for
+                  </p>
+                  <button
+                    onClick={clearFilters}
+                    className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300"
+                  >
+                    Clear Filters
+                  </button>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">No Products Found</h3>
-                <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                  Try adjusting your filters or browse different subcategories to find what you're looking for
-                </p>
-                <button
-                  onClick={clearFilters}
-                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300"
-                >
-                  Clear Filters
-                </button>
               </div>
             )}
           </div>
