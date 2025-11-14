@@ -126,7 +126,7 @@ const BestsellerProductCard = ({ product }) => {
   const favoriteStatus = checkFavorite(productId) || isFavorite;
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col w-[180px] sm:w-[200px] flex-shrink-0">
+    <div className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col w-[180px] sm:w-[200px] flex-shrink-0">
       {/* Product Image Container */}
       <div className="relative bg-white flex items-center justify-center p-3 pt-4">
         {/* Favorite Icon - Top Left */}

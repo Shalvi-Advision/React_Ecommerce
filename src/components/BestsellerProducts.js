@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import BestsellerProductCard from './BestsellerProductCard';
 import { getBestSellers } from '../api/merchandisingApi';
 
 const BestsellerProducts = () => {
+  const navigate = useNavigate();
   const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [storeCode, setStoreCode] = useState(null);
@@ -116,7 +118,11 @@ const BestsellerProducts = () => {
               package_size: item.product_details?.package_size || '',
               package_unit: item.product_details?.package_unit || '',
               brand_name: item.product_details?.brand_name || '',
-              store_quantity: item.product_details?.store_quantity || 0
+              store_quantity: item.product_details?.store_quantity || 0,
+              // Include category IDs if available
+              dept_id: item.product_details?.dept_id || item.dept_id || '2',
+              category_id: item.product_details?.category_id || item.category_id || '72',
+              sub_category_id: item.product_details?.sub_category_id || item.sub_category_id || '391'
             })) || [];
 
             return {
@@ -171,11 +177,21 @@ const BestsellerProducts = () => {
             <div className="relative container mx-auto px-2 sm:px-4 lg:px-6">
               {/* Promotional Banner at the top - Seamlessly integrated */}
               <div className="relative w-full">
-                <div className="relative w-full h-[140px] sm:h-[160px] lg:h-[180px] xl:h-[200px] overflow-hidden" style={{ borderRadius: '0.75rem 0.75rem 0 0' }}>
+                <div 
+                  className="relative w-full h-[140px] sm:h-[160px] lg:h-[180px] xl:h-[200px] overflow-hidden cursor-pointer group" 
+                  style={{ borderRadius: '0.75rem 0.75rem 0 0' }}
+                  onClick={() => {
+                    const sectionId = section._id || section.id;
+                    if (sectionId) {
+                      console.log(`🔗 BestsellerProducts: Navigating to section ${sectionId}`);
+                      navigate(`/bestsellers/${sectionId}`);
+                    }
+                  }}
+                >
                   <img
                     src={section.bannerImage.startsWith('http') ? section.bannerImage : `${process.env.PUBLIC_URL}${section.bannerImage}`}
                     alt={section.title || 'Bestseller Products Banner'}
-                    className="w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
+                    className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
                     style={{
                       maxWidth: '100%',
                       maxHeight: '100%',
@@ -193,7 +209,13 @@ const BestsellerProducts = () => {
                     }}
                   />
                   {/* Strong overlay gradient for perfect seamless transition */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent from-40% via-pink-300/60 via-70% to-pink-400/90"></div>
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent from-40% via-pink-300/60 via-70% to-pink-400/90 group-hover:via-pink-400/70 group-hover:to-pink-500/95 transition-all duration-300"></div>
+                  {/* Click indicator */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
+                      <span className="text-white font-semibold text-sm sm:text-base">View All Products</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -229,11 +251,17 @@ const BestsellerProducts = () => {
                         {section.productsList.map((product, index) => (
                           <div
                             key={product.id || product.p_code}
-                            className="transform transition-all duration-300 hover:scale-105"
+                            className="transform transition-all duration-300 hover:scale-105 cursor-pointer"
                             style={{
                               animationDelay: `${index * 100}ms`,
                               animation: 'fadeInUp 0.6s ease-out forwards',
                               opacity: 0
+                            }}
+                            onClick={() => {
+                              const productId = product.p_code || product.id;
+                              if (productId) {
+                                navigate(`/product/${productId}?dept_id=${product.dept_id || '2'}&category_id=${product.category_id || '72'}&sub_category_id=${product.sub_category_id || '391'}`);
+                              }
                             }}
                           >
                             <BestsellerProductCard product={product} />

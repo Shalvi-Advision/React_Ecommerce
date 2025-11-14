@@ -100,20 +100,45 @@ const CartPage = () => {
   const handleProceedToCheckout = async () => {
     setProcessingCheckout(true);
     try {
-      // Step 1: Validate cart
+      // Step 1: Save cart to database first (to ensure backend has latest quantities)
+      // This is important because quantity updates are debounced, so we need to sync before validation
+      if (isAuthenticated) {
+        const saveResponse = await cartService.saveCart(items);
+        
+        if (!saveResponse.success) {
+          showError(saveResponse.message || 'Failed to save cart');
+          setProcessingCheckout(false);
+          return;
+        }
+      }
+
+      // Step 2: Validate cart (now with the latest synced data)
       const validateResponse = await cartService.validateCart();
       
+      // Check if API call was successful
       if (!validateResponse.success) {
         showError(validateResponse.message || 'Cart validation failed');
         setProcessingCheckout(false);
         return;
       }
 
-      // Step 2: Save cart to database
-      const saveResponse = await cartService.saveCart(items);
-      
-      if (!saveResponse.success) {
-        showError(saveResponse.message || 'Failed to save cart');
+      // Check if actual validation passed (validation.valid)
+      const validation = validateResponse.validation;
+      if (validation && validation.valid === false) {
+        // Build error message with invalid items details
+        let errorMessage = 'Cart validation failed. ';
+        
+        if (validation.invalidItems && validation.invalidItems.length > 0) {
+          const firstInvalidItem = validation.invalidItems[0];
+          errorMessage += firstInvalidItem.reason || 'Some items are unavailable.';
+          if (validation.invalidItems.length > 1) {
+            errorMessage += ` (and ${validation.invalidItems.length - 1} more issue${validation.invalidItems.length - 1 > 1 ? 's' : ''})`;
+          }
+        } else {
+          errorMessage += 'Please review your cart items.';
+        }
+        
+        showError(errorMessage);
         setProcessingCheckout(false);
         return;
       }
@@ -450,6 +475,7 @@ const CartPage = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };

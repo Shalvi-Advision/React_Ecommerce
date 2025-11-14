@@ -196,8 +196,7 @@ const ProductDetailsPage = () => {
       
       console.log('🛒 Cart item:', cartItem);
       addItem(cartItem, quantity);
-      // Navigate to cart or show success message
-      navigate('/cart');
+      // Don't navigate to cart - stay on product page
     }
   };
 
