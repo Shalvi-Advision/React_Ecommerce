@@ -313,6 +313,69 @@ const getFallbackAdvertisements = () => {
   };
 };
 
+// Fallback data for seasonal categories
+const getFallbackSeasonalCategories = () => {
+  return {
+    success: true,
+    count: 1,
+    message: 'Using fallback seasonal categories data',
+    data: [
+      {
+        _id: 'fallback_sc_1',
+        title: 'Seasonal Categories',
+        description: 'Explore our special seasonal collections',
+        background_color: '#FFFFFF',
+        banner_urls: {
+          desktop: '/images/seasonal_banner.jpg',
+          mobile: '/images/seasonal_banner.jpg'
+        },
+        redirect_url: '#',
+        is_active: true,
+        sequence: 0,
+        season: 'winter',
+        subcategories: [
+          {
+            sub_category_id: '349',
+            position: 0,
+            redirect_url: '#',
+            image_link: null,
+            subcategory_details: {
+              idsub_category_master: '349',
+              sub_category_name: 'Home Decor',
+              category_id: '89'
+            },
+            category_details: {
+              idcategory_master: '89',
+              category_name: 'UPWAS ITEM',
+              dept_id: '2',
+              image_link: null
+            }
+          },
+          {
+            sub_category_id: '350',
+            position: 1,
+            redirect_url: '#',
+            image_link: null,
+            subcategory_details: {
+              idsub_category_master: '350',
+              sub_category_name: 'Kitchen Tools',
+              category_id: '90'
+            },
+            category_details: {
+              idcategory_master: '90',
+              category_name: 'KITCHEN ITEM',
+              dept_id: '2',
+              image_link: null
+            }
+          }
+        ]
+      }
+    ],
+    isOffline: true,
+    isFallback: true
+  };
+};
+
 /**
  * Fetch best seller sections from API
  * @param {Object} params - Query parameters
@@ -624,9 +687,122 @@ export const getAdvertisements = async (params = {}) => {
   }
 };
 
+/**
+ * Fetch seasonal category sections from API
+ * @param {Object} params - Query parameters
+ * @param {string} params.store_code - Store code (default: from localStorage or "AVB")
+ * @param {string} params.season - Season identifier (default: "winter")
+ * @returns {Promise<Object>} - API response with seasonal category sections
+ */
+export const getSeasonalCategories = async (params = {}) => {
+  try {
+    // Get store_code from localStorage if not provided
+    let store_code = params.store_code;
+    if (!store_code) {
+      try {
+        const locationData = localStorage.getItem('confirmedLocation');
+        if (locationData) {
+          const location = JSON.parse(locationData);
+          store_code = location?.store?.storeCode || location?.store?.store_code || 'AVB';
+        } else {
+          store_code = 'AVB';
+        }
+      } catch (error) {
+        console.warn('Failed to get store_code from localStorage:', error);
+        store_code = 'AVB';
+      }
+    }
+
+    const season = params.season || 'winter';
+    const url = `${API_BASE_URL}/seasonal-categories/list`;
+    const cacheKey = `seasonal_categories_${store_code}_${season}`;
+
+    // Prepare request body
+    const requestBody = {
+      store_code,
+      season,
+      enrich_subcategories: true
+    };
+
+    console.log('🔗 Fetching seasonal categories from:', url);
+    console.log('📦 Request body:', requestBody);
+
+    // If online, try to fetch from network first
+    if (isOnline()) {
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        console.log('📥 Seasonal categories response:', {
+          status: response.status,
+          ok: response.ok
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ Seasonal categories API response received');
+
+        if (!data.success || !data.data) {
+          console.warn('⚠️ Invalid seasonal categories response, using fallback');
+          return getFallbackSeasonalCategories();
+        }
+
+        const processedData = {
+          ...data,
+          isOffline: false,
+          isFallback: false
+        };
+
+        // Cache the response
+        await cacheMerchandisingData(cacheKey, processedData);
+
+        return processedData;
+      } catch (networkError) {
+        console.warn('Network request failed for seasonal categories, trying cache:', networkError);
+
+        // Try to get from cache
+        const cachedData = await getCachedMerchandisingData(cacheKey);
+        if (cachedData) {
+          console.log('✅ Serving seasonal categories from cache');
+          return { ...cachedData, isOffline: true };
+        }
+
+        // Use fallback data
+        console.log('⚠️ No cache available, using fallback seasonal categories');
+        return getFallbackSeasonalCategories();
+      }
+    } else {
+      // Offline mode - try cache
+      console.log('Offline mode: Attempting to load seasonal categories from cache');
+      const cachedData = await getCachedMerchandisingData(cacheKey);
+
+      if (cachedData) {
+        console.log('Serving seasonal categories from cache (offline mode)');
+        return { ...cachedData, isOffline: true };
+      } else {
+        console.log('No cache available in offline mode, using fallback');
+        return getFallbackSeasonalCategories();
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error fetching seasonal categories:', error);
+    return getFallbackSeasonalCategories();
+  }
+};
+
 export default {
   getBestSellers,
   getPopularCategories,
-  getAdvertisements
+  getAdvertisements,
+  getSeasonalCategories
 };
 

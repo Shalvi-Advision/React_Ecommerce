@@ -1,99 +1,97 @@
-// Theme Constants for E-Commerce Application
-// These constants work seamlessly with Tailwind CSS
+// Modern Green Color Palette for E-Commerce
+// Tailwind-friendly theme constants
 
 export const COLORS = {
-  // Primary Colors (Green Theme)
+  // Modern Green Primary Palette (Fresh + Premium)
   primary: {
-    50: '#f0fdf4',
-    100: '#dcfce7',
-    200: '#bbf7d0',
-    300: '#86efac',
-    400: '#4ade80',
-    500: '#22c55e',
-    600: '#16a34a',
-    700: '#15803d',
-    800: '#166534',
-    900: '#14532d',
+    50:  '#f3faf7',   // Mint Tint
+    100: '#d6f5e7',
+    200: '#b0ebd2',
+    300: '#7fddb9',
+    400: '#4ccca0',   // Modern Fresh Green
+    500: '#26b985',   // Main Brand Green
+    600: '#139f6d',
+    700: '#0e8059',
+    800: '#0b6648',
+    900: '#084c37',   // Elegant Deep Green
   },
 
-  // Secondary Colors
+  // Secondary (slate-neutral modern)
   secondary: {
     50: '#f8fafc',
-    100: '#f1f5f9',
-    200: '#e2e8f0',
-    300: '#cbd5e1',
-    400: '#94a3b8',
-    500: '#64748b',
-    600: '#475569',
-    700: '#334155',
-    800: '#1e293b',
-    900: '#0f172a',
+    100: '#eef2f6',
+    200: '#e1e7ef',
+    300: '#c8d2de',
+    400: '#9eacbe',
+    500: '#6f7e94',
+    600: '#4d5a6f',
+    700: '#394558',
+    800: '#222f3f',
+    900: '#0f1a28',
   },
 
-  // Success Colors
+  // Success: Slightly brighter than primary
   success: {
-    50: '#f0fdf4',
-    100: '#dcfce7',
-    200: '#bbf7d0',
-    300: '#86efac',
-    400: '#4ade80',
-    500: '#22c55e',
-    600: '#16a34a',
-    700: '#15803d',
-    800: '#166534',
-    900: '#14532d',
+    50:  '#f2fcf7',
+    100: '#d0f7e3',
+    200: '#a4eecb',
+    300: '#6edeb0',
+    400: '#3ccb96',
+    500: '#14b67f',
+    600: '#0d9567',
+    700: '#0c7754',
+    800: '#0a5940',
+    900: '#083f2e',
   },
 
-  // Warning Colors
+  // Warning (modern amber)
   warning: {
-    50: '#fffbeb',
-    100: '#fef3c7',
-    200: '#fde68a',
-    300: '#fcd34d',
-    400: '#fbbf24',
-    500: '#f59e0b',
-    600: '#d97706',
-    700: '#b45309',
-    800: '#92400e',
-    900: '#78350f',
+    50: '#fffaeb',
+    100: '#fef0c7',
+    200: '#fddc8a',
+    300: '#fac23d',
+    400: '#f59f0c',
+    500: '#d97706',
+    600: '#b45309',
+    700: '#92400e',
+    800: '#78320e',
+    900: '#5c260b',
   },
 
-  // Error/Danger Colors
+  // Error (modern red)
   error: {
     50: '#fef2f2',
-    100: '#fee2e2',
-    200: '#fecaca',
-    300: '#fca5a5',
-    400: '#f87171',
-    500: '#ef4444',
-    600: '#dc2626',
-    700: '#b91c1c',
-    800: '#991b1b',
-    900: '#7f1d1d',
+    100: '#fde0e0',
+    200: '#fbb7b7',
+    300: '#f28c8c',
+    400: '#e05757',
+    500: '#cf3434',
+    600: '#b02121',
+    700: '#8f1b1b',
+    800: '#6e1616',
+    900: '#510f0f',
   },
 
-  // Neutral Colors
+  // Neutrals (clean UI)
   gray: {
-    50: '#f9fafb',
-    100: '#f3f4f6',
-    200: '#e5e7eb',
-    300: '#d1d5db',
-    400: '#9ca3af',
-    500: '#6b7280',
-    600: '#4b5563',
-    700: '#374151',
-    800: '#1f2937',
-    900: '#111827',
+    50: '#fafafa',
+    100: '#f4f4f5',
+    200: '#e4e4e7',
+    300: '#d4d4d8',
+    400: '#a1a1aa',
+    500: '#71717a',
+    600: '#52525b',
+    700: '#3f3f46',
+    800: '#27272a',
+    900: '#18181b',
   },
 
-  // Special Colors
   white: '#ffffff',
   black: '#000000',
   transparent: 'transparent',
 };
 
 export const SPACING = {
-  // Spacing scale (in pixels)
   0: '0px',
   1: '4px',
   2: '8px',
@@ -127,13 +125,13 @@ export const BORDER_RADIUS = {
 
 export const SHADOWS = {
   none: 'none',
-  sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-  md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-  lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-  xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-  '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-  inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
-  outline: '0 0 0 3px rgba(34, 197, 94, 0.5)',
+  sm: '0 1px 2px rgba(0, 0, 0, 0.05)',
+  md: '0 4px 6px rgba(0, 0, 0, 0.08)',
+  lg: '0 10px 15px rgba(0, 0, 0, 0.1)',
+  xl: '0 20px 25px rgba(0, 0, 0, 0.12)',
+  '2xl': '0 25px 50px rgba(0, 0, 0, 0.15)',
+  inner: 'inset 0 2px 4px rgba(0, 0, 0, 0.06)',
+  outline: '0 0 0 3px rgba(38, 185, 133, 0.5)', // green glow
 };
 
 export const Z_INDEX = {
@@ -162,10 +160,10 @@ export const TRANSITIONS = {
   shadow: 'box-shadow 0.15s ease-out',
   fast: 'all 0.1s ease-out',
   slow: 'all 0.3s ease-out',
-  bounce: 'all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+  bounce: 'all 0.25s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
 };
 
-// Theme configuration object
+// Main Theme Object
 export const THEME = {
   colors: COLORS,
   spacing: SPACING,
@@ -174,7 +172,6 @@ export const THEME = {
   zIndex: Z_INDEX,
   transitions: TRANSITIONS,
 
-  // Extended theme properties
   breakpoints: {
     sm: '640px',
     md: '768px',
@@ -183,7 +180,6 @@ export const THEME = {
     '2xl': '1536px',
   },
 
-  // Component specific themes
   components: {
     button: {
       primary: {

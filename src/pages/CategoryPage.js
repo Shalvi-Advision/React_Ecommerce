@@ -10,6 +10,17 @@ import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
 import { getProductsOptimized } from '../api/productsApi';
 import groceryApiService from '../services/groceryApi';
 import { createCartItemFromProduct } from '../utils/cartUtils';
+import { COLORS } from '../constants/theme';
+
+// Helper function to convert hex color to rgba with opacity
+const hexToRgba = (hex, opacity = 1) => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return hex;
+  const r = parseInt(result[1], 16);
+  const g = parseInt(result[2], 16);
+  const b = parseInt(result[3], 16);
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+};
 
 const CategoryPage = () => {
   const { categoryName } = useParams();
@@ -626,13 +637,38 @@ const CategoryPage = () => {
   // Modern Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex items-center justify-center">
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background: `linear-gradient(to bottom right, ${COLORS.primary[50]}, ${COLORS.success[50]}, ${COLORS.primary[100]})`
+        }}
+      >
         <div className="text-center">
           <div className="relative">
-            <div className="w-16 h-16 border-4 border-transparent border-t-emerald-500 border-r-teal-500 border-b-cyan-500 rounded-full animate-spin"></div>
-            <div className="absolute inset-0 w-16 h-16 bg-gradient-to-r from-emerald-400/20 to-cyan-400/20 rounded-full blur-lg animate-pulse"></div>
+            <div 
+              className="w-16 h-16 border-4 border-transparent rounded-full animate-spin"
+              style={{
+                borderTopColor: COLORS.primary[500],
+                borderRightColor: COLORS.success[500],
+                borderBottomColor: COLORS.primary[400]
+              }}
+            ></div>
+            <div 
+              className="absolute inset-0 w-16 h-16 rounded-full blur-lg animate-pulse"
+              style={{
+                background: `linear-gradient(to right, ${hexToRgba(COLORS.primary[400], 0.2)}, ${hexToRgba(COLORS.success[400], 0.2)})`
+              }}
+            ></div>
           </div>
-          <p className="mt-4 text-gray-600 font-semibold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
+          <p 
+            className="mt-4 font-semibold bg-clip-text text-transparent"
+            style={{
+              color: COLORS.gray[600],
+              background: `linear-gradient(to right, ${COLORS.primary[600]}, ${COLORS.success[600]})`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}
+          >
             Loading products...
           </p>
         </div>
@@ -643,16 +679,41 @@ const CategoryPage = () => {
   // Modern Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-red-50 flex items-center justify-center p-4">
-        <div className="text-center bg-white/80 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-white/60 max-w-md">
-          <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <div 
+        className="min-h-screen flex items-center justify-center p-4"
+        style={{
+          background: `linear-gradient(to bottom right, ${COLORS.error[50]}, ${COLORS.error[100]}, ${COLORS.error[50]})`
+        }}
+      >
+        <div 
+          className="text-center backdrop-blur-lg rounded-3xl p-8 shadow-2xl border max-w-md"
+          style={{
+            backgroundColor: hexToRgba(COLORS.white, 0.8),
+            borderColor: hexToRgba(COLORS.white, 0.6)
+          }}
+        >
+          <div 
+            className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4"
+            style={{
+              background: `linear-gradient(to bottom right, ${COLORS.error[100]}, ${COLORS.error[200]})`
+            }}
+          >
             <span className="text-4xl">⚠️</span>
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Error Loading Products</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <h2 className="text-xl font-bold mb-2" style={{ color: COLORS.gray[900] }}>Error Loading Products</h2>
+          <p className="mb-6" style={{ color: COLORS.gray[600] }}>{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300"
+            className="px-6 py-3 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300"
+            style={{
+              background: `linear-gradient(to right, ${COLORS.primary[500]}, ${COLORS.success[500]})`
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = `linear-gradient(to right, ${COLORS.primary[600]}, ${COLORS.success[600]})`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = `linear-gradient(to right, ${COLORS.primary[500]}, ${COLORS.success[500]})`;
+            }}
           >
             Try Again
           </button>
@@ -662,20 +723,37 @@ const CategoryPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen" style={{ backgroundColor: COLORS.white }}>
       {/* Modern Mobile Header */}
       {isMobile && (
-        <div className="relative bg-white/90 backdrop-blur-sm border-b border-gray-200/50 px-4 py-3 shadow-sm">
+        <div 
+          className="relative backdrop-blur-sm border-b px-4 py-3 shadow-sm"
+          style={{
+            backgroundColor: hexToRgba(COLORS.white, 0.9),
+            borderColor: hexToRgba(COLORS.gray[200], 0.5)
+          }}
+        >
           <div className="flex items-center justify-between">
             <button
               onClick={toggleSidebar}
-              className="p-2 hover:bg-emerald-50 rounded-xl transition-all duration-300 hover:scale-110"
+              className="p-2 rounded-xl transition-all duration-300 hover:scale-110"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.primary[50];
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
             >
-              <Bars3Icon className="w-6 h-6 text-gray-700" />
+              <Bars3Icon className="w-6 h-6" style={{ color: COLORS.gray[700] }} />
             </button>
             <div className="flex items-center gap-2">
               {departmentImage && (
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg flex items-center justify-center overflow-hidden shadow-md">
+                <div 
+                  className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden shadow-md"
+                  style={{
+                    background: `linear-gradient(to bottom right, ${COLORS.primary[50]}, ${COLORS.success[50]})`
+                  }}
+                >
                   <img 
                     src={departmentImage} 
                     alt={selectedDepartment}
@@ -686,7 +764,14 @@ const CategoryPage = () => {
                   />
                 </div>
               )}
-              <h1 className="text-lg font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              <h1 
+                className="text-lg font-bold bg-clip-text text-transparent"
+                style={{
+                  background: `linear-gradient(to right, ${COLORS.primary[600]}, ${COLORS.success[600]})`,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}
+              >
                 {selectedDepartment || 'Categories'}
               </h1>
             </div>
@@ -697,19 +782,40 @@ const CategoryPage = () => {
 
       <div className="flex">
         {/* Sidebar */}
-        <div className={`
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-          ${isMobile ? 'fixed inset-y-0 left-0 z-50 w-64' : 'w-64'}
-          bg-white border-r border-gray-200 transition-transform duration-300 ease-in-out
-          ${isMobile ? '' : 'sticky top-0 h-screen overflow-y-auto'}
-        `}>
+        <div 
+          className={`
+            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+            ${isMobile ? 'fixed inset-y-0 left-0 z-50 w-64' : 'w-64'}
+            border-r transition-transform duration-300 ease-in-out
+            ${isMobile ? '' : 'sticky top-0 h-screen overflow-y-auto'}
+          `}
+          style={{
+            backgroundColor: COLORS.white,
+            borderColor: COLORS.gray[200]
+          }}
+        >
           {/* Mobile sidebar header */}
           {isMobile && (
             <div className="relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10"></div>
-              <div className="relative flex items-center justify-between p-4 border-b border-gray-200/50">
+              <div 
+                className="absolute inset-0"
+                style={{
+                  background: `linear-gradient(to right, ${hexToRgba(COLORS.primary[500], 0.1)}, ${hexToRgba(COLORS.success[500], 0.1)}, ${hexToRgba(COLORS.primary[400], 0.1)})`
+                }}
+              ></div>
+              <div 
+                className="relative flex items-center justify-between p-4 border-b"
+                style={{
+                  borderColor: hexToRgba(COLORS.gray[200], 0.5)
+                }}
+              >
                 <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg flex items-center justify-center overflow-hidden shadow-md">
+                  <div 
+                    className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden shadow-md"
+                    style={{
+                      background: `linear-gradient(to bottom right, ${COLORS.primary[50]}, ${COLORS.success[50]})`
+                    }}
+                  >
                     {departmentImage ? (
                       <img 
                         src={departmentImage} 
@@ -725,13 +831,32 @@ const CategoryPage = () => {
                       <span className="text-lg">📂</span>
                     )}
                   </div>
-                  <h2 className="text-lg font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Subcategories</h2>
+                  <h2 
+                    className="text-lg font-bold bg-clip-text text-transparent"
+                    style={{
+                      background: `linear-gradient(to right, ${COLORS.primary[600]}, ${COLORS.success[600]})`,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent'
+                    }}
+                  >
+                    Subcategories
+                  </h2>
                 </div>
                 <button
                   onClick={toggleSidebar}
-                  className="p-2 hover:bg-red-50 rounded-xl transition-all duration-300 hover:scale-110"
+                  className="p-2 rounded-xl transition-all duration-300 hover:scale-110"
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = COLORS.error[50];
+                    const icon = e.currentTarget.querySelector('svg');
+                    if (icon) icon.style.color = COLORS.error[500];
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    const icon = e.currentTarget.querySelector('svg');
+                    if (icon) icon.style.color = COLORS.gray[600];
+                  }}
                 >
-                  <XMarkIcon className="w-5 h-5 text-gray-600 hover:text-red-500 transition-colors" />
+                  <XMarkIcon className="w-5 h-5 transition-colors" style={{ color: COLORS.gray[600] }} />
                 </button>
               </div>
             </div>
@@ -739,9 +864,9 @@ const CategoryPage = () => {
 
           {/* Desktop sidebar header */}
           {!isMobile && (
-            <div className="border-b border-gray-200">
+            <div style={{ borderBottomColor: COLORS.gray[200] }} className="border-b">
               <div className="p-4">
-                <h2 className="text-base font-bold text-gray-900">{selectedDepartment}</h2>
+                <h2 className="text-base font-bold" style={{ color: COLORS.gray[900] }}>{selectedDepartment}</h2>
               </div>
             </div>
           )}
@@ -766,17 +891,32 @@ const CategoryPage = () => {
                       {/* Category Button */}
                       <button
                         onClick={() => handleCategorySelect(category)}
-                        className={`w-full text-left px-4 py-2.5 transition-colors flex items-center justify-between hover:bg-gray-50 ${
-                          isSelected ? 'bg-green-50' : ''
-                        }`}
+                        className="w-full text-left px-4 py-2.5 transition-colors flex items-center justify-between"
+                        style={{
+                          backgroundColor: isSelected ? COLORS.primary[50] : 'transparent'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isSelected) {
+                            e.currentTarget.style.backgroundColor = COLORS.gray[50];
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isSelected) {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                          }
+                        }}
                       >
-                        <span className={`text-sm ${
-                          isSelected ? 'text-green-600 font-semibold' : 'text-gray-700'
-                        }`}>
+                        <span 
+                          className="text-sm"
+                          style={{
+                            color: isSelected ? COLORS.primary[600] : COLORS.gray[700],
+                            fontWeight: isSelected ? '600' : 'normal'
+                          }}
+                        >
                           {category.category_name}
                         </span>
                         {categoryCount > 0 && (
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs" style={{ color: COLORS.gray[500] }}>
                             ({categoryCount})
                           </span>
                         )}
@@ -784,20 +924,42 @@ const CategoryPage = () => {
 
                       {/* Nested Subcategories - Only show when category is selected */}
                       {isSelected && subcategories.length > 0 && (
-                        <div className="bg-gray-50/50 border-l-2 border-green-500 ml-4">
-                          {subcategories.map((subcategory) => (
-                            <button
-                              key={subcategory.idsub_category_master}
-                              onClick={() => handleSubcategorySelect(subcategory)}
-                              className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                                selectedSubcategory?.idsub_category_master === subcategory.idsub_category_master
-                                  ? 'bg-green-100 text-green-700 font-medium'
-                                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                              }`}
-                            >
-                              {subcategory.sub_category_name}
-                            </button>
-                          ))}
+                        <div 
+                          className="border-l-2 ml-4"
+                          style={{
+                            backgroundColor: hexToRgba(COLORS.gray[50], 0.5),
+                            borderColor: COLORS.primary[500]
+                          }}
+                        >
+                          {subcategories.map((subcategory) => {
+                            const isSubSelected = selectedSubcategory?.idsub_category_master === subcategory.idsub_category_master;
+                            return (
+                              <button
+                                key={subcategory.idsub_category_master}
+                                onClick={() => handleSubcategorySelect(subcategory)}
+                                className="w-full text-left px-4 py-2 text-sm transition-colors"
+                                style={{
+                                  backgroundColor: isSubSelected ? COLORS.primary[100] : 'transparent',
+                                  color: isSubSelected ? COLORS.primary[700] : COLORS.gray[600],
+                                  fontWeight: isSubSelected ? '500' : 'normal'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!isSubSelected) {
+                                    e.currentTarget.style.backgroundColor = COLORS.gray[100];
+                                    e.currentTarget.style.color = COLORS.gray[900];
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (!isSubSelected) {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                    e.currentTarget.style.color = COLORS.gray[600];
+                                  }
+                                }}
+                              >
+                                {subcategory.sub_category_name}
+                              </button>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -810,7 +972,10 @@ const CategoryPage = () => {
         {/* Modern Mobile sidebar overlay */}
         {isMobile && sidebarOpen && (
           <div
-            className="fixed inset-0 bg-gradient-to-br from-black/60 via-black/50 to-black/60 backdrop-blur-sm z-40 animate-fade-in"
+            className="fixed inset-0 backdrop-blur-sm z-40 animate-fade-in"
+            style={{
+              background: `linear-gradient(to bottom right, ${hexToRgba(COLORS.black, 0.6)}, ${hexToRgba(COLORS.black, 0.5)}, ${hexToRgba(COLORS.black, 0.6)})`
+            }}
             onClick={toggleSidebar}
           />
         )}
@@ -818,39 +983,76 @@ const CategoryPage = () => {
         {/* Main Content */}
         <div className="flex-1 min-w-0">
           {/* Breadcrumb and Title */}
-          <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
-            <div className="flex items-center text-sm text-gray-500 mb-2 flex-wrap">
+          <div 
+            className="border-b px-4 sm:px-6 py-4"
+            style={{
+              backgroundColor: COLORS.white,
+              borderColor: COLORS.gray[200]
+            }}
+          >
+            <div className="flex items-center text-sm mb-2 flex-wrap" style={{ color: COLORS.gray[500] }}>
               {selectedDepartment && (
-                <span className="text-gray-700">{selectedDepartment}</span>
+                <span style={{ color: COLORS.gray[700] }}>{selectedDepartment}</span>
               )}
               {selectedCategory && (
                 <>
                   <span className="mx-2">›</span>
-                  <span className="text-gray-900 font-medium">{selectedCategory.category_name}</span>
+                  <span className="font-medium" style={{ color: COLORS.gray[900] }}>{selectedCategory.category_name}</span>
                 </>
               )}
               {selectedSubcategory && (
                 <>
                   <span className="mx-2">›</span>
-                  <span className="text-gray-700">{selectedSubcategory.sub_category_name}</span>
+                  <span style={{ color: COLORS.gray[700] }}>{selectedSubcategory.sub_category_name}</span>
                 </>
               )}
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold" style={{ color: COLORS.gray[900] }}>
               {selectedSubcategory?.sub_category_name || selectedCategory?.category_name || selectedDepartment || 'All Products'}
             </h1>
           </div>
 
           {/* Filters and Sort Bar */}
-          <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3">
+          <div 
+            className="border-b px-4 sm:px-6 py-3"
+            style={{
+              backgroundColor: COLORS.white,
+              borderColor: COLORS.gray[200]
+            }}
+          >
             <div className="flex flex-wrap items-center justify-between gap-3">
               {/* Filter Buttons */}
               <div className="flex flex-wrap gap-2">
                 <select
                   value={filters.brand}
                   onChange={(e) => handleFilterChange('brand', e.target.value)}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all cursor-pointer appearance-none pr-8 bg-no-repeat bg-right"
-                  style={{backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundSize: '1.25rem', backgroundPosition: 'right 0.5rem center'}}
+                  className="px-4 py-2 rounded-full text-sm transition-all cursor-pointer appearance-none pr-8 bg-no-repeat bg-right"
+                  style={{
+                    backgroundColor: COLORS.white,
+                    borderColor: COLORS.gray[300],
+                    color: COLORS.gray[700],
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2371717a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                    backgroundSize: '1.25rem',
+                    backgroundPosition: 'right 0.5rem center'
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = COLORS.primary[500];
+                    e.currentTarget.style.boxShadow = `0 0 0 2px ${hexToRgba(COLORS.primary[500], 0.5)}`;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = COLORS.gray[300];
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                  onMouseEnter={(e) => {
+                    if (document.activeElement !== e.currentTarget) {
+                      e.currentTarget.style.borderColor = COLORS.gray[400];
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (document.activeElement !== e.currentTarget) {
+                      e.currentTarget.style.borderColor = COLORS.gray[300];
+                    }
+                  }}
                 >
                   <option value="">Brand</option>
                   {availableBrands.map(brand => (
@@ -861,27 +1063,71 @@ const CategoryPage = () => {
                 <select
                   value={filters.category}
                   onChange={(e) => handleFilterChange('category', e.target.value)}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all cursor-pointer appearance-none pr-8 bg-no-repeat bg-right"
-                  style={{backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundSize: '1.25rem', backgroundPosition: 'right 0.5rem center'}}
+                  className="px-4 py-2 rounded-full text-sm transition-all cursor-pointer appearance-none pr-8 bg-no-repeat bg-right"
+                  style={{
+                    backgroundColor: COLORS.white,
+                    borderColor: COLORS.gray[300],
+                    color: COLORS.gray[700],
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2371717a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                    backgroundSize: '1.25rem',
+                    backgroundPosition: 'right 0.5rem center'
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = COLORS.primary[500];
+                    e.currentTarget.style.boxShadow = `0 0 0 2px ${hexToRgba(COLORS.primary[500], 0.5)}`;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = COLORS.gray[300];
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                  onMouseEnter={(e) => {
+                    if (document.activeElement !== e.currentTarget) {
+                      e.currentTarget.style.borderColor = COLORS.gray[400];
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (document.activeElement !== e.currentTarget) {
+                      e.currentTarget.style.borderColor = COLORS.gray[300];
+                    }
+                  }}
                 >
                   <option value="">Category</option>
                 </select>
-
-               
-
-                
-
-                
               </div>
 
               {/* Sort By */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-700 font-medium">Sort by:</span>
+                <span className="text-sm font-medium" style={{ color: COLORS.gray[700] }}>Sort by:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded text-sm text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all cursor-pointer appearance-none pr-8 bg-no-repeat bg-right"
-                  style={{backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundSize: '1.25rem', backgroundPosition: 'right 0.5rem center'}}
+                  className="px-4 py-2 rounded text-sm transition-all cursor-pointer appearance-none pr-8 bg-no-repeat bg-right"
+                  style={{
+                    backgroundColor: COLORS.white,
+                    borderColor: COLORS.gray[300],
+                    color: COLORS.gray[700],
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2371717a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                    backgroundSize: '1.25rem',
+                    backgroundPosition: 'right 0.5rem center'
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = COLORS.primary[500];
+                    e.currentTarget.style.boxShadow = `0 0 0 2px ${hexToRgba(COLORS.primary[500], 0.5)}`;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = COLORS.gray[300];
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                  onMouseEnter={(e) => {
+                    if (document.activeElement !== e.currentTarget) {
+                      e.currentTarget.style.borderColor = COLORS.gray[400];
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (document.activeElement !== e.currentTarget) {
+                      e.currentTarget.style.borderColor = COLORS.gray[300];
+                    }
+                  }}
                 >
                   <option value="relevance">Relevance</option>
                   <option value="price-low">Price: Low to High</option>
@@ -894,16 +1140,27 @@ const CategoryPage = () => {
           </div>
 
           {/* Products Grid */}
-          <div className="p-4 sm:p-6 bg-gray-50 relative min-h-screen">
+          <div className="p-4 sm:p-6 relative min-h-screen" style={{ backgroundColor: COLORS.gray[50] }}>
             {/* Centered Loading State - Shows when loading or no subcategory selected yet */}
             {(productsLoading || !selectedSubcategory) ? (
               <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
                   <div className="relative inline-block mb-4">
-                    <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-                    <div className="absolute inset-0 w-16 h-16 bg-green-400/20 rounded-full blur-lg animate-pulse"></div>
+                    <div 
+                      className="w-16 h-16 border-4 border-t-transparent rounded-full animate-spin"
+                      style={{
+                        borderColor: COLORS.primary[500],
+                        borderTopColor: 'transparent'
+                      }}
+                    ></div>
+                    <div 
+                      className="absolute inset-0 w-16 h-16 rounded-full blur-lg animate-pulse"
+                      style={{
+                        backgroundColor: hexToRgba(COLORS.primary[400], 0.2)
+                      }}
+                    ></div>
                   </div>
-                  <p className="text-gray-600 font-medium text-lg">Loading products...</p>
+                  <p className="font-medium text-lg" style={{ color: COLORS.gray[600] }}>Loading products...</p>
                 </div>
               </div>
             ) : filteredProducts.length > 0 ? (
@@ -915,11 +1172,15 @@ const CategoryPage = () => {
                     return (
                     <div 
                       key={uniqueKey} 
-                      className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer"
+                      className="group rounded-lg border overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer"
+                      style={{
+                        backgroundColor: COLORS.white,
+                        borderColor: COLORS.gray[200]
+                      }}
                       onClick={() => navigate(`/product/${product.p_code || product._id}?dept_id=${product.dept_id || departmentId}&category_id=${product.category_id || selectedCategory?.idcategory_master}&sub_category_id=${product.sub_category_id || selectedSubcategory?.idsub_category_master}`)}
                     >
                       {/* Product Image */}
-                      <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden p-4">
+                      <div className="relative aspect-square flex items-center justify-center overflow-hidden p-4" style={{ backgroundColor: COLORS.white }}>
                         {/* Favorite Button */}
                         <button
                           onClick={(e) => {
@@ -941,12 +1202,24 @@ const CategoryPage = () => {
                               max_quantity_allowed: product.max_quantity_allowed || 10
                             });
                           }}
-                          className="absolute top-2 right-2 z-20 p-1.5 bg-white/95 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+                          className="absolute top-2 right-2 z-20 p-1.5 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+                          style={{
+                            backgroundColor: hexToRgba(COLORS.white, 0.95)
+                          }}
                         >
                           {isFavorite(product.p_code || product._id) ? (
-                            <HeartSolid className="w-4 h-4 text-red-500" />
+                            <HeartSolid className="w-4 h-4" style={{ color: COLORS.error[500] }} />
                           ) : (
-                            <HeartOutline className="w-4 h-4 text-gray-400 group-hover:text-red-500 transition-colors duration-200" />
+                            <HeartOutline 
+                              className="w-4 h-4 transition-colors duration-200" 
+                              style={{ color: COLORS.gray[400] }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.color = COLORS.error[500];
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.color = COLORS.gray[400];
+                              }}
+                            />
                           )}
                         </button>
                         
@@ -959,32 +1232,42 @@ const CategoryPage = () => {
                           }}
                         />
                 {product.discount_percentage > 0 && (
-                  <div className="absolute top-2 left-2 bg-orange-500 text-white text-xs px-2 py-1 rounded font-semibold z-10">
+                  <div 
+                    className="absolute top-2 left-2 text-white text-xs px-2 py-1 rounded font-semibold z-10"
+                    style={{ backgroundColor: COLORS.warning[500] }}
+                  >
                     ₹ {product.discount_percentage} OFF
                   </div>
                 )}
               </div>
 
                       {/* Product Info */}
-                      <div className="p-3 border-t border-gray-100">
+                      <div className="p-3 border-t" style={{ borderColor: COLORS.gray[100] }}>
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs text-gray-500 mb-1">MRP <span className="text-gray-400"></span></p>
-                            <p className="text-xs text-gray-400 line-through">₹ {product.product_mrp}</p>
+                            <p className="text-xs mb-1" style={{ color: COLORS.gray[500] }}>MRP <span style={{ color: COLORS.gray[400] }}></span></p>
+                            <p className="text-xs line-through" style={{ color: COLORS.gray[400] }}>₹ {product.product_mrp}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-xs text-gray-500 mb-1">Selling Price <span className="text-gray-400"></span></p>
-                            <p className="text-base font-bold text-gray-900">₹ {product.our_price}</p>
+                            <p className="text-xs mb-1" style={{ color: COLORS.gray[500] }}>Selling Price <span style={{ color: COLORS.gray[400] }}></span></p>
+                            <p className="text-base font-bold" style={{ color: COLORS.gray[900] }}>₹ {product.our_price}</p>
                           </div>
                         </div>
 
-                        <p className="text-xs text-gray-500 mb-2">(Inclusive of all taxes)</p>
+                        <p className="text-xs mb-2" style={{ color: COLORS.gray[500] }}>(Inclusive of all taxes)</p>
 
-                        <h3 className="text-sm text-gray-900 mb-2 line-clamp-2 min-h-[2.5rem]">{product.product_name}</h3>
+                        <h3 className="text-sm mb-2 line-clamp-2 min-h-[2.5rem]" style={{ color: COLORS.gray[900] }}>{product.product_name}</h3>
 
                         {/* Package Size Display */}
                         {product.package_size && (
-                          <div className="w-full text-xs border border-gray-300 rounded px-2 py-1.5 mb-2 bg-white">
+                          <div 
+                            className="w-full text-xs border rounded px-2 py-1.5 mb-2"
+                            style={{
+                              borderColor: COLORS.gray[300],
+                              backgroundColor: COLORS.white,
+                              color: COLORS.gray[700]
+                            }}
+                          >
                             {product.package_unit && product.package_size.includes(product.package_unit)
                               ? product.package_size
                               : `${product.package_size}${product.package_unit ? ` ${product.package_unit}` : ''}`
@@ -995,20 +1278,34 @@ const CategoryPage = () => {
                         {/* Add to Cart Button or Quantity Selector */}
                         {!showQuantitySelector[product.p_code || product._id] ? (
                           <button 
-                            className={`w-full py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-md ${
-                              addingToCart[product.p_code || product._id] 
-                                ? 'bg-gray-400 cursor-not-allowed' 
-                                : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-lg transform hover:scale-105 active:scale-95'
-                            }`}
+                            className="w-full py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-md text-white hover:shadow-lg transform hover:scale-105 active:scale-95"
+                            style={{
+                              background: addingToCart[product.p_code || product._id] 
+                                ? COLORS.gray[400]
+                                : `linear-gradient(to right, ${COLORS.primary[600]}, ${COLORS.success[600]})`,
+                              cursor: addingToCart[product.p_code || product._id] ? 'not-allowed' : 'pointer'
+                            }}
                             onClick={(e) => {
                               e.stopPropagation(); // Prevent navigation when clicking the button
                               handleAddToCart(product);
                             }}
                             disabled={addingToCart[product.p_code || product._id]}
+                            onMouseEnter={(e) => {
+                              if (!addingToCart[product.p_code || product._id]) {
+                                e.currentTarget.style.background = `linear-gradient(to right, ${COLORS.primary[700]}, ${COLORS.success[700]})`;
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!addingToCart[product.p_code || product._id]) {
+                                e.currentTarget.style.background = `linear-gradient(to right, ${COLORS.primary[600]}, ${COLORS.success[600]})`;
+                              }
+                            }}
                           >
                             {addingToCart[product.p_code || product._id] ? (
                               <>
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <div 
+                                  className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+                                ></div>
                                 <span>ADDING...</span>
                               </>
                             ) : (
@@ -1023,7 +1320,13 @@ const CategoryPage = () => {
                         ) : (
                           <div className="w-full" onClick={(e) => e.stopPropagation()}>
                             {/* Quantity Selector */}
-                            <div className="flex items-stretch bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg overflow-hidden shadow-md w-full hover:shadow-lg transition-all duration-200">
+                            <div 
+                              className="flex items-stretch border-2 rounded-lg overflow-hidden shadow-md w-full hover:shadow-lg transition-all duration-200"
+                              style={{
+                                background: `linear-gradient(to right, ${COLORS.primary[50]}, ${COLORS.success[50]})`,
+                                borderColor: COLORS.primary[200]
+                              }}
+                            >
                               {/* Minus Button */}
                               <button
                                 onClick={(e) => {
@@ -1031,18 +1334,38 @@ const CategoryPage = () => {
                                   handleQuantityChange(product, (quantities[product.p_code || product._id] || 1) - 1);
                                 }}
                                 disabled={(quantities[product.p_code || product._id] || 1) <= 1}
-                                className={`flex items-center justify-center px-3 py-2 transition-all duration-200 ${
-                                  (quantities[product.p_code || product._id] || 1) <= 1
-                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                    : 'bg-gradient-to-br from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-md active:scale-95'
-                                }`}
+                                className="flex items-center justify-center px-3 py-2 transition-all duration-200"
+                                style={{
+                                  backgroundColor: (quantities[product.p_code || product._id] || 1) <= 1
+                                    ? COLORS.gray[200]
+                                    : `linear-gradient(to bottom right, ${COLORS.primary[600]}, ${COLORS.success[600]})`,
+                                  color: (quantities[product.p_code || product._id] || 1) <= 1
+                                    ? COLORS.gray[400]
+                                    : COLORS.white,
+                                  cursor: (quantities[product.p_code || product._id] || 1) <= 1 ? 'not-allowed' : 'pointer'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if ((quantities[product.p_code || product._id] || 1) > 1) {
+                                    e.currentTarget.style.background = `linear-gradient(to bottom right, ${COLORS.primary[700]}, ${COLORS.success[700]})`;
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if ((quantities[product.p_code || product._id] || 1) > 1) {
+                                    e.currentTarget.style.background = `linear-gradient(to bottom right, ${COLORS.primary[600]}, ${COLORS.success[600]})`;
+                                  }
+                                }}
                               >
                                 <MinusIcon className="w-4 h-4 font-bold" strokeWidth={3} />
                               </button>
 
                               {/* Quantity Display */}
-                              <div className="bg-white px-4 py-2 flex-1 flex items-center justify-center border-x-2 border-green-200">
-                                <span className="text-base font-bold text-green-700">
+                              <div 
+                                className="bg-white px-4 py-2 flex-1 flex items-center justify-center border-x-2"
+                                style={{
+                                  borderColor: COLORS.primary[200]
+                                }}
+                              >
+                                <span className="text-base font-bold" style={{ color: COLORS.primary[700] }}>
                                   {quantities[product.p_code || product._id] || 1}
                                 </span>
                               </div>
@@ -1054,11 +1377,26 @@ const CategoryPage = () => {
                                   handleQuantityChange(product, (quantities[product.p_code || product._id] || 1) + 1);
                                 }}
                                 disabled={(quantities[product.p_code || product._id] || 1) >= (product.max_quantity_allowed || 10)}
-                                className={`flex items-center justify-center px-3 py-2 transition-all duration-200 ${
-                                  (quantities[product.p_code || product._id] || 1) >= (product.max_quantity_allowed || 10)
-                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                    : 'bg-gradient-to-br from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-md active:scale-95'
-                                }`}
+                                className="flex items-center justify-center px-3 py-2 transition-all duration-200"
+                                style={{
+                                  backgroundColor: (quantities[product.p_code || product._id] || 1) >= (product.max_quantity_allowed || 10)
+                                    ? COLORS.gray[200]
+                                    : `linear-gradient(to bottom right, ${COLORS.primary[600]}, ${COLORS.success[600]})`,
+                                  color: (quantities[product.p_code || product._id] || 1) >= (product.max_quantity_allowed || 10)
+                                    ? COLORS.gray[400]
+                                    : COLORS.white,
+                                  cursor: (quantities[product.p_code || product._id] || 1) >= (product.max_quantity_allowed || 10) ? 'not-allowed' : 'pointer'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if ((quantities[product.p_code || product._id] || 1) < (product.max_quantity_allowed || 10)) {
+                                    e.currentTarget.style.background = `linear-gradient(to bottom right, ${COLORS.primary[700]}, ${COLORS.success[700]})`;
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if ((quantities[product.p_code || product._id] || 1) < (product.max_quantity_allowed || 10)) {
+                                    e.currentTarget.style.background = `linear-gradient(to bottom right, ${COLORS.primary[600]}, ${COLORS.success[600]})`;
+                                  }
+                                }}
                               >
                                 <PlusIcon className="w-4 h-4 font-bold" strokeWidth={3} />
                               </button>
@@ -1073,16 +1411,32 @@ const CategoryPage = () => {
 
                 {/* Modern Pagination Controls */}
                 {pagination.total_pages > 1 && (
-                  <div className="mt-10 pt-8 border-t border-gray-200">
+                  <div className="mt-10 pt-8 border-t" style={{ borderColor: COLORS.gray[200] }}>
                     <div className="flex flex-col items-center gap-4">
-                      <div className="text-sm text-gray-600 font-medium">
-                        Showing <span className="text-emerald-600 font-bold">{products.length}</span> of <span className="text-emerald-600 font-bold">{pagination.total_products}</span> products
+                      <div className="text-sm font-medium" style={{ color: COLORS.gray[600] }}>
+                        Showing <span className="font-bold" style={{ color: COLORS.primary[600] }}>{products.length}</span> of <span className="font-bold" style={{ color: COLORS.primary[600] }}>{pagination.total_products}</span> products
                       </div>
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => handlePageChange(currentPage - 1)}
                           disabled={!pagination.has_prev}
-                          className="px-4 sm:px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl text-sm font-bold hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                          className="px-4 sm:px-6 py-3 text-white rounded-xl text-sm font-bold hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 disabled:cursor-not-allowed disabled:hover:scale-100"
+                          style={{
+                            background: !pagination.has_prev 
+                              ? COLORS.gray[300]
+                              : `linear-gradient(to right, ${COLORS.primary[500]}, ${COLORS.success[500]})`,
+                            opacity: !pagination.has_prev ? 0.5 : 1
+                          }}
+                          onMouseEnter={(e) => {
+                            if (pagination.has_prev) {
+                              e.currentTarget.style.background = `linear-gradient(to right, ${COLORS.primary[600]}, ${COLORS.success[600]})`;
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (pagination.has_prev) {
+                              e.currentTarget.style.background = `linear-gradient(to right, ${COLORS.primary[500]}, ${COLORS.success[500]})`;
+                            }
+                          }}
                         >
                           Previous
                         </button>
@@ -1090,15 +1444,33 @@ const CategoryPage = () => {
                         <div className="flex items-center space-x-1.5">
                           {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
                             const pageNum = i + 1;
+                            const isActive = currentPage === pageNum;
                             return (
                               <button
                                 key={pageNum}
                                 onClick={() => handlePageChange(pageNum)}
-                                className={`px-4 py-3 text-sm font-bold rounded-xl transition-all duration-300 ${
-                                  currentPage === pageNum
-                                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg scale-110'
-                                    : 'text-gray-700 bg-white border-2 border-gray-200 hover:border-emerald-400 hover:scale-105'
-                                }`}
+                                className="px-4 py-3 text-sm font-bold rounded-xl transition-all duration-300"
+                                style={{
+                                  background: isActive 
+                                    ? `linear-gradient(to right, ${COLORS.primary[500]}, ${COLORS.success[500]})`
+                                    : COLORS.white,
+                                  color: isActive ? COLORS.white : COLORS.gray[700],
+                                  border: isActive ? 'none' : `2px solid ${COLORS.gray[200]}`,
+                                  transform: isActive ? 'scale(1.1)' : 'scale(1)',
+                                  boxShadow: isActive ? '0 10px 15px rgba(0, 0, 0, 0.1)' : 'none'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!isActive) {
+                                    e.currentTarget.style.borderColor = COLORS.primary[400];
+                                    e.currentTarget.style.transform = 'scale(1.05)';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (!isActive) {
+                                    e.currentTarget.style.borderColor = COLORS.gray[200];
+                                    e.currentTarget.style.transform = 'scale(1)';
+                                  }
+                                }}
                               >
                                 {pageNum}
                               </button>
@@ -1109,7 +1481,23 @@ const CategoryPage = () => {
                         <button
                           onClick={() => handlePageChange(currentPage + 1)}
                           disabled={!pagination.has_next}
-                          className="px-4 sm:px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-xl text-sm font-bold hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                          className="px-4 sm:px-6 py-3 text-white rounded-xl text-sm font-bold hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 disabled:cursor-not-allowed disabled:hover:scale-100"
+                          style={{
+                            background: !pagination.has_next 
+                              ? COLORS.gray[300]
+                              : `linear-gradient(to right, ${COLORS.success[500]}, ${COLORS.primary[400]})`,
+                            opacity: !pagination.has_next ? 0.5 : 1
+                          }}
+                          onMouseEnter={(e) => {
+                            if (pagination.has_next) {
+                              e.currentTarget.style.background = `linear-gradient(to right, ${COLORS.success[600]}, ${COLORS.primary[500]})`;
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (pagination.has_next) {
+                              e.currentTarget.style.background = `linear-gradient(to right, ${COLORS.success[500]}, ${COLORS.primary[400]})`;
+                            }
+                          }}
                         >
                           Next
                         </button>
@@ -1122,18 +1510,37 @@ const CategoryPage = () => {
               <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
                   <div className="relative inline-block mb-6">
-                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-full blur-2xl opacity-30 animate-pulse"></div>
-                    <div className="relative w-32 h-32 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center mx-auto shadow-xl">
+                    <div 
+                      className="absolute inset-0 rounded-full blur-2xl opacity-30 animate-pulse"
+                      style={{
+                        background: `linear-gradient(to bottom right, ${COLORS.primary[400]}, ${COLORS.success[400]})`
+                      }}
+                    ></div>
+                    <div 
+                      className="relative w-32 h-32 rounded-full flex items-center justify-center mx-auto shadow-xl"
+                      style={{
+                        background: `linear-gradient(to bottom right, ${COLORS.primary[100]}, ${COLORS.success[100]})`
+                      }}
+                    >
                       <span className="text-6xl">📦</span>
                     </div>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">No Products Found</h3>
-                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  <h3 className="text-2xl font-bold mb-3" style={{ color: COLORS.gray[900] }}>No Products Found</h3>
+                  <p className="mb-6 max-w-md mx-auto" style={{ color: COLORS.gray[600] }}>
                     Try adjusting your filters or browse different subcategories to find what you're looking for
                   </p>
                   <button
                     onClick={clearFilters}
-                    className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300"
+                    className="px-6 py-3 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300"
+                    style={{
+                      background: `linear-gradient(to right, ${COLORS.primary[500]}, ${COLORS.success[500]})`
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = `linear-gradient(to right, ${COLORS.primary[600]}, ${COLORS.success[600]})`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = `linear-gradient(to right, ${COLORS.primary[500]}, ${COLORS.success[500]})`;
+                    }}
                   >
                     Clear Filters
                   </button>
@@ -1150,15 +1557,15 @@ const CategoryPage = () => {
           width: 8px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-          background: #f1f5f9;
+          background: ${COLORS.gray[100]};
           border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, #10b981, #14b8a6);
+          background: linear-gradient(to bottom, ${COLORS.primary[500]}, ${COLORS.success[500]});
           border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(to bottom, #059669, #0d9488);
+          background: linear-gradient(to bottom, ${COLORS.primary[600]}, ${COLORS.success[600]});
         }
         .hover\:scale-102:hover {
           transform: scale(1.02);

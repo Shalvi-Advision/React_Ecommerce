@@ -20,6 +20,17 @@ import AdvertisementCarousel from '../components/AdvertisementCarousel';
 import FamousCategories from '../components/FamousCategories';
 import ProductCard from '../components/ProductCard';
 import { ChevronLeftIcon, ChevronRightIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { COLORS } from '../constants/theme';
+
+// Helper function to convert hex color to rgba with opacity
+const hexToRgba = (hex, opacity = 1) => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return hex;
+  const r = parseInt(result[1], 16);
+  const g = parseInt(result[2], 16);
+  const b = parseInt(result[3], 16);
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+};
 
 const HomePage = () => {
   const [searchParams] = useSearchParams();
@@ -230,7 +241,12 @@ const HomePage = () => {
 
   if (loading && allProducts.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background: `linear-gradient(to bottom right, ${COLORS.primary[50]}, ${COLORS.success[50]}, ${COLORS.primary[100]})`
+        }}
+      >
         <div className="text-center">
           <Loading size="large" text="Loading products..." />
         </div>
@@ -240,9 +256,25 @@ const HomePage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 via-pink-50 to-red-50">
-        <div className="text-center bg-white/80 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-white/20">
-          <p className="text-red-600 mb-4 text-lg font-semibold">Error: {error}</p>
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background: `linear-gradient(to bottom right, ${COLORS.error[50]}, ${COLORS.error[100]}, ${COLORS.error[50]})`
+        }}
+      >
+        <div 
+          className="text-center backdrop-blur-lg rounded-3xl p-8 shadow-2xl border"
+          style={{
+            backgroundColor: hexToRgba(COLORS.white, 0.8),
+            borderColor: hexToRgba(COLORS.gray[200], 0.2)
+          }}
+        >
+          <p 
+            className="mb-4 text-lg font-semibold"
+            style={{ color: COLORS.error[600] }}
+          >
+            Error: {error}
+          </p>
           <Button onClick={() => loadProducts(currentPage)}>Try Again</Button>
         </div>
       </div>
@@ -250,12 +282,32 @@ const HomePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50">
+    <div 
+      className="min-h-screen"
+      style={{
+        background: `linear-gradient(to bottom right, ${COLORS.secondary[50]}, ${COLORS.gray[50]}, ${COLORS.secondary[100]})`
+      }}
+    >
       {/* Hero Carousel with Modern Frame */}
-      <div className="w-full bg-gradient-to-r from-violet-600/5 via-purple-600/5 to-fuchsia-600/5 py-3 sm:py-4 lg:py-6">
+      <div 
+        className="w-full py-3 sm:py-4 lg:py-6"
+        style={{
+          background: `linear-gradient(to right, ${hexToRgba(COLORS.primary[600], 0.05)}, ${hexToRgba(COLORS.primary[500], 0.05)}, ${hexToRgba(COLORS.success[500], 0.05)})`
+        }}
+      >
         <div className="container mx-auto px-2 sm:px-4 lg:px-6">
-          <div className="relative overflow-hidden rounded-3xl shadow-2xl ring-1 ring-gray-900/5">
-            <div className="absolute inset-0 bg-gradient-to-tr from-violet-500/10 via-purple-500/10 to-fuchsia-500/10 pointer-events-none"></div>
+          <div 
+            className="relative overflow-hidden rounded-3xl shadow-2xl"
+            style={{
+              boxShadow: `0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px ${hexToRgba(COLORS.gray[900], 0.05)}`
+            }}
+          >
+            <div 
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: `linear-gradient(to top right, ${hexToRgba(COLORS.primary[500], 0.1)}, ${hexToRgba(COLORS.primary[400], 0.1)}, ${hexToRgba(COLORS.success[400], 0.1)})`
+              }}
+            ></div>
             <Carousel />
           </div>
         </div>
@@ -275,10 +327,26 @@ const HomePage = () => {
 
       {/* Category Banner with Modern Design */}
       <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-50/50 via-orange-50/50 to-rose-50/50"></div>
-        <div className="absolute top-1/2 left-1/4 w-96 h-96 bg-gradient-to-br from-amber-400/20 to-orange-400/20 rounded-full blur-3xl -translate-y-1/2"></div>
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(to bottom right, ${hexToRgba(COLORS.warning[50], 0.5)}, ${hexToRgba(COLORS.warning[100], 0.5)}, ${hexToRgba(COLORS.warning[50], 0.5)})`
+          }}
+        ></div>
+        <div 
+          className="absolute top-1/2 left-1/4 w-96 h-96 rounded-full blur-3xl -translate-y-1/2"
+          style={{
+            background: `linear-gradient(to bottom right, ${hexToRgba(COLORS.warning[400], 0.2)}, ${hexToRgba(COLORS.warning[500], 0.2)})`
+          }}
+        ></div>
         <div className="relative container mx-auto px-2 sm:px-4 lg:px-6">
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-2 sm:p-3 lg:p-4 shadow-xl border border-white/60 hover:shadow-2xl transition-all duration-300 overflow-hidden">
+          <div 
+            className="backdrop-blur-sm rounded-3xl p-2 sm:p-3 lg:p-4 shadow-xl border hover:shadow-2xl transition-all duration-300 overflow-hidden"
+            style={{
+              backgroundColor: hexToRgba(COLORS.white, 0.8),
+              borderColor: hexToRgba(COLORS.white, 0.6)
+            }}
+          >
             <CategoryBanner />
           </div>
         </div>
@@ -313,10 +381,26 @@ const HomePage = () => {
 
       {/* Offer Banner with Modern Gradient */}
       <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 via-blue-50/50 to-sky-50/50"></div>
-        <div className="absolute top-1/2 right-1/4 w-96 h-96 bg-gradient-to-br from-indigo-400/20 to-blue-400/20 rounded-full blur-3xl -translate-y-1/2"></div>
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(to bottom right, ${hexToRgba(COLORS.secondary[50], 0.5)}, ${hexToRgba(COLORS.secondary[100], 0.5)}, ${hexToRgba(COLORS.secondary[50], 0.5)})`
+          }}
+        ></div>
+        <div 
+          className="absolute top-1/2 right-1/4 w-96 h-96 rounded-full blur-3xl -translate-y-1/2"
+          style={{
+            background: `linear-gradient(to bottom right, ${hexToRgba(COLORS.secondary[400], 0.2)}, ${hexToRgba(COLORS.secondary[500], 0.2)})`
+          }}
+        ></div>
         <div className="relative container mx-auto px-2 sm:px-4 lg:px-6">
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-2 sm:p-3 lg:p-4 shadow-xl border border-white/60 hover:shadow-2xl transition-all duration-300 overflow-hidden">
+          <div 
+            className="backdrop-blur-sm rounded-3xl p-2 sm:p-3 lg:p-4 shadow-xl border hover:shadow-2xl transition-all duration-300 overflow-hidden"
+            style={{
+              backgroundColor: hexToRgba(COLORS.white, 0.8),
+              borderColor: hexToRgba(COLORS.white, 0.6)
+            }}
+          >
             <OfferBanner />
           </div>
         </div>
@@ -324,11 +408,32 @@ const HomePage = () => {
 
       {/* Seasonal Offer Banner with Elegant Design */}
       <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 via-fuchsia-50/50 to-pink-50/50"></div>
-        <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-fuchsia-400/20 rounded-full blur-3xl -translate-x-1/4 -translate-y-1/4"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-fuchsia-400/20 to-pink-400/20 rounded-full blur-3xl translate-x-1/4 translate-y-1/4"></div>
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(to bottom right, ${hexToRgba(COLORS.primary[50], 0.5)}, ${hexToRgba(COLORS.success[50], 0.5)}, ${hexToRgba(COLORS.primary[100], 0.5)})`
+          }}
+        ></div>
+        <div 
+          className="absolute top-0 left-0 w-96 h-96 rounded-full blur-3xl -translate-x-1/4 -translate-y-1/4"
+          style={{
+            background: `linear-gradient(to bottom right, ${hexToRgba(COLORS.primary[400], 0.2)}, ${hexToRgba(COLORS.success[400], 0.2)})`
+          }}
+        ></div>
+        <div 
+          className="absolute bottom-0 right-0 w-96 h-96 rounded-full blur-3xl translate-x-1/4 translate-y-1/4"
+          style={{
+            background: `linear-gradient(to bottom right, ${hexToRgba(COLORS.success[400], 0.2)}, ${hexToRgba(COLORS.primary[500], 0.2)})`
+          }}
+        ></div>
         <div className="relative container mx-auto px-2 sm:px-4 lg:px-6">
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-2 sm:p-3 lg:p-4 shadow-xl border border-white/60 hover:shadow-2xl transition-all duration-300 overflow-hidden">
+          <div 
+            className="backdrop-blur-sm rounded-3xl p-2 sm:p-3 lg:p-4 shadow-xl border hover:shadow-2xl transition-all duration-300 overflow-hidden"
+            style={{
+              backgroundColor: hexToRgba(COLORS.white, 0.8),
+              borderColor: hexToRgba(COLORS.white, 0.6)
+            }}
+          >
             <SeasonalOfferBanner />
           </div>
         </div>
