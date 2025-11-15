@@ -25,6 +25,17 @@ import {
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { useFavorite } from '../context/FavoriteContext';
+import { COLORS } from '../constants/theme';
+
+// Helper function to convert hex color to rgba with opacity
+const hexToRgba = (hex, opacity = 1) => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return hex;
+  const r = parseInt(result[1], 16);
+  const g = parseInt(result[2], 16);
+  const b = parseInt(result[3], 16);
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+};
 
 const Header = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -292,7 +303,13 @@ const Header = () => {
 
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <header 
+      className="sticky top-0 z-50"
+      style={{
+        backgroundColor: COLORS.white,
+        borderBottom: `1px solid ${COLORS.gray[200]}`
+      }}
+    >
       {/* Top bar */}
       <div className="container mx-auto px-2 sm:px-4">
         <div className="flex items-center justify-between py-2 sm:py-3 gap-2 sm:gap-4">
@@ -319,34 +336,68 @@ const Header = () => {
             {/* About Us Button */}
             <Link
               to="/about"
-              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:border-primary-300 hover:text-primary-600 transition-colors text-sm font-medium"
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-colors text-sm font-medium"
+              style={{
+                borderColor: COLORS.gray[200],
+                color: COLORS.gray[700]
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = COLORS.primary[300];
+                e.currentTarget.style.color = COLORS.primary[600];
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = COLORS.gray[200];
+                e.currentTarget.style.color = COLORS.gray[700];
+              }}
               aria-label="About Us"
             >
-              <InformationCircleIcon className="w-4 h-4 text-primary-600" />
+              <InformationCircleIcon style={{ color: COLORS.primary[600] }} className="w-4 h-4" />
               <span>About Us</span>
             </Link>
             {/* Mobile About Us Icon */}
             <Link
               to="/about"
-              className="sm:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-gray-700 hover:border-primary-300 hover:text-primary-600 transition-colors"
+              className="sm:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg border transition-colors"
+              style={{
+                borderColor: COLORS.gray[200],
+                color: COLORS.gray[700]
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = COLORS.primary[300];
+                e.currentTarget.style.color = COLORS.primary[600];
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = COLORS.gray[200];
+                e.currentTarget.style.color = COLORS.gray[700];
+              }}
               aria-label="About Us"
               title="About Us"
             >
-              <InformationCircleIcon className="w-5 h-5 text-primary-600" />
+              <InformationCircleIcon style={{ color: COLORS.primary[600] }} className="w-5 h-5" />
             </Link>
             {/* Desktop Location Button */}
             <div className="hidden lg:block">
               <button 
                 onClick={openPincodeModal}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:border-primary-300 transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors"
+                style={{
+                  borderColor: COLORS.gray[200],
+                  color: COLORS.gray[700]
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = COLORS.primary[300];
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = COLORS.gray[200];
+                }}
               >
-                <MapPinIcon className="w-5 h-5 text-primary-600" />
+                <MapPinIcon style={{ color: COLORS.primary[600] }} className="w-5 h-5" />
                 <span className="text-sm font-medium">
                   {isLocationSet ? getLocationDisplayText() : 'Select Location'}
                 </span>
-                <ChevronDownIcon className="w-4 h-4 text-gray-500" />
+                <ChevronDownIcon style={{ color: COLORS.gray[500] }} className="w-4 h-4" />
                 {isLocationSet && getStoreDisplayText() && (
-                  <span className="ml-1 text-gray-500 text-xs">
+                  <span className="ml-1 text-xs" style={{ color: COLORS.gray[500] }}>
                     {getStoreDisplayText()}
                   </span>
                 )}
@@ -359,15 +410,29 @@ const Header = () => {
           {/* Search - Responsive with Dropdown */}
           <form onSubmit={handleSearchSubmit} className="flex-1 max-w-2xl lg:max-w-4xl w-full mx-2 sm:mx-4 relative">
             <div className="flex">
-              <div className="flex items-center gap-2 flex-1 border border-gray-300 rounded-l-lg px-2 sm:px-3 focus-within:ring-2 focus-within:ring-primary-500 bg-white">
-                <MagnifyingGlassIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
+              <div 
+                className="flex items-center gap-2 flex-1 border rounded-l-lg px-2 sm:px-3 bg-white"
+                style={{
+                  borderColor: COLORS.gray[300]
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.boxShadow = `0 0 0 2px ${hexToRgba(COLORS.primary[500], 0.5)}`;
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <MagnifyingGlassIcon style={{ color: COLORS.gray[500] }} className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <input
                   type="text"
                   value={search}
                   onChange={handleSearchChange}
                   onFocus={handleSearchFocus}
                   placeholder="Search for products..."
-                  className="w-full py-2 outline-none text-gray-800 placeholder-gray-400 text-sm sm:text-base"
+                  className="w-full py-2 outline-none text-sm sm:text-base"
+                  style={{
+                    color: COLORS.gray[800]
+                  }}
                   autoComplete="off"
                   aria-label="Search products"
                   aria-autocomplete="list"
@@ -376,13 +441,25 @@ const Header = () => {
                 />
                 {isSearching && (
                   <div className="flex-shrink-0">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+                    <div 
+                      className="animate-spin rounded-full h-4 w-4 border-b-2"
+                      style={{ borderColor: COLORS.primary[600] }}
+                    ></div>
                   </div>
                 )}
               </div>
               <button 
                 type="submit" 
-                className="bg-primary-600 hover:bg-primary-700 text-white px-3 sm:px-4 py-2 rounded-r-lg font-medium text-xs sm:text-sm transition-colors"
+                className="text-white px-3 sm:px-4 py-2 rounded-r-lg font-medium text-xs sm:text-sm transition-colors"
+                style={{
+                  backgroundColor: COLORS.primary[600]
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = COLORS.primary[700];
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = COLORS.primary[600];
+                }}
                 aria-label="Search"
               >
                 <span className="hidden sm:inline">SEARCH</span>
@@ -410,10 +487,21 @@ const Header = () => {
                 <div className="hidden lg:block relative account-dropdown-container">
                   <button
                     onClick={handleAccountDropdownToggle}
-                    className="flex items-center gap-2 text-gray-700 hover:text-primary-700 text-sm font-medium p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-2 text-sm font-medium p-2 rounded-lg transition-colors"
+                    style={{
+                      color: COLORS.gray[700]
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = COLORS.primary[700];
+                      e.currentTarget.style.backgroundColor = COLORS.gray[50];
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = COLORS.gray[700];
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
                   >
                     <div className="text-right">
-                      <div className="text-xs text-gray-500">Hello {user?.name || 'User'}</div>
+                      <div className="text-xs" style={{ color: COLORS.gray[500] }}>Hello {user?.name || 'User'}</div>
                       <div className="font-semibold">My Account</div>
                     </div>
                     <ChevronDownIcon className={`w-4 h-4 transition-transform ${isAccountDropdownOpen ? 'rotate-180' : ''}`} />
@@ -421,60 +509,112 @@ const Header = () => {
 
                   {/* Account Dropdown Menu */}
                   {isAccountDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <div 
+                      className="absolute right-0 mt-2 w-64 rounded-lg shadow-lg border py-2 z-50"
+                      style={{
+                        backgroundColor: COLORS.white,
+                        borderColor: COLORS.primary[200],
+                        boxShadow: `0 10px 15px ${hexToRgba(COLORS.primary[900], 0.1)}`
+                      }}
+                    >
                       {/* Account Details Section */}
                       <div className="px-4 py-2">
-                        <div className="text-xs text-gray-500 font-medium mb-2">Account Details</div>
+                        <div className="text-xs font-medium mb-2" style={{ color: COLORS.primary[700] }}>Account Details</div>
                         <button
                           onClick={() => handleAccountMenuClick('profile')}
-                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          className="w-full text-left px-2 py-2 text-sm rounded-md transition-colors"
+                          style={{ color: COLORS.gray[700] }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                            e.currentTarget.style.color = COLORS.primary[700];
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = COLORS.gray[700];
+                          }}
                         >
                           Profile
                         </button>
                         <button
                           onClick={() => handleAccountMenuClick('address')}
-                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          className="w-full text-left px-2 py-2 text-sm rounded-md transition-colors"
+                          style={{ color: COLORS.gray[700] }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                            e.currentTarget.style.color = COLORS.primary[700];
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = COLORS.gray[700];
+                          }}
                         >
                            Address
                         </button>
                       </div>
 
                       {/* Divider */}
-                      <div className="border-t border-gray-200 my-2"></div>
+                      <div className="border-t my-2" style={{ borderColor: COLORS.primary[200] }}></div>
 
                       {/* Lists and Orders Section */}
                       <div className="px-4 py-2">
                         <button
                           onClick={() => handleAccountMenuClick('orders')}
-                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          className="w-full text-left px-2 py-2 text-sm rounded-md transition-colors"
+                          style={{ color: COLORS.gray[700] }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                            e.currentTarget.style.color = COLORS.primary[700];
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = COLORS.gray[700];
+                          }}
                         >
                           Ready List
                         </button>
                         <button
                           onClick={() => handleAccountMenuClick('orders')}
-                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          className="w-full text-left px-2 py-2 text-sm rounded-md transition-colors"
+                          style={{ color: COLORS.gray[700] }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                            e.currentTarget.style.color = COLORS.primary[700];
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = COLORS.gray[700];
+                          }}
                         >
                           Orders
                         </button>
                       </div>
 
                       {/* Divider */}
-                      <div className="border-t border-gray-200 my-2"></div>
+                      <div className="border-t my-2" style={{ borderColor: COLORS.primary[200] }}></div>
                       
                       {/* About Us Section */}
                       <div className="px-4 py-2">
                         <Link
                           to="/about"
-                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors flex items-center gap-2"
+                          className="w-full text-left px-2 py-2 text-sm rounded-md transition-colors flex items-center gap-2"
+                          style={{ color: COLORS.gray[700] }}
                           onClick={() => setIsAccountDropdownOpen(false)}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                            e.currentTarget.style.color = COLORS.primary[700];
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = COLORS.gray[700];
+                          }}
                         >
-                          <InformationCircleIcon className="w-4 h-4 text-gray-500" />
+                          <InformationCircleIcon style={{ color: COLORS.primary[600] }} className="w-4 h-4" />
                           About Us
                         </Link>
                       </div>
 
                       {/* Divider */}
-                      <div className="border-t border-gray-200 my-2"></div>
+                      <div className="border-t my-2" style={{ borderColor: COLORS.primary[200] }}></div>
 
                       {/* Clear Cache Section */}
                       <div className="px-4 py-2">
@@ -484,21 +624,44 @@ const Header = () => {
                             setIsAccountDropdownOpen(false);
                           }}
                           disabled={isClearingCache}
-                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full text-left px-2 py-2 text-sm rounded-md transition-colors flex items-center gap-2 disabled:cursor-not-allowed"
+                          style={{ 
+                            color: COLORS.gray[700],
+                            opacity: isClearingCache ? 0.5 : 1
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isClearingCache) {
+                              e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                              e.currentTarget.style.color = COLORS.primary[700];
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = COLORS.gray[700];
+                          }}
                         >
-                          <ArrowPathIcon className={`w-4 h-4 text-gray-500 ${isClearingCache ? 'animate-spin' : ''}`} />
+                          <ArrowPathIcon style={{ color: COLORS.primary[600] }} className={`w-4 h-4 ${isClearingCache ? 'animate-spin' : ''}`} />
                           {isClearingCache ? 'Clearing Cache...' : 'Clear Cache'}
                         </button>
                       </div>
 
                       {/* Divider */}
-                      <div className="border-t border-gray-200 my-2"></div>
+                      <div className="border-t my-2" style={{ borderColor: COLORS.primary[200] }}></div>
 
                       {/* Logout Section */}
                       <div className="px-4 py-2">
                         <button
                           onClick={() => handleAccountMenuClick('logout')}
-                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          className="w-full text-left px-2 py-2 text-sm rounded-md transition-colors"
+                          style={{ color: COLORS.gray[700] }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                            e.currentTarget.style.color = COLORS.primary[700];
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = COLORS.gray[700];
+                          }}
                         >
                           Logout
                         </button>
@@ -511,10 +674,30 @@ const Header = () => {
               // Unauthenticated user actions
               <>
                 <div className="hidden lg:flex items-center gap-2">
-                  <Link to="/register" className="text-gray-700 hover:text-primary-700 text-sm font-medium">
+                  <Link 
+                    to="/register" 
+                    className="text-sm font-medium transition-colors"
+                    style={{ color: COLORS.gray[700] }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = COLORS.primary[700];
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = COLORS.gray[700];
+                    }}
+                  >
                     <span>Register</span>
                   </Link>
-                  <Link to="/login" className="text-gray-700 hover:text-primary-700 text-sm font-medium">
+                  <Link 
+                    to="/login" 
+                    className="text-sm font-medium transition-colors"
+                    style={{ color: COLORS.gray[700] }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = COLORS.primary[700];
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = COLORS.gray[700];
+                    }}
+                  >
                     <span>Login</span>
                   </Link>
                 </div>
@@ -525,9 +708,19 @@ const Header = () => {
             <div className="lg:hidden">
               <button
                 onClick={openPincodeModal}
-                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-gray-200 text-gray-700 hover:border-primary-300 transition-colors"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border transition-colors"
+                style={{
+                  borderColor: COLORS.gray[200],
+                  color: COLORS.gray[700]
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = COLORS.primary[300];
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = COLORS.gray[200];
+                }}
               >
-                <MapPinIcon className="w-4 h-4 text-primary-600" />
+                <MapPinIcon style={{ color: COLORS.primary[600] }} className="w-4 h-4" />
                 <span className="text-xs font-medium hidden sm:inline">
                   {isLocationSet ? getLocationDisplayText() : 'Location'}
                 </span>
@@ -541,32 +734,63 @@ const Header = () => {
             <div className="lg:hidden relative user-menu-container">
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="inline-flex p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="inline-flex p-2 rounded-full focus:outline-none transition-colors"
+                style={{
+                  boxShadow: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = COLORS.gray[100];
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.boxShadow = `0 0 0 2px ${hexToRgba(COLORS.primary[500], 0.5)}`;
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
                 aria-label="User menu"
               >
-                <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600" />
+                <UserIcon style={{ color: COLORS.primary[600] }} className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
 
               {/* Mobile User Dropdown Menu */}
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 max-w-[calc(100vw-2rem)]">
+                <div 
+                  className="absolute right-0 mt-2 w-64 rounded-lg shadow-lg border py-2 z-50 max-w-[calc(100vw-2rem)]"
+                  style={{
+                    backgroundColor: COLORS.white,
+                    borderColor: COLORS.primary[200],
+                    boxShadow: `0 10px 15px ${hexToRgba(COLORS.primary[900], 0.1)}`
+                  }}
+                >
                   {isAuthenticated ? (
                     // Authenticated mobile menu
                     <>
-                      <div className="px-4 py-2 border-b border-gray-200">
-                        <p className="text-xs text-gray-500">Hello {user?.name || 'User'}</p>
-                        <p className="text-sm font-semibold text-gray-900">My Account</p>
+                      <div className="px-4 py-2 border-b" style={{ borderColor: COLORS.primary[200] }}>
+                        <p className="text-xs" style={{ color: COLORS.primary[600] }}>Hello {user?.name || 'User'}</p>
+                        <p className="text-sm font-semibold" style={{ color: COLORS.primary[700] }}>My Account</p>
                       </div>
                       
                       {/* Account Details Section */}
                       <div className="px-4 py-2">
-                        <div className="text-xs text-gray-500 font-medium mb-2">Account Details</div>
+                        <div className="text-xs font-medium mb-2" style={{ color: COLORS.primary[700] }}>Account Details</div>
                         <button
                           onClick={() => {
                             handleAccountMenuClick('profile');
                             setIsUserMenuOpen(false);
                           }}
-                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          className="w-full text-left px-2 py-2 text-sm rounded-md transition-colors"
+                          style={{ color: COLORS.gray[700] }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                            e.currentTarget.style.color = COLORS.primary[700];
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = COLORS.gray[700];
+                          }}
                         >
                           My Profile
                         </button>
@@ -575,14 +799,23 @@ const Header = () => {
                             handleAccountMenuClick('address');
                             setIsUserMenuOpen(false);
                           }}
-                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          className="w-full text-left px-2 py-2 text-sm rounded-md transition-colors"
+                          style={{ color: COLORS.gray[700] }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                            e.currentTarget.style.color = COLORS.primary[700];
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = COLORS.gray[700];
+                          }}
                         >
                           My Address
                         </button>
                       </div>
 
                       {/* Divider */}
-                      <div className="border-t border-gray-200 my-2"></div>
+                      <div className="border-t my-2" style={{ borderColor: COLORS.primary[200] }}></div>
 
                       {/* Lists and Orders Section */}
                       <div className="px-4 py-2">
@@ -591,7 +824,16 @@ const Header = () => {
                             handleAccountMenuClick('orders');
                             setIsUserMenuOpen(false);
                           }}
-                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          className="w-full text-left px-2 py-2 text-sm rounded-md transition-colors"
+                          style={{ color: COLORS.gray[700] }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                            e.currentTarget.style.color = COLORS.primary[700];
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = COLORS.gray[700];
+                          }}
                         >
                           Ready List
                         </button>
@@ -600,29 +842,47 @@ const Header = () => {
                             handleAccountMenuClick('orders');
                             setIsUserMenuOpen(false);
                           }}
-                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          className="w-full text-left px-2 py-2 text-sm rounded-md transition-colors"
+                          style={{ color: COLORS.gray[700] }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                            e.currentTarget.style.color = COLORS.primary[700];
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = COLORS.gray[700];
+                          }}
                         >
                           My Orders
                         </button>
                       </div>
 
                       {/* Divider */}
-                      <div className="border-t border-gray-200 my-2"></div>
+                      <div className="border-t my-2" style={{ borderColor: COLORS.primary[200] }}></div>
                       
                       {/* About Us Section */}
                       <div className="px-4 py-2">
                         <Link
                           to="/about"
                           onClick={() => setIsUserMenuOpen(false)}
-                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors flex items-center gap-2"
+                          className="w-full text-left px-2 py-2 text-sm rounded-md transition-colors flex items-center gap-2"
+                          style={{ color: COLORS.gray[700] }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                            e.currentTarget.style.color = COLORS.primary[700];
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = COLORS.gray[700];
+                          }}
                         >
-                          <InformationCircleIcon className="w-4 h-4 text-gray-500" />
+                          <InformationCircleIcon style={{ color: COLORS.primary[600] }} className="w-4 h-4" />
                           About Us
                         </Link>
                       </div>
 
                       {/* Divider */}
-                      <div className="border-t border-gray-200 my-2"></div>
+                      <div className="border-t my-2" style={{ borderColor: COLORS.primary[200] }}></div>
 
                       {/* Clear Cache Section */}
                       <div className="px-4 py-2">
@@ -632,15 +892,29 @@ const Header = () => {
                             setIsUserMenuOpen(false);
                           }}
                           disabled={isClearingCache}
-                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full text-left px-2 py-2 text-sm rounded-md transition-colors flex items-center gap-2 disabled:cursor-not-allowed"
+                          style={{ 
+                            color: COLORS.gray[700],
+                            opacity: isClearingCache ? 0.5 : 1
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isClearingCache) {
+                              e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                              e.currentTarget.style.color = COLORS.primary[700];
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = COLORS.gray[700];
+                          }}
                         >
-                          <ArrowPathIcon className={`w-4 h-4 text-gray-500 ${isClearingCache ? 'animate-spin' : ''}`} />
+                          <ArrowPathIcon style={{ color: COLORS.primary[600] }} className={`w-4 h-4 ${isClearingCache ? 'animate-spin' : ''}`} />
                           {isClearingCache ? 'Clearing Cache...' : 'Clear Cache'}
                         </button>
                       </div>
 
                       {/* Divider */}
-                      <div className="border-t border-gray-200 my-2"></div>
+                      <div className="border-t my-2" style={{ borderColor: COLORS.primary[200] }}></div>
 
                       {/* Logout Section */}
                       <div className="px-4 py-2">
@@ -649,7 +923,16 @@ const Header = () => {
                             handleAccountMenuClick('logout');
                             setIsUserMenuOpen(false);
                           }}
-                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          className="w-full text-left px-2 py-2 text-sm rounded-md transition-colors"
+                          style={{ color: COLORS.gray[700] }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                            e.currentTarget.style.color = COLORS.primary[700];
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = COLORS.gray[700];
+                          }}
                         >
                           Logout
                         </button>
@@ -661,28 +944,79 @@ const Header = () => {
                       <Link
                         to="/login"
                         onClick={() => setIsUserMenuOpen(false)}
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
+                        className="block px-4 py-2 text-sm focus:outline-none transition-colors"
+                        style={{ color: COLORS.gray[700] }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                          e.currentTarget.style.color = COLORS.primary[700];
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                          e.currentTarget.style.color = COLORS.gray[700];
+                        }}
+                        onFocus={(e) => {
+                          e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                          e.currentTarget.style.color = COLORS.primary[700];
+                        }}
+                        onBlur={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                          e.currentTarget.style.color = COLORS.gray[700];
+                        }}
                       >
                         Login
                       </Link>
                       <Link
                         to="/register"
                         onClick={() => setIsUserMenuOpen(false)}
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
+                        className="block px-4 py-2 text-sm focus:outline-none transition-colors"
+                        style={{ color: COLORS.gray[700] }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                          e.currentTarget.style.color = COLORS.primary[700];
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                          e.currentTarget.style.color = COLORS.gray[700];
+                        }}
+                        onFocus={(e) => {
+                          e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                          e.currentTarget.style.color = COLORS.primary[700];
+                        }}
+                        onBlur={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                          e.currentTarget.style.color = COLORS.gray[700];
+                        }}
                       >
                         Register
                       </Link>
                       <Link
                         to="/about"
                         onClick={() => setIsUserMenuOpen(false)}
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 flex items-center gap-2"
+                        className="block px-4 py-2 text-sm focus:outline-none transition-colors flex items-center gap-2"
+                        style={{ color: COLORS.gray[700] }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                          e.currentTarget.style.color = COLORS.primary[700];
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                          e.currentTarget.style.color = COLORS.gray[700];
+                        }}
+                        onFocus={(e) => {
+                          e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                          e.currentTarget.style.color = COLORS.primary[700];
+                        }}
+                        onBlur={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                          e.currentTarget.style.color = COLORS.gray[700];
+                        }}
                       >
-                        <InformationCircleIcon className="w-4 h-4 text-gray-500" />
+                        <InformationCircleIcon style={{ color: COLORS.primary[600] }} className="w-4 h-4" />
                         About Us
                       </Link>
 
                       {/* Divider */}
-                      <div className="border-t border-gray-200 my-2"></div>
+                      <div className="border-t my-2" style={{ borderColor: COLORS.primary[200] }}></div>
 
                       {/* Clear Cache for Unauthenticated Users */}
                       <div className="px-4 py-2">
@@ -692,9 +1026,23 @@ const Header = () => {
                             setIsUserMenuOpen(false);
                           }}
                           disabled={isClearingCache}
-                          className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full text-left px-2 py-2 text-sm rounded-md transition-colors flex items-center gap-2 disabled:cursor-not-allowed"
+                          style={{ 
+                            color: COLORS.gray[700],
+                            opacity: isClearingCache ? 0.5 : 1
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isClearingCache) {
+                              e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                              e.currentTarget.style.color = COLORS.primary[700];
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = COLORS.gray[700];
+                          }}
                         >
-                          <ArrowPathIcon className={`w-4 h-4 text-gray-500 ${isClearingCache ? 'animate-spin' : ''}`} />
+                          <ArrowPathIcon style={{ color: COLORS.primary[600] }} className={`w-4 h-4 ${isClearingCache ? 'animate-spin' : ''}`} />
                           {isClearingCache ? 'Clearing Cache...' : 'Clear Cache'}
                         </button>
                       </div>
@@ -707,11 +1055,26 @@ const Header = () => {
             {/* Favorites Icon */}
             <Link
               to="/favorites"
-              className="relative inline-flex p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="relative inline-flex p-2 rounded-full focus:outline-none transition-colors"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.gray[100];
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.boxShadow = `0 0 0 2px ${hexToRgba(COLORS.primary[500], 0.5)}`;
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             >
-              <HeartIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600" />
+              <HeartIcon style={{ color: COLORS.primary[600] }} className="w-5 h-5 sm:w-6 sm:h-6" />
               {favorites.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
+                <span 
+                  className="absolute -top-1 -right-1 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center"
+                  style={{ backgroundColor: COLORS.primary[600] }}
+                >
                   {favorites.length}
                 </span>
               )}
@@ -720,11 +1083,26 @@ const Header = () => {
             {/* Cart Icon */}
             <button 
               onClick={openDrawer}
-              className="relative inline-flex p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="relative inline-flex p-2 rounded-full focus:outline-none transition-colors"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.gray[100];
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.boxShadow = `0 0 0 2px ${hexToRgba(COLORS.primary[500], 0.5)}`;
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             >
-              <ShoppingCartIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600" />
+              <ShoppingCartIcon style={{ color: COLORS.primary[600] }} className="w-5 h-5 sm:w-6 sm:h-6" />
               {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
+                <span 
+                  className="absolute -top-1 -right-1 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center"
+                  style={{ backgroundColor: COLORS.primary[600] }}
+                >
                   {totalItems}
                 </span>
               )}
@@ -734,30 +1112,60 @@ const Header = () => {
       </div>
 
       {/* Category bar */}
-      <div className="border-t border-gray-200 bg-white">
+      <div 
+        className="border-t"
+        style={{
+          borderColor: COLORS.gray[200],
+          backgroundColor: COLORS.white
+        }}
+      >
         <div className="container mx-auto px-2 sm:px-4">
           <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 h-10 sm:h-12 overflow-x-auto scrollbar-hide">
             <button
-              className="inline-flex items-center gap-1 sm:gap-2 text-gray-800 hover:text-primary-700 font-medium whitespace-nowrap text-xs sm:text-sm flex-shrink-0 px-2 py-1 rounded-md hover:bg-gray-50"
+              className="inline-flex items-center gap-1 sm:gap-2 font-medium whitespace-nowrap text-xs sm:text-sm flex-shrink-0 px-2 py-1 rounded-md transition-colors"
+              style={{ color: COLORS.gray[800] }}
               onClick={handleAllCategoriesClick}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = COLORS.primary[700];
+                e.currentTarget.style.backgroundColor = COLORS.gray[50];
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = COLORS.gray[800];
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
             >
               <Bars3Icon className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="hidden sm:inline">All Categories</span>
               <span className="sm:hidden">All</span>
             </button>
-            {categories.slice(1).map((cat) => (
-              <button
-                key={cat}
-                onClick={() => goToCategory(cat)}
-                className={`text-xs sm:text-sm whitespace-nowrap pb-0.5 border-b-2 transition-colors font-medium flex-shrink-0 px-2 py-1 rounded-md hover:bg-gray-50 ${
-                  (currentCategory === cat.toLowerCase().replace(/\s+/g, '-')) || (currentCategory === 'all' && cat === 'all')
-                    ? 'border-primary-600 text-primary-700'
-                    : 'border-transparent text-gray-700 hover:text-primary-700'
-                }`}
-              >
-                {cat === 'all' ? 'All' : cat.replace(/\s+/g, ' ')}
-              </button>
-            ))}
+            {categories.slice(1).map((cat) => {
+              const isActive = (currentCategory === cat.toLowerCase().replace(/\s+/g, '-')) || (currentCategory === 'all' && cat === 'all');
+              return (
+                <button
+                  key={cat}
+                  onClick={() => goToCategory(cat)}
+                  className="text-xs sm:text-sm whitespace-nowrap pb-0.5 border-b-2 transition-colors font-medium flex-shrink-0 px-2 py-1 rounded-md"
+                  style={{
+                    borderColor: isActive ? COLORS.primary[600] : 'transparent',
+                    color: isActive ? COLORS.primary[700] : COLORS.gray[700]
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = COLORS.primary[700];
+                      e.currentTarget.style.backgroundColor = COLORS.gray[50];
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = COLORS.gray[700];
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                >
+                  {cat === 'all' ? 'All' : cat.replace(/\s+/g, ' ')}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

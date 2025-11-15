@@ -194,19 +194,22 @@ const BestsellerProducts = () => {
           const bgColorRgb98 = rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.98)` : bgColor;
 
           return (
-          <div key={section._id || sectionIndex} className="relative overflow-hidden py-3 sm:py-4 lg:py-5">
+          <div key={section._id || sectionIndex} className="relative py-3 sm:py-4 lg:py-5" style={{ backgroundColor: 'transparent' }}>
+            {/* Container to constrain the background color from API */}
+            <div className="container mx-auto px-2 sm:px-4 lg:px-6">
+              {/* Wrapper to contain the background color from API */}
+              <div className="relative overflow-hidden rounded-2xl" style={{ backgroundColor: bgColorRgb }}>
             {/* Dynamic Background with Animated Gradients */}
-            <div className="absolute inset-0" style={{ backgroundColor: bgColorRgb }}></div>
-            <div className="absolute top-0 right-1/4 w-96 h-96 rounded-full blur-3xl -translate-y-1/4 animate-pulse" style={{ backgroundColor: bgColorRgb25 }}></div>
-            <div className="absolute bottom-0 left-1/4 w-96 h-96 rounded-full blur-3xl translate-y-1/4 animate-pulse" style={{ backgroundColor: bgColorRgb25, animationDelay: '1s' }}></div>
+                <div className="absolute top-0 right-1/4 w-96 h-96 rounded-full blur-3xl -translate-y-1/4 animate-pulse pointer-events-none" style={{ backgroundColor: bgColorRgb25 }}></div>
+                <div className="absolute bottom-0 left-1/4 w-96 h-96 rounded-full blur-3xl translate-y-1/4 animate-pulse pointer-events-none" style={{ backgroundColor: bgColorRgb25, animationDelay: '1s' }}></div>
 
-            {/* Container with consistent padding for entire component */}
-            <div className="relative container mx-auto px-2 sm:px-4 lg:px-6">
+                {/* Content wrapper */}
+                <div className="relative">
               {/* Promotional Banner at the top - Seamlessly integrated */}
               <div className="relative w-full">
                 <div 
                   className="relative w-full h-[140px] sm:h-[160px] lg:h-[180px] xl:h-[200px] overflow-hidden cursor-pointer group" 
-                  style={{ borderRadius: '0.75rem 0.75rem 0 0' }}
+                  style={{ borderRadius: '1rem 1rem 0 0' }}
                   onClick={() => {
                     const sectionId = section._id || section.id;
                     if (sectionId) {
@@ -257,7 +260,7 @@ const BestsellerProducts = () => {
                 style={{
                   background: `linear-gradient(to bottom, ${bgColor}, ${bgColorRgb98}, ${bgColorRgb98})`,
                   marginTop: '-1px',
-                  borderRadius: '0 0 0.75rem 0.75rem',
+                  borderRadius: '0 0 1rem 1rem',
                   boxShadow: rgb ? `0 20px 25px -5px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15), 0 10px 10px -5px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.1)` : '0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.1)'
                 }}
               >
@@ -311,6 +314,8 @@ const BestsellerProducts = () => {
                       className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l to-transparent pointer-events-none"
                       style={{ background: `linear-gradient(to left, ${bgColorRgb25}, transparent)` }}
                     ></div>
+                  </div>
+                </div>
                   </div>
                 </div>
               </div>

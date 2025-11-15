@@ -6,6 +6,17 @@ import { useFavorite } from '../context/FavoriteContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { createCartItemFromProduct } from '../utils/cartUtils';
+import { COLORS } from '../constants/theme';
+
+// Helper function to convert hex color to rgba with opacity
+const hexToRgba = (hex, opacity = 1) => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return hex;
+  const r = parseInt(result[1], 16);
+  const g = parseInt(result[2], 16);
+  const b = parseInt(result[3], 16);
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+};
 
 const BestsellerProductCard = ({ product }) => {
   const [isFavorite, setIsFavorite] = useState(false);
@@ -126,24 +137,42 @@ const BestsellerProductCard = ({ product }) => {
   const favoriteStatus = checkFavorite(productId) || isFavorite;
 
   return (
-    <div className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col w-[180px] sm:w-[200px] flex-shrink-0">
+    <div 
+      className="rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col w-[180px] sm:w-[200px] flex-shrink-0"
+      style={{ backgroundColor: COLORS.white }}
+    >
       {/* Product Image Container */}
-      <div className="relative bg-white flex items-center justify-center p-3 pt-4">
+      <div className="relative flex items-center justify-center p-3 pt-4" style={{ backgroundColor: COLORS.white }}>
         {/* Favorite Icon - Top Left */}
         <button
           onClick={handleFavoriteToggle}
-          className="absolute top-2 left-2 z-20 p-1.5 bg-white/90 rounded-full shadow-sm hover:shadow-md transition-all duration-200"
+          className="absolute top-2 left-2 z-20 p-1.5 rounded-full shadow-sm hover:shadow-md transition-all duration-200"
+          style={{
+            backgroundColor: hexToRgba(COLORS.white, 0.9)
+          }}
         >
           {favoriteStatus ? (
-            <HeartSolid className="w-4 h-4 text-red-500" />
+            <HeartSolid className="w-4 h-4" style={{ color: COLORS.error[500] }} />
           ) : (
-            <HeartOutline className="w-4 h-4 text-gray-400 hover:text-red-500 transition-colors" />
+            <HeartOutline 
+              className="w-4 h-4 transition-colors" 
+              style={{ color: COLORS.gray[400] }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = COLORS.error[500];
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = COLORS.gray[400];
+              }}
+            />
           )}
         </button>
 
-        {/* Discount Badge - Top Right (Red Banner Style) */}
+        {/* Discount Badge - Top Right */}
         {calculatedDiscount > 0 && (
-          <div className="absolute top-2 right-2 z-20 bg-red-500 text-white text-xs px-2.5 py-1 rounded font-bold shadow-md">
+          <div 
+            className="absolute top-2 right-2 z-20 text-white text-xs px-2.5 py-1 rounded font-bold shadow-md"
+            style={{ backgroundColor: COLORS.warning[500] }}
+          >
             {calculatedDiscount}% OFF
           </div>
         )}
@@ -165,93 +194,149 @@ const BestsellerProductCard = ({ product }) => {
       {/* Product Info */}
       <div className="p-3 flex-grow flex flex-col">
         {/* Product Name */}
-        <h3 className="text-xs text-gray-900 mb-1 line-clamp-2 min-h-[2rem] font-medium">
+        <h3 className="text-xs mb-1 line-clamp-2 min-h-[2rem] font-medium" style={{ color: COLORS.gray[900] }}>
           {displayName}
         </h3>
 
         {/* Weight */}
-        <p className="text-xs text-gray-600 mb-2">
+        <p className="text-xs mb-2" style={{ color: COLORS.gray[600] }}>
           {weight}
         </p>
 
         {/* Price */}
         <div className="mb-3">
           <div className="flex items-baseline gap-2">
-            <span className="text-base font-bold text-gray-900">₹{displayPrice}</span>
+            <span className="text-base font-bold" style={{ color: COLORS.gray[900] }}>₹{displayPrice}</span>
             {displayMrp > displayPrice && (
-              <span className="text-xs text-gray-400 line-through">₹{displayMrp}</span>
+              <span className="text-xs line-through" style={{ color: COLORS.gray[400] }}>₹{displayMrp}</span>
             )}
           </div>
         </div>
 
         {/* Add to Cart Button or Quantity Selector */}
-        {!showQuantitySelector ? (
-          <button
-            onClick={handleAddToCart}
-            disabled={addingToCart}
-            className={`w-full py-2 px-3 rounded text-xs font-medium transition-colors duration-200 flex items-center justify-center gap-1.5 mt-auto ${
-              addingToCart 
-                ? 'bg-gray-400 cursor-not-allowed text-white' 
-                : 'bg-purple-600 hover:bg-purple-700 text-white'
-            }`}
-          >
-            {addingToCart ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>ADDING...</span>
-              </>
-            ) : (
-              <>
-                <ShoppingCartIcon className="w-4 h-4" />
-                <span>ADD</span>
-              </>
-            )}
-          </button>
-        ) : (
-          <div className="w-full mt-auto" onClick={(e) => e.stopPropagation()}>
-            {/* Quantity Selector */}
-            <div className="flex items-stretch bg-gradient-to-r from-purple-50 to-purple-100 border-2 border-purple-200 rounded-lg overflow-hidden shadow-md w-full hover:shadow-lg transition-all duration-200">
-              {/* Minus Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleQuantityChange(quantity - 1);
+        <div className="w-full mt-auto" style={{ minHeight: '36px' }}>
+          {!showQuantitySelector ? (
+            <button
+              onClick={handleAddToCart}
+              disabled={addingToCart}
+              className="w-full h-9 rounded text-xs font-medium transition-all duration-200 flex items-center justify-center gap-1.5 text-white shadow-md hover:shadow-lg"
+              style={{
+                background: addingToCart 
+                  ? COLORS.gray[400]
+                  : `linear-gradient(to right, ${COLORS.primary[600]}, ${COLORS.success[600]})`,
+                cursor: addingToCart ? 'not-allowed' : 'pointer',
+                opacity: addingToCart ? 0.5 : 1
+              }}
+              onMouseEnter={(e) => {
+                if (!addingToCart) {
+                  e.currentTarget.style.background = `linear-gradient(to right, ${COLORS.primary[700]}, ${COLORS.success[700]})`;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!addingToCart) {
+                  e.currentTarget.style.background = `linear-gradient(to right, ${COLORS.primary[600]}, ${COLORS.success[600]})`;
+                }
+              }}
+            >
+              {addingToCart ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>ADDING...</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingCartIcon className="w-4 h-4" />
+                  <span>ADD</span>
+                </>
+              )}
+            </button>
+          ) : (
+            <div onClick={(e) => e.stopPropagation()}>
+              {/* Quantity Selector */}
+              <div 
+                className="flex items-stretch border-2 rounded-lg overflow-hidden shadow-md w-full transition-all duration-200 h-9"
+                style={{
+                  background: `linear-gradient(to right, ${COLORS.primary[50]}, ${COLORS.success[50]})`,
+                  borderColor: COLORS.primary[200]
                 }}
-                disabled={quantity <= 1}
-                className={`flex items-center justify-center px-3 py-2 transition-all duration-200 ${
-                  quantity <= 1
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white hover:shadow-md active:scale-95'
-                }`}
               >
-                <MinusIcon className="w-4 h-4 font-bold" strokeWidth={3} />
-              </button>
+                {/* Minus Button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleQuantityChange(quantity - 1);
+                  }}
+                  disabled={quantity <= 1}
+                  className="flex items-center justify-center px-2 sm:px-3 transition-all duration-200 h-full"
+                  style={{
+                    backgroundColor: quantity <= 1
+                      ? COLORS.gray[200]
+                      : `linear-gradient(to bottom right, ${COLORS.primary[600]}, ${COLORS.success[600]})`,
+                    color: quantity <= 1
+                      ? COLORS.gray[400]
+                      : COLORS.white,
+                    cursor: quantity <= 1 ? 'not-allowed' : 'pointer'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (quantity > 1) {
+                      e.currentTarget.style.background = `linear-gradient(to bottom right, ${COLORS.primary[700]}, ${COLORS.success[700]})`;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (quantity > 1) {
+                      e.currentTarget.style.background = `linear-gradient(to bottom right, ${COLORS.primary[600]}, ${COLORS.success[600]})`;
+                    }
+                  }}
+                >
+                  <MinusIcon className="w-4 h-4 font-bold" strokeWidth={3} />
+                </button>
 
-              {/* Quantity Display */}
-              <div className="bg-white px-4 py-2 flex-1 flex items-center justify-center border-x-2 border-purple-200">
-                <span className="text-base font-bold text-purple-700">
-                  {quantity}
-                </span>
+                {/* Quantity Display */}
+                <div 
+                  className="bg-white px-2 sm:px-4 flex-1 flex items-center justify-center border-x-2 h-full"
+                  style={{
+                    borderColor: COLORS.primary[200]
+                  }}
+                >
+                  <span className="text-sm sm:text-base font-bold" style={{ color: COLORS.primary[700] }}>
+                    {quantity}
+                  </span>
+                </div>
+
+                {/* Plus Button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleQuantityChange(quantity + 1);
+                  }}
+                  disabled={quantity >= maxQuantity}
+                  className="flex items-center justify-center px-2 sm:px-3 transition-all duration-200 h-full"
+                  style={{
+                    backgroundColor: quantity >= maxQuantity
+                      ? COLORS.gray[200]
+                      : `linear-gradient(to bottom right, ${COLORS.primary[600]}, ${COLORS.success[600]})`,
+                    color: quantity >= maxQuantity
+                      ? COLORS.gray[400]
+                      : COLORS.white,
+                    cursor: quantity >= maxQuantity ? 'not-allowed' : 'pointer'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (quantity < maxQuantity) {
+                      e.currentTarget.style.background = `linear-gradient(to bottom right, ${COLORS.primary[700]}, ${COLORS.success[700]})`;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (quantity < maxQuantity) {
+                      e.currentTarget.style.background = `linear-gradient(to bottom right, ${COLORS.primary[600]}, ${COLORS.success[600]})`;
+                    }
+                  }}
+                >
+                  <PlusIcon className="w-4 h-4 font-bold" strokeWidth={3} />
+                </button>
               </div>
-
-              {/* Plus Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleQuantityChange(quantity + 1);
-                }}
-                disabled={quantity >= maxQuantity}
-                className={`flex items-center justify-center px-3 py-2 transition-all duration-200 ${
-                  quantity >= maxQuantity
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white hover:shadow-md active:scale-95'
-                }`}
-              >
-                <PlusIcon className="w-4 h-4 font-bold" strokeWidth={3} />
-              </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
