@@ -4,11 +4,14 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useOrders } from '../context/OrderContext';
 import { usePincode } from '../context/PincodeContext';
+import { useToast } from '../context/ToastContext';
 import { useResponsive } from '../hooks/useResponsive';
 import { getPincodeStores, formatStoreData } from '../api/pincodeService';
 import { getAddresses, transformAddressFromAPI } from '../api/addressApi';
-import { getDeliverySlots, generateTimeSlotsFromAPI, generateDefaultTimeSlots, transformDeliverySlotFromAPI } from '../api/deliverySlotsApi';
+import { getDeliverySlots, generateTimeSlotsFromAPI, transformDeliverySlotFromAPI } from '../api/deliverySlotsApi';
 import { getEnabledPaymentModes, mapPaymentModeToUI } from '../api/paymentModesApi';
+import { placeOrder } from '../api/ordersApi';
+import { COLORS } from '../constants/theme';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -34,12 +37,14 @@ const CheckoutPage = () => {
   const { isAuthenticated, user, setSuccessMessage } = useAuth();
   const { addOrder } = useOrders();
   const { getCurrentPincode, confirmedLocation } = usePincode();
+  const { showError, showSuccess } = useToast();
   const navigate = useNavigate();
   const { isMobile, isTablet, getResponsiveValue } = useResponsive();
 
   // State for dynamic time slots
-  const [timeSlots, setTimeSlots] = useState(generateDefaultTimeSlots());
+  const [timeSlots, setTimeSlots] = useState([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+  const [slotsErrorMessage, setSlotsErrorMessage] = useState(null);
   
   // State for dynamic pickup stores
   const [pickupStores, setPickupStores] = useState([]);
@@ -235,6 +240,7 @@ const CheckoutPage = () => {
     const loadDeliverySlots = async () => {
       try {
         setIsLoadingSlots(true);
+        setSlotsErrorMessage(null);
         const response = await getDeliverySlots();
         
         console.log('📅 Delivery Slots API Response:', response);
@@ -248,15 +254,20 @@ const CheckoutPage = () => {
           const generatedSlots = generateTimeSlotsFromAPI(transformedSlots);
           console.log('📅 Generated time slots:', generatedSlots);
           setTimeSlots(generatedSlots);
+          setSlotsErrorMessage(null);
         } else {
-          // Use default slots if API fails or returns no data
-          console.warn('⚠️ No delivery slots found from API, using default slots. Response:', response);
-          setTimeSlots(generateDefaultTimeSlots());
+          // Display API message when slots are not available
+          const apiMessage = response.message || 'Delivery slots are not available at this time.';
+          console.warn('⚠️ No delivery slots found from API. Message:', apiMessage);
+          setTimeSlots([]);
+          setSlotsErrorMessage(apiMessage);
         }
       } catch (error) {
         console.error('❌ Failed to load delivery slots:', error);
-        // Use default slots on error
-        setTimeSlots(generateDefaultTimeSlots());
+        // Display error message from API response if available
+        const errorMessage = error.message || 'Failed to load delivery slots. Please try again later.';
+        setTimeSlots([]);
+        setSlotsErrorMessage(errorMessage);
       } finally {
         setIsLoadingSlots(false);
       }
@@ -314,6 +325,126 @@ const CheckoutPage = () => {
     return methodMap[paymentMode] || { value: 'card', icon: '💳', name: paymentMode, description: '' };
   };
 
+  // Helper function to format date from "DayName DD-MonthName-YYYY" to "YYYY-MM-DD"
+  const formatDateForAPI = (dateString) => {
+    if (!dateString) return null;
+    
+    try {
+      console.log('📅 formatDateForAPI input:', dateString);
+      
+      // Parse date string like "Tuesday 25-November-2025" or "Monday 25-December-2025"
+      // Remove the day name (first word) and split the rest
+      const parts = dateString.trim().split(' ');
+      
+      if (parts.length >= 2) {
+        // Get the date part (everything after the day name)
+        // For "Tuesday 25-November-2025", parts[0] = "Tuesday", parts[1] = "25-November-2025"
+        const datePart = parts.slice(1).join(' '); // Join in case there are spaces in the date part
+        
+        console.log('📅 Date part extracted:', datePart);
+        
+        // Split by hyphen: "25-November-2025" -> ["25", "November", "2025"]
+        const dateComponents = datePart.split('-');
+        
+        if (dateComponents.length === 3) {
+          const day = dateComponents[0].trim();
+          const monthName = dateComponents[1].trim();
+          const year = dateComponents[2].trim();
+          
+          console.log('📅 Parsed components:', { day, monthName, year });
+          
+          // Convert month name to number
+          const monthMap = {
+            'January': '01', 'February': '02', 'March': '03', 'April': '04',
+            'May': '05', 'June': '06', 'July': '07', 'August': '08',
+            'September': '09', 'October': '10', 'November': '11', 'December': '12'
+          };
+          
+          const month = monthMap[monthName];
+          if (!month) {
+            console.error('❌ Invalid month name:', monthName);
+            return null;
+          }
+          
+          const dayPadded = day.padStart(2, '0');
+          const formattedDate = `${year}-${month}-${dayPadded}`;
+          
+          console.log('📅 Formatted date for API:', formattedDate);
+          return formattedDate;
+        } else {
+          console.error('❌ Invalid date format - expected DD-MonthName-YYYY, got:', datePart);
+        }
+      } else {
+        console.error('❌ Invalid date string format - expected "DayName DD-MonthName-YYYY", got:', dateString);
+      }
+    } catch (error) {
+      console.error('❌ Error formatting date:', error, dateString);
+    }
+    
+    return null;
+  };
+
+  // Helper function to get payment mode ID from selected payment method
+  const getPaymentModeId = () => {
+    // Map UI payment method to API payment mode name
+    const paymentMethodToModeName = {
+      'cod': 'POD',
+      'card': 'Online Payment',
+      'netbanking': 'Bank Transfer',
+      'paytm': 'Online Payment', // Paytm might use Online Payment mode
+      'upi': 'Online Payment' // UPI might use Online Payment mode
+    };
+    
+    const modeName = paymentMethodToModeName[formData.paymentMethod];
+    if (!modeName) {
+      console.warn('Unknown payment method:', formData.paymentMethod);
+      return null;
+    }
+    
+    // Find the matching payment mode from enabledPaymentModes
+    const matchingMode = enabledPaymentModes.find(mode => mode.name === modeName);
+    if (!matchingMode) {
+      console.warn('Payment mode not found:', modeName);
+      return null;
+    }
+    
+    // Return idpayment_mode if available, otherwise id
+    return matchingMode.idpayment_mode || matchingMode.id;
+  };
+
+  // Helper function to build payment_details object for API
+  const buildPaymentDetails = () => {
+    const paymentMethod = formData.paymentMethod;
+    
+    // Map payment method to API payment method type
+    const methodTypeMap = {
+      'cod': 'cod',
+      'card': 'online_payment',
+      'upi': 'online_payment',
+      'netbanking': 'online_payment',
+      'paytm': 'online_payment'
+    };
+    
+    const method = methodTypeMap[paymentMethod] || 'online_payment';
+    
+    const paymentDetails = {
+      method: method
+    };
+    
+    // Add card_last_four if card payment
+    if (paymentMethod === 'card' && formData.cardNumber) {
+      const cardNumber = formData.cardNumber.replace(/\s/g, '');
+      if (cardNumber.length >= 4) {
+        paymentDetails.card_last_four = cardNumber.slice(-4);
+      }
+    }
+    
+    // Generate transaction ID (in real app, this would come from payment gateway)
+    paymentDetails.transaction_id = `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    return paymentDetails;
+  };
+
   // Redirect if not authenticated or cart is empty
   React.useEffect(() => {
     if (!isAuthenticated) {
@@ -352,30 +483,33 @@ const CheckoutPage = () => {
   const validateStep = (step) => {
     const newErrors = {};
 
-    if (step === 2) {
+    // Validate step 2 (payment) or step 3 (review - should have payment already validated)
+    if (step === 2 || step === 3) {
       // Payment validation based on selected method
       if (formData.paymentMethod === 'card') {
-        if (!formData.cardNumber.trim()) newErrors.cardNumber = 'Card number is required';
-        if (!/^\d{12}$/.test(formData.cardNumber.replace(/\s/g, ''))) newErrors.cardNumber = 'Card number must be exactly 12 digits';
-        if (!formData.expiryDate.trim()) newErrors.expiryDate = 'Expiry date is required';
-        if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(formData.expiryDate)) newErrors.expiryDate = 'Expiry date must be in MM/YY format';
-        if (!formData.cvv.trim()) newErrors.cvv = 'CVV is required';
-        if (!/^\d{3}$/.test(formData.cvv)) newErrors.cvv = 'CVV must be exactly 3 digits';
-        if (!formData.nameOnCard.trim()) newErrors.nameOnCard = 'Name on card is required';
+        if (!formData.cardNumber || !formData.cardNumber.trim()) newErrors.cardNumber = 'Card number is required';
+        else if (!/^\d{12}$/.test(formData.cardNumber.replace(/\s/g, ''))) newErrors.cardNumber = 'Card number must be exactly 12 digits';
+        if (!formData.expiryDate || !formData.expiryDate.trim()) newErrors.expiryDate = 'Expiry date is required';
+        else if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(formData.expiryDate)) newErrors.expiryDate = 'Expiry date must be in MM/YY format';
+        if (!formData.cvv || !formData.cvv.trim()) newErrors.cvv = 'CVV is required';
+        else if (!/^\d{3}$/.test(formData.cvv)) newErrors.cvv = 'CVV must be exactly 3 digits';
+        if (!formData.nameOnCard || !formData.nameOnCard.trim()) newErrors.nameOnCard = 'Name on card is required';
       } else if (formData.paymentMethod === 'upi') {
-        if (!formData.upiId.trim()) newErrors.upiId = 'UPI ID is required';
-        if (!formData.upiId.includes('@')) newErrors.upiId = 'Please enter a valid UPI ID';
+        if (!formData.upiId || !formData.upiId.trim()) newErrors.upiId = 'UPI ID is required';
+        else if (!formData.upiId.includes('@')) newErrors.upiId = 'Please enter a valid UPI ID';
       } else if (formData.paymentMethod === 'netbanking') {
-        if (!formData.bankName.trim()) newErrors.bankName = 'Bank name is required';
+        if (!formData.bankName || !formData.bankName.trim()) newErrors.bankName = 'Bank name is required';
       } else if (formData.paymentMethod === 'paytm') {
-        if (!formData.paytmNumber.trim()) newErrors.paytmNumber = 'Paytm number is required';
-        if (!/^\d{10}$/.test(formData.paytmNumber.replace(/\s/g, ''))) newErrors.paytmNumber = 'Paytm number must be exactly 10 digits';
+        if (!formData.paytmNumber || !formData.paytmNumber.trim()) newErrors.paytmNumber = 'Paytm number is required';
+        else if (!/^\d{10}$/.test(formData.paytmNumber.replace(/\s/g, ''))) newErrors.paytmNumber = 'Paytm number must be exactly 10 digits';
       }
       // COD doesn't need additional validation
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const isValid = Object.keys(newErrors).length === 0;
+    console.log('🔍 validateStep result:', { step, isValid, errors: newErrors });
+    return isValid;
   };
 
   const handleNext = () => {
@@ -449,44 +583,186 @@ const CheckoutPage = () => {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(currentStep)) return;
+    console.log('🚀 handleSubmit called', { currentStep });
+    
+    // Validate step (only validates step 2 for payment)
+    const stepValid = validateStep(currentStep);
+    console.log('✅ Step validation result:', stepValid);
+    
+    if (!stepValid) {
+      console.warn('⚠️ Step validation failed, returning early');
+      return;
+    }
 
+    console.log('📝 Starting order placement process...');
     setLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Validate required fields
+      console.log('🔍 Validating checkout data:', {
+        selectedTimeSlot: checkoutData.selectedTimeSlot,
+        selectedDate: checkoutData.selectedDate,
+        deliveryMode: checkoutData.deliveryMode,
+        selectedAddress: checkoutData.selectedAddress,
+        selectedPickupPoint: checkoutData.selectedPickupPoint
+      });
 
-      // Create order object
-      const order = {
-        userId: user?.id ?? user?.mobile_no ?? 'guest',
-        items: items,
-        checkoutData: checkoutData, // Include all checkout details
-        paymentMethod: formData.paymentMethod,
-        paymentDetails: getPaymentDetails(),
-        subtotal: totalPrice,
-        shippingCost: shippingCost,
-        taxAmount: taxAmount,
-        totalAmount: finalTotal,
-        orderDate: new Date().toISOString(),
-        status: 'Processing',
-        deliveryDate: checkoutData.selectedDate ? new Date(checkoutData.selectedDate).toISOString() : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now if no date selected
+      if (!checkoutData.selectedTimeSlot) {
+        console.error('❌ Validation failed: No time slot selected');
+        showError('Please select a delivery time slot');
+        setLoading(false);
+        return;
+      }
+
+      if (!checkoutData.selectedDate) {
+        console.error('❌ Validation failed: No date selected');
+        showError('Please select a delivery date');
+        setLoading(false);
+        return;
+      }
+
+      if (checkoutData.deliveryMode === 'home' && !checkoutData.selectedAddress) {
+        console.error('❌ Validation failed: No address selected for home delivery');
+        showError('Please select a delivery address');
+        setLoading(false);
+        return;
+      }
+
+      if (checkoutData.deliveryMode === 'pickup' && !checkoutData.selectedPickupPoint) {
+        console.error('❌ Validation failed: No pickup point selected');
+        showError('Please select a pickup point');
+        setLoading(false);
+        return;
+      }
+
+      console.log('✅ All validations passed');
+
+      // Get delivery slot ID
+      const deliverySlotId = checkoutData.selectedTimeSlot.iddelivery_slot || checkoutData.selectedTimeSlot.id;
+      console.log('📅 Delivery slot ID:', deliverySlotId, 'from slot:', checkoutData.selectedTimeSlot);
+      if (!deliverySlotId) {
+        console.error('❌ Validation failed: Invalid delivery slot');
+        showError('Invalid delivery slot selected');
+        setLoading(false);
+        return;
+      }
+
+      // Format delivery date
+      const deliveryDate = formatDateForAPI(checkoutData.selectedDate);
+      console.log('📅 Formatted delivery date:', deliveryDate, 'from:', checkoutData.selectedDate);
+      if (!deliveryDate) {
+        console.error('❌ Validation failed: Invalid delivery date');
+        showError('Invalid delivery date');
+        setLoading(false);
+        return;
+      }
+
+      // Get address ID (for home delivery or pickup)
+      let addressId = null;
+      if (checkoutData.deliveryMode === 'home' && checkoutData.selectedAddress) {
+        // Try MongoDB ID first, then idaddress_book
+        addressId = checkoutData.selectedAddress.id || checkoutData.selectedAddress.idaddress_book;
+        console.log('🏠 Address ID:', addressId, 'from address:', checkoutData.selectedAddress);
+        if (!addressId) {
+          console.error('❌ Validation failed: Invalid address');
+          showError('Invalid address selected');
+          setLoading(false);
+          return;
+        }
+      } else if (checkoutData.deliveryMode === 'pickup' && checkoutData.selectedPickupPoint) {
+        // For pickup orders, use the pickup point's ID as address_id
+        // The API requires address_id even for pickup orders
+        addressId = checkoutData.selectedPickupPoint.id || checkoutData.selectedPickupPoint._id;
+        console.log('📦 Pickup point ID (used as address_id):', addressId, 'from pickup point:', checkoutData.selectedPickupPoint);
+        if (!addressId) {
+          console.error('❌ Validation failed: Invalid pickup point');
+          showError('Invalid pickup point selected');
+          setLoading(false);
+          return;
+        }
+      }
+      
+      // Final validation - address_id is required by API
+      if (!addressId) {
+        console.error('❌ Validation failed: address_id is required');
+        showError('Address or pickup point is required');
+        setLoading(false);
+        return;
+      }
+
+      // Get payment mode ID
+      const paymentModeId = getPaymentModeId();
+      console.log('💳 Payment mode ID:', paymentModeId, 'for payment method:', formData.paymentMethod);
+      if (!paymentModeId) {
+        console.error('❌ Validation failed: Invalid payment mode');
+        showError('Invalid payment method selected');
+        setLoading(false);
+        return;
+      }
+
+      // Build payment details
+      const paymentDetails = buildPaymentDetails();
+
+      // Prepare order data for API
+      const orderData = {
+        cart_validated: true, // Cart is validated before checkout
+        delivery_slot_id: deliverySlotId,
+        delivery_date: deliveryDate,
+        address_id: addressId, // Required by API - use address ID for home delivery or pickup point ID for pickup
+        payment_mode_id: paymentModeId,
+        order_notes: '', // Can be added later if needed
+        payment_details: paymentDetails
       };
 
-      // Add order to context
-      const savedOrder = addOrder(order);
+      console.log('📦 Placing order with data:', orderData);
+      console.log('📦 About to call placeOrder API...');
 
-      // Clear cart
-      clearUserCart();
-      
-      // Set order number and show success modal
-      setOrderNumber(savedOrder.id);
-      setShowOrderSuccessModal(true);
-      
-      // Also set success message (for backup/fallback)
-      setSuccessMessage(`Order #${savedOrder.id} placed successfully! Check your orders for details.`);
+      // Call place order API
+      const response = await placeOrder(orderData);
+      console.log('📦 placeOrder API response received:', response);
+
+      if (response.success) {
+        // Get order ID from response
+        const orderId = response.data?.order_id || response.data?.id || response.order_id || response.id || `ORD_${Date.now()}`;
+        
+        // Create order object for context
+        const order = {
+          id: orderId,
+          userId: user?.id ?? user?.mobile_no ?? 'guest',
+          items: items,
+          checkoutData: checkoutData,
+          paymentMethod: formData.paymentMethod,
+          paymentDetails: getPaymentDetails(),
+          subtotal: totalPrice,
+          shippingCost: shippingCost,
+          taxAmount: taxAmount,
+          totalAmount: finalTotal,
+          orderDate: new Date().toISOString(),
+          status: response.data?.status || 'Processing',
+          deliveryDate: deliveryDate,
+          apiResponse: response.data // Store full API response
+        };
+
+        // Add order to context
+        addOrder(order);
+
+        // Clear cart
+        clearUserCart();
+        
+        // Set order number and show success modal
+        setOrderNumber(orderId);
+        setShowOrderSuccessModal(true);
+        
+        // Show success message
+        showSuccess(`Order #${orderId} placed successfully!`);
+        setSuccessMessage(`Order #${orderId} placed successfully! Check your orders for details.`);
+      } else {
+        throw new Error(response.message || 'Failed to place order');
+      }
     } catch (error) {
       console.error('Checkout error:', error);
+      const errorMessage = error.message || 'Failed to place order. Please try again.';
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -556,7 +832,7 @@ const CheckoutPage = () => {
     <div className="container mx-auto px-4 py-4 sm:py-8">
       {/* Warning if no pincode is selected */}
       {!hasPincode && (
-        <div className="mb-4 bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg flex items-center">
+        <div className="mb-4 px-4 py-3 rounded-lg flex items-center" style={{ backgroundColor: COLORS.warning[50], borderColor: COLORS.warning[200], borderWidth: '1px', borderStyle: 'solid', color: COLORS.warning[800] }}>
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
@@ -572,10 +848,12 @@ const CheckoutPage = () => {
           <div className="flex items-center justify-center overflow-x-auto pb-2">
             {steps.map((step, index) => (
               <React.Fragment key={step.id}>
-                <div className={`flex items-center flex-shrink-0 ${currentStep >= step.id ? 'text-primary-600' : 'text-gray-400'}`}>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 text-sm ${
-                    currentStep >= step.id ? 'border-primary-600 bg-primary-600 text-white' : 'border-gray-300'
-                  }`}>
+                <div className="flex items-center flex-shrink-0" style={{ color: currentStep >= step.id ? COLORS.primary[600] : COLORS.gray[400] }}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center border-2 text-sm" style={{
+                    borderColor: currentStep >= step.id ? COLORS.primary[600] : COLORS.gray[300],
+                    backgroundColor: currentStep >= step.id ? COLORS.primary[600] : 'transparent',
+                    color: currentStep >= step.id ? COLORS.white : COLORS.gray[400]
+                  }}>
                     {step.id}
                   </div>
                   <div className={`ml-2 ${isMobile ? 'hidden' : 'hidden sm:block'}`}>
@@ -584,9 +862,7 @@ const CheckoutPage = () => {
                   </div>
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={`w-8 sm:w-12 h-0.5 mx-2 sm:mx-4 flex-shrink-0 ${
-                    currentStep > step.id ? 'bg-primary-600' : 'bg-gray-300'
-                  }`} />
+                  <div className="w-8 sm:w-12 h-0.5 mx-2 sm:mx-4 flex-shrink-0" style={{ backgroundColor: currentStep > step.id ? COLORS.primary[600] : COLORS.gray[300] }} />
                 )}
               </React.Fragment>
             ))}
@@ -600,10 +876,10 @@ const CheckoutPage = () => {
               {/* Step 1: Checkout - Delivery Mode & Time Slot */}
               {currentStep === 1 && (
                 <div className="space-y-6">
-                  <h2 className="text-2xl font-semibold text-gray-900">Checkout</h2>
+                  <h2 className="text-2xl font-semibold" style={{ color: COLORS.gray[900] }}>Checkout</h2>
 
                   {/* Selected Pincode */}
-                  <div className="flex items-center text-gray-600 mb-6">
+                  <div className="flex items-center mb-6" style={{ color: COLORS.gray[600] }}>
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -614,32 +890,44 @@ const CheckoutPage = () => {
                   {/* Step 1: Select a delivery mode */}
                   <div className="space-y-4">
                     <div className="flex items-center">
-                      <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3" style={{ backgroundColor: COLORS.primary[500] }}>
                         1
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900">Select a delivery mode</h3>
+                      <h3 className="text-lg font-semibold" style={{ color: COLORS.gray[900] }}>Select a delivery mode</h3>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Pick Up Point Option */}
-                      <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                        checkoutData.deliveryMode === 'pickup'
-                          ? 'border-green-500 bg-green-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}>
+                      <label 
+                        className="flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors"
+                        style={{
+                          borderColor: checkoutData.deliveryMode === 'pickup' ? COLORS.primary[500] : COLORS.gray[200],
+                          backgroundColor: checkoutData.deliveryMode === 'pickup' ? COLORS.primary[50] : 'transparent'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (checkoutData.deliveryMode !== 'pickup') {
+                            e.currentTarget.style.borderColor = COLORS.gray[300];
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (checkoutData.deliveryMode !== 'pickup') {
+                            e.currentTarget.style.borderColor = COLORS.gray[200];
+                          }
+                        }}
+                      >
                         <input
                           type="radio"
                           name="deliveryMode"
                           value="pickup"
                           checked={checkoutData.deliveryMode === 'pickup'}
                           onChange={(e) => handleDeliveryModeChange(e.target.value)}
-                          className="text-green-600 focus:ring-green-500"
+                          style={{ accentColor: COLORS.primary[600] }}
                         />
                         <div className="ml-3 flex items-center flex-1">
                           <div className="text-2xl mr-3">🏪</div>
                           <div className="flex-1">
-                            <p className="font-medium text-gray-900">Pick Up Point</p>
-                            <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mt-1">
+                            <p className="font-medium" style={{ color: COLORS.gray[900] }}>Pick Up Point</p>
+                            <span className="inline-block text-xs px-2 py-1 rounded-full mt-1" style={{ backgroundColor: COLORS.primary[100], color: COLORS.primary[800] }}>
                               Free Delivery
                             </span>
                           </div>
@@ -647,26 +935,38 @@ const CheckoutPage = () => {
                       </label>
 
                       {/* Home Delivery Option */}
-                      <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                        checkoutData.deliveryMode === 'home'
-                          ? 'border-green-500 bg-green-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}>
+                      <label 
+                        className="flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors"
+                        style={{
+                          borderColor: checkoutData.deliveryMode === 'home' ? COLORS.primary[500] : COLORS.gray[200],
+                          backgroundColor: checkoutData.deliveryMode === 'home' ? COLORS.primary[50] : 'transparent'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (checkoutData.deliveryMode !== 'home') {
+                            e.currentTarget.style.borderColor = COLORS.gray[300];
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (checkoutData.deliveryMode !== 'home') {
+                            e.currentTarget.style.borderColor = COLORS.gray[200];
+                          }
+                        }}
+                      >
                         <input
                           type="radio"
                           name="deliveryMode"
                           value="home"
                           checked={checkoutData.deliveryMode === 'home'}
                           onChange={(e) => handleDeliveryModeChange(e.target.value)}
-                          className="text-green-600 focus:ring-green-500"
+                          style={{ accentColor: COLORS.primary[600] }}
                         />
                         <div className="ml-3 flex items-center flex-1">
                           <div className="text-2xl mr-3">🏠</div>
                           <div className="flex-1">
-                            <p className="font-medium text-gray-900">Home Delivery</p>
+                            <p className="font-medium" style={{ color: COLORS.gray[900] }}>Home Delivery</p>
                             <div className="flex items-center mt-1">
-                              <span className="text-sm text-gray-500 line-through mr-2">₹49.00</span>
-                              <span className="text-orange-600 font-semibold">₹0</span>
+                              <span className="text-sm line-through mr-2" style={{ color: COLORS.gray[500] }}>₹49.00</span>
+                              <span className="font-semibold" style={{ color: COLORS.warning[600] }}>₹0</span>
                             </div>
                           </div>
                         </div>
@@ -679,9 +979,9 @@ const CheckoutPage = () => {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-900">Pickup Points</h3>
+                          <h3 className="text-lg font-semibold" style={{ color: COLORS.gray[900] }}>Pickup Points</h3>
                           {confirmedLocation?.pincode && (
-                            <p className="text-sm text-gray-600 mt-1">
+                            <p className="text-sm mt-1" style={{ color: COLORS.gray[600] }}>
                               Available stores in {confirmedLocation.pincode.pincode}
                             </p>
                           )}
@@ -695,7 +995,18 @@ const CheckoutPage = () => {
                               }
                             }}
                             disabled={isLoadingStores}
-                            className="text-green-600 hover:text-green-700 text-sm font-medium disabled:opacity-50"
+                            className="text-sm font-medium disabled:opacity-50 transition-colors"
+                            style={{ color: COLORS.primary[600] }}
+                            onMouseEnter={(e) => {
+                              if (!isLoadingStores) {
+                                e.target.style.color = COLORS.primary[700];
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isLoadingStores) {
+                                e.target.style.color = COLORS.primary[600];
+                              }
+                            }}
                           >
                             {isLoadingStores ? 'Loading...' : 'Refresh'}
                           </button>
@@ -704,30 +1015,43 @@ const CheckoutPage = () => {
                       
                       {isLoadingStores ? (
                         <div className="flex items-center justify-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-                          <span className="ml-2 text-gray-600">Loading stores...</span>
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: COLORS.primary[500] }}></div>
+                          <span className="ml-2" style={{ color: COLORS.gray[600] }}>Loading stores...</span>
                         </div>
                       ) : pickupStores.length === 0 ? (
                         <div className="text-center py-8">
-                          <div className="w-12 h-12 mx-auto rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: COLORS.gray[100] }}>
+                            <svg className="w-6 h-6" style={{ color: COLORS.gray[400] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                           </div>
-                          <p className="text-gray-700 font-medium mb-2">No pickup points available</p>
-                          <p className="text-sm text-gray-500">
+                          <p className="font-medium mb-2" style={{ color: COLORS.gray[700] }}>No pickup points available</p>
+                          <p className="text-sm" style={{ color: COLORS.gray[500] }}>
                             {storesError || 'Please select a different location or try home delivery.'}
                           </p>
                         </div>
                       ) : (
                         <div className="space-y-3">
                           {pickupStores.map((point) => (
-                          <label key={point.id} className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                            checkoutData.selectedPickupPoint?.id === point.id
-                              ? 'border-green-500 bg-green-50'
-                              : 'border-gray-200 hover:border-gray-300'
-                          } ${!point.isAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                          <label 
+                            key={point.id} 
+                            className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-colors ${!point.isAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            style={{
+                              borderColor: checkoutData.selectedPickupPoint?.id === point.id ? COLORS.primary[500] : COLORS.gray[200],
+                              backgroundColor: checkoutData.selectedPickupPoint?.id === point.id ? COLORS.primary[50] : 'transparent'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (point.isAvailable && checkoutData.selectedPickupPoint?.id !== point.id) {
+                                e.currentTarget.style.borderColor = COLORS.gray[300];
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (checkoutData.selectedPickupPoint?.id !== point.id) {
+                                e.currentTarget.style.borderColor = COLORS.gray[200];
+                              }
+                            }}
+                          >
                             <input
                               type="radio"
                               name="pickupPoint"
@@ -735,35 +1059,36 @@ const CheckoutPage = () => {
                               checked={checkoutData.selectedPickupPoint?.id === point.id}
                               onChange={() => handlePickupPointSelect(point)}
                               disabled={!point.isAvailable}
-                              className="text-green-600 focus:ring-green-500 mt-1"
+                              className="mt-1"
+                              style={{ accentColor: COLORS.primary[600] }}
                             />
                             <div className="ml-3 flex-1">
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                   <div className="flex items-center">
-                                    <svg className="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 mr-2" style={{ color: COLORS.primary[500] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
-                                    <p className="font-medium text-gray-900">{point.name}</p>
+                                    <p className="font-medium" style={{ color: COLORS.gray[900] }}>{point.name}</p>
                                   </div>
-                                  <p className="text-sm text-gray-600 mt-1">{point.address}</p>
+                                  <p className="text-sm mt-1" style={{ color: COLORS.gray[600] }}>{point.address}</p>
                                   <div className="flex items-center mt-2 space-x-4 flex-wrap">
-                                    <span className="text-sm text-gray-500">Distance: {point.distance}</span>
-                                    <span className="text-sm text-gray-500">Timings: {point.timings}</span>
+                                    <span className="text-sm" style={{ color: COLORS.gray[500] }}>Distance: {point.distance}</span>
+                                    <span className="text-sm" style={{ color: COLORS.gray[500] }}>Timings: {point.timings}</span>
                                     {point.contactNumber && (
-                                      <span className="text-sm text-gray-500">Contact: {point.contactNumber}</span>
+                                      <span className="text-sm" style={{ color: COLORS.gray[500] }}>Contact: {point.contactNumber}</span>
                                     )}
                                     {point.minOrderAmount && (
-                                      <span className="text-sm text-gray-500">Min Order: ₹{point.minOrderAmount}</span>
+                                      <span className="text-sm" style={{ color: COLORS.gray[500] }}>Min Order: ₹{point.minOrderAmount}</span>
                                     )}
                                   </div>
                                   {point.storeMessage && (
-                                    <p className="text-xs text-blue-600 mt-1 italic">{point.storeMessage}</p>
+                                    <p className="text-xs mt-1 italic" style={{ color: COLORS.secondary[600] }}>{point.storeMessage}</p>
                                   )}
                                 </div>
                                 {!point.isAvailable && (
-                                  <span className="text-xs text-red-600 font-medium">Unavailable</span>
+                                  <span className="text-xs font-medium" style={{ color: COLORS.error[600] }}>Unavailable</span>
                                 )}
                               </div>
                             </div>
@@ -785,10 +1110,13 @@ const CheckoutPage = () => {
                   {checkoutData.deliveryMode === 'home' && (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-gray-900">Saved addresses</h3>
+                        <h3 className="text-lg font-semibold" style={{ color: COLORS.gray[900] }}>Saved addresses</h3>
                         <button 
                           onClick={() => navigate('/address')}
-                          className="text-green-600 hover:text-green-700 text-sm font-medium"
+                          className="text-sm font-medium transition-colors"
+                          style={{ color: COLORS.primary[600] }}
+                          onMouseEnter={(e) => e.target.style.color = COLORS.primary[700]}
+                          onMouseLeave={(e) => e.target.style.color = COLORS.primary[600]}
                         >
                           + Add New Address
                         </button>
@@ -796,32 +1124,38 @@ const CheckoutPage = () => {
                       
                       {isLoadingAddresses ? (
                         <div className="flex items-center justify-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-                          <span className="ml-2 text-gray-600">Loading addresses...</span>
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: COLORS.primary[500] }}></div>
+                          <span className="ml-2" style={{ color: COLORS.gray[600] }}>Loading addresses...</span>
                         </div>
                       ) : addressesError ? (
-                        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+                        <div className="px-4 py-3 rounded-lg" style={{ backgroundColor: COLORS.error[50], borderColor: COLORS.error[200], borderWidth: '1px', borderStyle: 'solid', color: COLORS.error[800] }}>
                           <p className="text-sm">{addressesError}</p>
                           <button
                             onClick={() => window.location.reload()}
-                            className="mt-2 text-sm underline hover:text-red-900"
+                            className="mt-2 text-sm underline transition-colors"
+                            style={{ color: COLORS.error[800] }}
+                            onMouseEnter={(e) => e.target.style.color = COLORS.error[900]}
+                            onMouseLeave={(e) => e.target.style.color = COLORS.error[800]}
                           >
                             Try again
                           </button>
                         </div>
                       ) : savedAddresses.length === 0 ? (
                         <div className="text-center py-8">
-                          <div className="w-12 h-12 mx-auto rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: COLORS.gray[100] }}>
+                            <svg className="w-6 h-6" style={{ color: COLORS.gray[400] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                           </div>
-                          <p className="text-gray-700 font-medium mb-2">No saved addresses</p>
-                          <p className="text-sm text-gray-500 mb-4">Add an address to continue with home delivery</p>
+                          <p className="font-medium mb-2" style={{ color: COLORS.gray[700] }}>No saved addresses</p>
+                          <p className="text-sm mb-4" style={{ color: COLORS.gray[500] }}>Add an address to continue with home delivery</p>
                           <button
                             onClick={() => navigate('/address')}
-                            className="text-green-600 hover:text-green-700 text-sm font-medium"
+                            className="text-sm font-medium transition-colors"
+                            style={{ color: COLORS.primary[600] }}
+                            onMouseEnter={(e) => e.target.style.color = COLORS.primary[700]}
+                            onMouseLeave={(e) => e.target.style.color = COLORS.primary[600]}
                           >
                             + Add New Address
                           </button>
@@ -831,11 +1165,21 @@ const CheckoutPage = () => {
                           {savedAddresses.map((address) => (
                             <label 
                               key={address.id || address.mongoId}
-                              className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                                checkoutData.selectedAddress?.id === address.id
-                                  ? 'border-green-500 bg-green-50'
-                                  : 'border-gray-200 hover:border-gray-300'
-                              }`}
+                              className="flex items-start p-4 border-2 rounded-lg cursor-pointer transition-colors"
+                              style={{
+                                borderColor: checkoutData.selectedAddress?.id === address.id ? COLORS.primary[500] : COLORS.gray[200],
+                                backgroundColor: checkoutData.selectedAddress?.id === address.id ? COLORS.primary[50] : 'transparent'
+                              }}
+                              onMouseEnter={(e) => {
+                                if (checkoutData.selectedAddress?.id !== address.id) {
+                                  e.currentTarget.style.borderColor = COLORS.gray[300];
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (checkoutData.selectedAddress?.id !== address.id) {
+                                  e.currentTarget.style.borderColor = COLORS.gray[200];
+                                }
+                              }}
                             >
                               <input
                                 type="radio"
@@ -850,32 +1194,33 @@ const CheckoutPage = () => {
                                   city: address.city,
                                   pinCode: address.pinCode
                                 })}
-                                className="text-green-600 focus:ring-green-500 mt-1"
+                                className="mt-1"
+                                style={{ accentColor: COLORS.primary[600] }}
                               />
                               <div className="ml-3 flex-1">
                                 <div className="flex items-start justify-between">
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-2">
-                                      <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <svg className="w-4 h-4" style={{ color: COLORS.primary[500] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                       </svg>
-                                      <p className="font-medium text-gray-900">{address.name}</p>
+                                      <p className="font-medium" style={{ color: COLORS.gray[900] }}>{address.name}</p>
                                       {address.isDefault && (
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: COLORS.primary[100], color: COLORS.primary[800] }}>
                                           Default
                                         </span>
                                       )}
                                     </div>
-                                    <p className="text-sm text-gray-600">
+                                    <p className="text-sm" style={{ color: COLORS.gray[600] }}>
                                       {address.addressLine1}
                                       {address.addressLine2 && <>, {address.addressLine2}</>}
                                     </p>
-                                    <p className="text-sm text-gray-600">
+                                    <p className="text-sm" style={{ color: COLORS.gray[600] }}>
                                       {address.city} - {address.pinCode}
                                     </p>
                                     {address.email && (
-                                      <p className="text-sm text-gray-500 mt-1">Email: {address.email}</p>
+                                      <p className="text-sm mt-1" style={{ color: COLORS.gray[500] }}>Email: {address.email}</p>
                                     )}
                                   </div>
                                   <button 
@@ -883,7 +1228,10 @@ const CheckoutPage = () => {
                                       e.preventDefault();
                                       navigate('/address');
                                     }}
-                                    className="text-blue-600 hover:text-blue-700 text-sm flex items-center ml-2"
+                                    className="text-sm flex items-center ml-2 transition-colors"
+                                    style={{ color: COLORS.secondary[600] }}
+                                    onMouseEnter={(e) => e.target.style.color = COLORS.secondary[700]}
+                                    onMouseLeave={(e) => e.target.style.color = COLORS.secondary[600]}
                                   >
                                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -900,7 +1248,7 @@ const CheckoutPage = () => {
                       <Button 
                         onClick={handleConfirmLocation}
                         disabled={!checkoutData.selectedAddress || savedAddresses.length === 0}
-                        className="w-full bg-green-600 hover:bg-green-700"
+                        className="w-full"
                       >
                         CONFIRM ADDRESS
                       </Button>
@@ -910,25 +1258,21 @@ const CheckoutPage = () => {
                   {/* Step 2: Select a time slot (disabled until location is confirmed) */}
                   <div className="space-y-4">
                     <div className="flex items-center">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3 ${
-                        checkoutData.selectedPickupPoint || checkoutData.selectedAddress
-                          ? 'bg-green-500'
-                          : 'bg-gray-400'
-                      }`}>
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3" style={{
+                        backgroundColor: checkoutData.selectedPickupPoint || checkoutData.selectedAddress ? COLORS.primary[500] : COLORS.gray[400]
+                      }}>
                         2
                       </div>
-                      <h3 className={`text-lg font-semibold ${
-                        checkoutData.selectedPickupPoint || checkoutData.selectedAddress
-                          ? 'text-gray-900'
-                          : 'text-gray-400'
-                      }`}>
+                      <h3 className="text-lg font-semibold" style={{
+                        color: checkoutData.selectedPickupPoint || checkoutData.selectedAddress ? COLORS.gray[900] : COLORS.gray[400]
+                      }}>
                         Select a time slot
                       </h3>
                     </div>
                     
                     {checkoutData.selectedPickupPoint || checkoutData.selectedAddress ? (
                       <div className="space-y-4">
-                        <div className="flex items-center text-green-600">
+                        <div className="flex items-center" style={{ color: COLORS.primary[600] }}>
                           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
@@ -938,32 +1282,58 @@ const CheckoutPage = () => {
                         </div>
                         
                         <div className="space-y-3">
-                          <div className="flex items-center p-4 border border-gray-200 rounded-lg">
-                            <div className="text-2xl mr-3">🚚</div>
-                            <div className="flex-1">
-                              <p className="font-medium text-gray-900">Shipment 1: {totalItems} items</p>
+                          {isLoadingSlots ? (
+                            <div className="flex items-center justify-center p-4 rounded-lg" style={{ borderColor: COLORS.gray[200], borderWidth: '1px', borderStyle: 'solid' }}>
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 mr-3" style={{ borderColor: COLORS.primary[500] }}></div>
+                              <span style={{ color: COLORS.gray[600] }}>Loading delivery slots...</span>
                             </div>
-                            <button 
-                              onClick={() => {
-                                setSelectedShipment(1);
-                                setShowTimeSlotModal(true);
-                              }}
-                              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center"
-                            >
-                              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-                              </svg>
-                              Tap to Select
-                            </button>
-                          </div>
+                          ) : slotsErrorMessage ? (
+                            <div className="p-4 rounded-lg" style={{ borderColor: COLORS.error[200], borderWidth: '1px', borderStyle: 'solid', backgroundColor: COLORS.error[50] }}>
+                              <div className="flex items-start">
+                                <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" style={{ color: COLORS.error[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium mb-1" style={{ color: COLORS.error[900] }}>Delivery Slots Unavailable</p>
+                                  <p className="text-sm" style={{ color: COLORS.error[700] }}>{slotsErrorMessage}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ) : timeSlots.length > 0 ? (
+                            <div className="flex items-center p-4 rounded-lg" style={{ borderColor: COLORS.gray[200], borderWidth: '1px', borderStyle: 'solid' }}>
+                              <div className="text-2xl mr-3">🚚</div>
+                              <div className="flex-1">
+                                <p className="font-medium" style={{ color: COLORS.gray[900] }}>Shipment 1: {totalItems} items</p>
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  setSelectedShipment(1);
+                                  setShowTimeSlotModal(true);
+                                }}
+                                className="text-white px-4 py-2 rounded-lg flex items-center transition-colors"
+                                style={{ backgroundColor: COLORS.primary[600] }}
+                                onMouseEnter={(e) => e.target.style.backgroundColor = COLORS.primary[700]}
+                                onMouseLeave={(e) => e.target.style.backgroundColor = COLORS.primary[600]}
+                              >
+                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                                </svg>
+                                Tap to Select
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="p-4 rounded-lg" style={{ borderColor: COLORS.gray[200], borderWidth: '1px', borderStyle: 'solid', backgroundColor: COLORS.gray[50] }}>
+                              <p className="text-sm" style={{ color: COLORS.gray[600] }}>No delivery slots available at this time.</p>
+                            </div>
+                          )}
                         </div>
                         
-                        <p className="text-sm text-gray-600">
-                          Why am I seeing multiple shipments? <span className="text-green-600 underline cursor-pointer">Know More</span>
+                        <p className="text-sm" style={{ color: COLORS.gray[600] }}>
+                          Why am I seeing multiple shipments? <span className="underline cursor-pointer transition-colors" style={{ color: COLORS.primary[600] }} onMouseEnter={(e) => e.target.style.color = COLORS.primary[700]} onMouseLeave={(e) => e.target.style.color = COLORS.primary[600]}>Know More</span>
                         </p>
                       </div>
                     ) : (
-                      <p className="text-gray-500 text-sm">Please select a delivery mode and confirm location first</p>
+                      <p className="text-sm" style={{ color: COLORS.gray[500] }}>Please select a delivery mode and confirm location first</p>
                     )}
                   </div>
                 </div>
@@ -972,21 +1342,21 @@ const CheckoutPage = () => {
               {/* Step 2: Payment Information */}
               {currentStep === 2 && (
                 <div className="space-y-6">
-                  <h2 className="text-2xl font-semibold text-gray-900">Payment Information</h2>
+                  <h2 className="text-2xl font-semibold" style={{ color: COLORS.gray[900] }}>Payment Information</h2>
 
                   {/* Payment Method Selection */}
                   <div className="space-y-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                      Select Payment Method <span className="text-red-500">*</span>
+                    <label className="block text-sm font-medium mb-3" style={{ color: COLORS.gray[700] }}>
+                      Select Payment Method <span style={{ color: COLORS.error[500] }}>*</span>
                     </label>
 
                     {isLoadingPaymentModes ? (
                       <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-                        <span className="ml-2 text-gray-600">Loading payment methods...</span>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: COLORS.primary[500] }}></div>
+                        <span className="ml-2" style={{ color: COLORS.gray[600] }}>Loading payment methods...</span>
                       </div>
                     ) : enabledPaymentModes.length === 0 ? (
-                      <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg">
+                      <div className="px-4 py-3 rounded-lg" style={{ backgroundColor: COLORS.warning[50], borderColor: COLORS.warning[200], borderWidth: '1px', borderStyle: 'solid', color: COLORS.warning[800] }}>
                         <p className="text-sm">No payment methods available. Please try again later.</p>
                       </div>
                     ) : (
@@ -996,11 +1366,21 @@ const CheckoutPage = () => {
                           return (
                             <label 
                               key={mode.id} 
-                              className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
-                                formData.paymentMethod === details.value
-                                  ? 'border-primary-500 bg-primary-50'
-                                  : 'border-gray-200 hover:border-gray-300'
-                              }`}
+                              className="flex items-center p-4 border rounded-lg cursor-pointer transition-colors"
+                              style={{
+                                borderColor: formData.paymentMethod === details.value ? COLORS.primary[500] : COLORS.gray[200],
+                                backgroundColor: formData.paymentMethod === details.value ? COLORS.primary[50] : 'transparent'
+                              }}
+                              onMouseEnter={(e) => {
+                                if (formData.paymentMethod !== details.value) {
+                                  e.currentTarget.style.borderColor = COLORS.gray[300];
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (formData.paymentMethod !== details.value) {
+                                  e.currentTarget.style.borderColor = COLORS.gray[200];
+                                }
+                              }}
                             >
                               <input
                                 type="radio"
@@ -1008,14 +1388,14 @@ const CheckoutPage = () => {
                                 value={details.value}
                                 checked={formData.paymentMethod === details.value}
                                 onChange={handleInputChange}
-                                className="text-primary-600 focus:ring-primary-500"
+                                style={{ accentColor: COLORS.primary[600] }}
                               />
                               <div className="ml-3 flex items-center">
                                 <span className="text-lg mr-2">{details.icon}</span>
                                 <div>
-                                  <p className="font-medium text-gray-900">{details.name}</p>
+                                  <p className="font-medium" style={{ color: COLORS.gray[900] }}>{details.name}</p>
                                   {details.description && (
-                                    <p className="text-sm text-gray-500">{details.description}</p>
+                                    <p className="text-sm" style={{ color: COLORS.gray[500] }}>{details.description}</p>
                                   )}
                                 </div>
                               </div>
@@ -1028,8 +1408,8 @@ const CheckoutPage = () => {
 
                   {/* Conditional Payment Forms */}
                   {formData.paymentMethod === 'card' && (
-                    <div className="space-y-4 mt-6 p-4 bg-gray-50 rounded-lg">
-                      <h3 className="text-lg font-medium text-gray-900">Card Details</h3>
+                    <div className="space-y-4 mt-6 p-4 rounded-lg" style={{ backgroundColor: COLORS.gray[50] }}>
+                      <h3 className="text-lg font-medium" style={{ color: COLORS.gray[900] }}>Card Details</h3>
 
                       <Input
                         label="Name on Card"
@@ -1077,8 +1457,8 @@ const CheckoutPage = () => {
                   )}
 
                   {formData.paymentMethod === 'upi' && (
-                    <div className="space-y-4 mt-6 p-4 bg-gray-50 rounded-lg">
-                      <h3 className="text-lg font-medium text-gray-900">UPI Details</h3>
+                    <div className="space-y-4 mt-6 p-4 rounded-lg" style={{ backgroundColor: COLORS.gray[50] }}>
+                      <h3 className="text-lg font-medium" style={{ color: COLORS.gray[900] }}>UPI Details</h3>
                       <Input
                         label="UPI ID"
                         name="upiId"
@@ -1092,8 +1472,8 @@ const CheckoutPage = () => {
                   )}
 
                   {formData.paymentMethod === 'netbanking' && (
-                    <div className="space-y-4 mt-6 p-4 bg-gray-50 rounded-lg">
-                      <h3 className="text-lg font-medium text-gray-900">Net Banking</h3>
+                    <div className="space-y-4 mt-6 p-4 rounded-lg" style={{ backgroundColor: COLORS.gray[50] }}>
+                      <h3 className="text-lg font-medium" style={{ color: COLORS.gray[900] }}>Net Banking</h3>
                       <Input
                         label="Bank Name"
                         name="bankName"
@@ -1107,8 +1487,8 @@ const CheckoutPage = () => {
                   )}
 
                   {formData.paymentMethod === 'paytm' && (
-                    <div className="space-y-4 mt-6 p-4 bg-gray-50 rounded-lg">
-                      <h3 className="text-lg font-medium text-gray-900">Paytm Details</h3>
+                    <div className="space-y-4 mt-6 p-4 rounded-lg" style={{ backgroundColor: COLORS.gray[50] }}>
+                      <h3 className="text-lg font-medium" style={{ color: COLORS.gray[900] }}>Paytm Details</h3>
                       <Input
                         label="Paytm Number"
                         name="paytmNumber"
@@ -1127,19 +1507,19 @@ const CheckoutPage = () => {
               {/* Step 3: Review Order */}
               {currentStep === 3 && (
                 <div className="space-y-6">
-                  <h2 className="text-2xl font-semibold text-gray-900">Review Your Order</h2>
+                  <h2 className="text-2xl font-semibold" style={{ color: COLORS.gray[900] }}>Review Your Order</h2>
 
                   <div className="space-y-4">
                     {/* Delivery Method */}
-                    <div className="flex items-start space-x-4 p-4 border border-gray-200 rounded-lg">
+                    <div className="flex items-start space-x-4 p-4 rounded-lg" style={{ borderColor: COLORS.gray[200], borderWidth: '1px', borderStyle: 'solid' }}>
                       <div className="flex-shrink-0">
-                        <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5" style={{ color: COLORS.primary[500] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
                       <div>
-                        <h3 className="text-sm font-medium text-gray-900">Delivery Method</h3>
-                        <p className="text-sm text-gray-600">
+                        <h3 className="text-sm font-medium" style={{ color: COLORS.gray[900] }}>Delivery Method</h3>
+                        <p className="text-sm" style={{ color: COLORS.gray[600] }}>
                           {checkoutData.deliveryMode === 'pickup' ? 'Pick Up Point' : 'Home Delivery'}
                           {checkoutData.deliveryMode === 'pickup' && checkoutData.selectedPickupPoint && (
                             <><br />{checkoutData.selectedPickupPoint.name}<br />{checkoutData.selectedPickupPoint.address}</>
@@ -1153,15 +1533,15 @@ const CheckoutPage = () => {
 
                     {/* Time Slot */}
                     {checkoutData.selectedTimeSlot && (
-                      <div className="flex items-start space-x-4 p-4 border border-gray-200 rounded-lg">
+                      <div className="flex items-start space-x-4 p-4 rounded-lg" style={{ borderColor: COLORS.gray[200], borderWidth: '1px', borderStyle: 'solid' }}>
                         <div className="flex-shrink-0">
-                          <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5" style={{ color: COLORS.primary[500] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
                         <div>
-                          <h3 className="text-sm font-medium text-gray-900">Delivery Time Slot</h3>
-                          <p className="text-sm text-gray-600">
+                          <h3 className="text-sm font-medium" style={{ color: COLORS.gray[900] }}>Delivery Time Slot</h3>
+                          <p className="text-sm" style={{ color: COLORS.gray[600] }}>
                             {checkoutData.selectedDate}<br />
                             {checkoutData.selectedTimeSlot.time}
                           </p>
@@ -1171,15 +1551,15 @@ const CheckoutPage = () => {
 
                     {/* Shipping Address */}
                     {checkoutData.selectedAddress && (
-                      <div className="flex items-start space-x-4 p-4 border border-gray-200 rounded-lg">
+                      <div className="flex items-start space-x-4 p-4 rounded-lg" style={{ borderColor: COLORS.gray[200], borderWidth: '1px', borderStyle: 'solid' }}>
                         <div className="flex-shrink-0">
-                          <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5" style={{ color: COLORS.primary[500] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
                         <div>
-                          <h3 className="text-sm font-medium text-gray-900">Shipping Address</h3>
-                          <p className="text-sm text-gray-600">
+                          <h3 className="text-sm font-medium" style={{ color: COLORS.gray[900] }}>Shipping Address</h3>
+                          <p className="text-sm" style={{ color: COLORS.gray[600] }}>
                             {checkoutData.selectedAddress.name}<br />
                             {checkoutData.selectedAddress.address}
                           </p>
@@ -1187,15 +1567,15 @@ const CheckoutPage = () => {
                       </div>
                     )}
                     {checkoutData.selectedPickupPoint && (
-                      <div className="flex items-start space-x-4 p-4 border border-gray-200 rounded-lg">
+                      <div className="flex items-start space-x-4 p-4 rounded-lg" style={{ borderColor: COLORS.gray[200], borderWidth: '1px', borderStyle: 'solid' }}>
                         <div className="flex-shrink-0">
-                          <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5" style={{ color: COLORS.primary[500] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
                         <div>
-                          <h3 className="text-sm font-medium text-gray-900">Pickup Address</h3>
-                          <p className="text-sm text-gray-600">
+                          <h3 className="text-sm font-medium" style={{ color: COLORS.gray[900] }}>Pickup Address</h3>
+                          <p className="text-sm" style={{ color: COLORS.gray[600] }}>
                             {checkoutData.selectedPickupPoint.name}<br />
                             {checkoutData.selectedPickupPoint.address}
                           </p>
@@ -1204,15 +1584,15 @@ const CheckoutPage = () => {
                     )}
 
                     {/* Payment Method */}
-                    <div className="flex items-start space-x-4 p-4 border border-gray-200 rounded-lg">
+                    <div className="flex items-start space-x-4 p-4 rounded-lg" style={{ borderColor: COLORS.gray[200], borderWidth: '1px', borderStyle: 'solid' }}>
                       <div className="flex-shrink-0">
-                        <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5" style={{ color: COLORS.primary[500] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
                       <div>
-                        <h3 className="text-sm font-medium text-gray-900">Payment Method</h3>
-                        <p className="text-sm text-gray-600">
+                        <h3 className="text-sm font-medium" style={{ color: COLORS.gray[900] }}>Payment Method</h3>
+                        <p className="text-sm" style={{ color: COLORS.gray[600] }}>
                         {formData.paymentMethod === 'card' && formData.cardNumber && `Card ending in ${formData.cardNumber.slice(-4)}`}
                         {formData.paymentMethod === 'upi' && formData.upiId && `UPI ID: ${formData.upiId}`}
                         {formData.paymentMethod === 'netbanking' && formData.bankName && `Net Banking: ${formData.bankName}`}
@@ -1240,7 +1620,15 @@ const CheckoutPage = () => {
                     Next
                   </Button>
                 ) : (
-                  <Button onClick={handleSubmit} disabled={loading} className={isMobile ? 'w-full' : ''}>
+                  <Button 
+                    onClick={(e) => {
+                      console.log('🔘 Place Order button clicked', { currentStep, loading });
+                      e.preventDefault();
+                      handleSubmit();
+                    }} 
+                    disabled={loading} 
+                    className={isMobile ? 'w-full' : ''}
+                  >
                     {loading ? 'Processing...' : 'Place Order'}
                   </Button>
                 )}
@@ -1329,52 +1717,83 @@ const CheckoutPage = () => {
 
             {/* Modal Content */}
             <div className="p-6 overflow-y-auto max-h-[60vh]">
-              <div className="space-y-6">
-                {timeSlots.map((dateSlot, dateIndex) => (
-                  <div key={dateIndex} className="space-y-4">
-                    {/* Date Header */}
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-lg font-semibold text-gray-900">{dateSlot.date}</h4>
-                      <div className="flex items-center space-x-2">
-                        <div className="flex space-x-1">
-                          {[...Array(6)].map((_, i) => (
-                            <div key={i} className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          ))}
+              {isLoadingSlots ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mr-3"></div>
+                  <span className="text-gray-600">Loading delivery slots...</span>
+                </div>
+              ) : slotsErrorMessage ? (
+                <div className="py-12">
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                      <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Delivery Slots Unavailable</h4>
+                    <p className="text-sm text-gray-700 max-w-md">{slotsErrorMessage}</p>
+                  </div>
+                </div>
+              ) : timeSlots.length > 0 ? (
+                <div className="space-y-6">
+                  {timeSlots.map((dateSlot, dateIndex) => (
+                    <div key={dateIndex} className="space-y-4">
+                      {/* Date Header */}
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-lg font-semibold text-gray-900">{dateSlot.date}</h4>
+                        <div className="flex items-center space-x-2">
+                          <div className="flex space-x-1">
+                            {[...Array(6)].map((_, i) => (
+                              <div key={i} className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            ))}
+                          </div>
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
                         </div>
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
+                      </div>
+
+                      {/* Time Slots Grid */}
+                      <div className="grid grid-cols-2 gap-3">
+                        {dateSlot.slots.map((slot) => (
+                          <button
+                            key={slot.id}
+                            onClick={() => handleTimeSlotSelect(dateSlot.date, slot)}
+                            disabled={!slot.available}
+                            className={`p-3 text-left border rounded-lg transition-colors ${
+                              slot.available
+                                ? 'border-gray-200 hover:border-green-500 hover:bg-green-50'
+                                : 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-50'
+                            } ${
+                              checkoutData.selectedTimeSlot?.id === slot.id
+                                ? 'border-green-500 bg-green-50'
+                                : ''
+                            }`}
+                          >
+                            <span className={`text-sm font-medium ${
+                              slot.available ? 'text-gray-900' : 'text-gray-400'
+                            }`}>
+                              {slot.time}
+                            </span>
+                          </button>
+                        ))}
                       </div>
                     </div>
-
-                    {/* Time Slots Grid */}
-                    <div className="grid grid-cols-2 gap-3">
-                      {dateSlot.slots.map((slot) => (
-                        <button
-                          key={slot.id}
-                          onClick={() => handleTimeSlotSelect(dateSlot.date, slot)}
-                          disabled={!slot.available}
-                          className={`p-3 text-left border rounded-lg transition-colors ${
-                            slot.available
-                              ? 'border-gray-200 hover:border-green-500 hover:bg-green-50'
-                              : 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-50'
-                          } ${
-                            checkoutData.selectedTimeSlot?.id === slot.id
-                              ? 'border-green-500 bg-green-50'
-                              : ''
-                          }`}
-                        >
-                          <span className={`text-sm font-medium ${
-                            slot.available ? 'text-gray-900' : 'text-gray-400'
-                          }`}>
-                            {slot.time}
-                          </span>
-                        </button>
-                      ))}
+                  ))}
+                </div>
+              ) : (
+                <div className="py-12">
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
                     </div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">No Delivery Slots Available</h4>
+                    <p className="text-sm text-gray-600">Please try again later.</p>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Modal Footer */}
@@ -1383,15 +1802,17 @@ const CheckoutPage = () => {
                 onClick={handleTimeSlotModalClose}
                 className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
               >
-                Cancel
+                {slotsErrorMessage ? 'Close' : 'Cancel'}
               </button>
-              <Button
-                onClick={handleConfirmTimeSlot}
-                disabled={!checkoutData.selectedTimeSlot}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                Confirm Time Slot
-              </Button>
+              {!slotsErrorMessage && timeSlots.length > 0 && (
+                <Button
+                  onClick={handleConfirmTimeSlot}
+                  disabled={!checkoutData.selectedTimeSlot}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  Confirm Time Slot
+                </Button>
+              )}
             </div>
           </div>
         </div>

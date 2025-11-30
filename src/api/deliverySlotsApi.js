@@ -123,8 +123,8 @@ export const formatTime = (timeString) => {
  */
 export const generateTimeSlotsFromAPI = (apiSlots) => {
   if (!apiSlots || apiSlots.length === 0) {
-    // Return default slots if no API data
-    return generateDefaultTimeSlots();
+    // Return empty array if no API data - no fallback slots
+    return [];
   }
 
   const today = new Date();
@@ -148,28 +148,26 @@ export const generateTimeSlotsFromAPI = (apiSlots) => {
     
     let slotsForDate = [];
     
-    if (activeSlot) {
+    if (activeSlot && activeSlot.slotFrom && activeSlot.slotTo) {
       // Generate slots based on API slot time range
       const fromTime = activeSlot.slotFrom;
       const toTime = activeSlot.slotTo;
+      // Preserve the delivery slot ID from API
+      const deliverySlotId = activeSlot.iddelivery_slot || activeSlot.id;
       
       // Generate time slots in 2-3 hour intervals
-      slotsForDate = generateSlotsForTimeRange(fromTime, toTime, slotId);
+      slotsForDate = generateSlotsForTimeRange(fromTime, toTime, slotId, deliverySlotId);
       slotId += slotsForDate.length;
-    } else {
-      // Use default slots if no active slot
-      slotsForDate = [
-        { id: slotId++, time: '09:00 AM - 12:00 PM', available: true },
-        { id: slotId++, time: '12:00 PM - 03:00 PM', available: true },
-        { id: slotId++, time: '03:00 PM - 06:00 PM', available: true },
-        { id: slotId++, time: '06:00 PM - 09:00 PM', available: true }
-      ];
     }
+    // If no active slot or missing time data, skip this date (no fallback slots)
     
-    timeSlots.push({
-      date: dateString,
-      slots: slotsForDate
-    });
+    // Only add date if we have slots for it
+    if (slotsForDate.length > 0) {
+      timeSlots.push({
+        date: dateString,
+        slots: slotsForDate
+      });
+    }
   }
 
   return timeSlots;
@@ -224,9 +222,10 @@ export const generateDefaultTimeSlots = () => {
  * @param {string} fromTime - Start time in HH:MM:SS format
  * @param {string} toTime - End time in HH:MM:SS format
  * @param {number} startSlotId - Starting slot ID
+ * @param {number|string} deliverySlotId - Delivery slot ID from API (iddelivery_slot)
  * @returns {Array} - Array of time slots
  */
-const generateSlotsForTimeRange = (fromTime, toTime, startSlotId) => {
+const generateSlotsForTimeRange = (fromTime, toTime, startSlotId, deliverySlotId) => {
   const slots = [];
   let currentSlotId = startSlotId;
   
@@ -261,7 +260,8 @@ const generateSlotsForTimeRange = (fromTime, toTime, startSlotId) => {
       slots.push({
         id: currentSlotId++,
         time: `${startTime} - ${endTime}`,
-        available: true
+        available: true,
+        iddelivery_slot: deliverySlotId // Preserve the delivery slot ID from API
       });
     }
     

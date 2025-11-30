@@ -3,6 +3,7 @@ import AccountSidebar from '../components/AccountSidebar';
 import { PlusIcon, PencilIcon, TrashIcon, MapPinIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { usePincode } from '../context/PincodeContext';
+import { COLORS } from '../constants/theme';
 import { 
   getAddresses, 
   addAddress, 
@@ -277,7 +278,7 @@ const AddressPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ backgroundColor: COLORS.gray[50] }}>
       <div className="flex">
         <AccountSidebar />
 
@@ -286,12 +287,12 @@ const AddressPage = () => {
           <div className="max-w-6xl">
             {/* Success Message */}
             {successMessage && (
-              <div className="mb-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+              <div className="mb-4 border px-4 py-3 rounded-lg flex items-center justify-between" style={{ backgroundColor: COLORS.success[50], borderColor: COLORS.success[200], color: COLORS.success[800] }}>
                 <div className="flex items-center gap-2">
                   <CheckCircleIcon className="w-5 h-5" />
                   <span>{successMessage}</span>
                 </div>
-                <button onClick={() => setSuccessMessage('')} className="text-green-600 hover:text-green-800">
+                <button onClick={() => setSuccessMessage('')} style={{ color: COLORS.success[600] }} onMouseEnter={(e) => { e.currentTarget.style.color = COLORS.success[800]; }} onMouseLeave={(e) => { e.currentTarget.style.color = COLORS.success[600]; }}>
                   <XMarkIcon className="w-5 h-5" />
                 </button>
               </div>
@@ -299,19 +300,26 @@ const AddressPage = () => {
 
             {/* Error Message */}
             {apiError && (
-              <div className="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+              <div className="mb-4 border px-4 py-3 rounded-lg flex items-center justify-between" style={{ backgroundColor: COLORS.error[50], borderColor: COLORS.error[200], color: COLORS.error[800] }}>
                 <span>{apiError}</span>
-                <button onClick={() => setApiError('')} className="text-red-600 hover:text-red-800">
+                <button onClick={() => setApiError('')} style={{ color: COLORS.error[600] }} onMouseEnter={(e) => { e.currentTarget.style.color = COLORS.error[800]; }} onMouseLeave={(e) => { e.currentTarget.style.color = COLORS.error[600]; }}>
                   <XMarkIcon className="w-5 h-5" />
                 </button>
               </div>
             )}
 
             <div className="flex items-center justify-between mb-8">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Addresses</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: COLORS.gray[900] }}>My Addresses</h1>
               <button
                 onClick={handleAddAddress}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 sm:px-6 rounded-lg transition-colors flex items-center gap-2"
+                className="text-white font-semibold py-2 px-4 sm:px-6 rounded-lg transition-colors flex items-center gap-2"
+                style={{ backgroundColor: COLORS.primary[600] }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = COLORS.primary[700];
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = COLORS.primary[600];
+                }}
               >
                 <PlusIcon className="w-5 h-5" />
                 <span className="hidden sm:inline">Add New Address</span>
@@ -320,23 +328,30 @@ const AddressPage = () => {
             </div>
             
             {loading ? (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="rounded-lg shadow-sm border p-6" style={{ backgroundColor: COLORS.white, borderColor: COLORS.gray[200] }}>
                 <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading addresses...</p>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: COLORS.primary[600] }}></div>
+                  <p style={{ color: COLORS.gray[600] }}>Loading addresses...</p>
                 </div>
               </div>
             ) : addresses.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="rounded-lg shadow-sm border p-6" style={{ backgroundColor: COLORS.white, borderColor: COLORS.gray[200] }}>
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <MapPinIcon className="w-8 h-8 text-gray-400" />
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: COLORS.gray[100] }}>
+                    <MapPinIcon className="w-8 h-8" style={{ color: COLORS.gray[400] }} />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No addresses saved</h3>
-                  <p className="text-gray-600 mb-6">Add your first address to get started</p>
+                  <h3 className="text-lg font-semibold mb-2" style={{ color: COLORS.gray[900] }}>No addresses saved</h3>
+                  <p className="mb-6" style={{ color: COLORS.gray[600] }}>Add your first address to get started</p>
                   <button
                     onClick={handleAddAddress}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+                    className="text-white font-bold py-2 px-6 rounded-lg transition-colors"
+                    style={{ backgroundColor: COLORS.primary[600] }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = COLORS.primary[700];
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = COLORS.primary[600];
+                    }}
                   >
                     Add New Address
                   </button>
@@ -347,14 +362,16 @@ const AddressPage = () => {
                 {addresses.map((address, index) => (
                   <div
                     key={address.mongoId || address.id || `address-${index}`}
-                    className={`bg-white rounded-lg shadow-sm border-2 p-4 sm:p-6 relative transition-all hover:shadow-md ${
-                      address.isDefault ? 'border-emerald-500' : 'border-gray-200'
-                    }`}
+                    className="rounded-lg shadow-sm border-2 p-4 sm:p-6 relative transition-all hover:shadow-md"
+                    style={{
+                      backgroundColor: COLORS.white,
+                      borderColor: address.isDefault ? COLORS.primary[500] : COLORS.gray[200]
+                    }}
                   >
                     {/* Default Badge */}
                     {address.isDefault && (
                       <div className="flex items-center justify-end mb-3">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: COLORS.primary[100], color: COLORS.primary[800] }}>
                           <CheckCircleIcon className="w-3 h-3 mr-1" />
                           Default
                         </span>
@@ -363,37 +380,62 @@ const AddressPage = () => {
 
                     {/* Address Details */}
                     <div className="mb-4">
-                      <h3 className="font-semibold text-gray-900 mb-1">{address.name}</h3>
-                      {address.email && <p className="text-sm text-gray-600 mb-1">Email: {address.email}</p>}
-                      <p className="text-sm text-gray-600 mt-2">
+                      <h3 className="font-semibold mb-1" style={{ color: COLORS.gray[900] }}>{address.name}</h3>
+                      {address.email && <p className="text-sm mb-1" style={{ color: COLORS.gray[600] }}>Email: {address.email}</p>}
+                      <p className="text-sm mt-2" style={{ color: COLORS.gray[600] }}>
                         {address.addressLine1}
                         {address.addressLine2 && <>, {address.addressLine2}</>}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm" style={{ color: COLORS.gray[600] }}>
                         {address.city} - {address.pinCode}
                       </p>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-2 pt-4 border-t" style={{ borderColor: COLORS.gray[100] }}>
                       {!address.isDefault && (
                         <button
                           onClick={() => handleSetDefault(address)}
-                          className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                          className="text-xs font-medium"
+                          style={{ color: COLORS.primary[600] }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.color = COLORS.primary[700];
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.color = COLORS.primary[600];
+                          }}
                         >
                           Set as Default
                         </button>
                       )}
                       <button
                         onClick={() => handleEditAddress(address)}
-                        className="ml-auto text-blue-600 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-colors"
+                        className="ml-auto p-2 rounded-lg transition-colors"
+                        style={{ color: COLORS.primary[600] }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = COLORS.primary[700];
+                          e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = COLORS.primary[600];
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
                         title="Edit"
                       >
                         <PencilIcon className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteAddress(address)}
-                        className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                        className="p-2 rounded-lg transition-colors"
+                        style={{ color: COLORS.error[600] }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = COLORS.error[700];
+                          e.currentTarget.style.backgroundColor = COLORS.error[50];
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = COLORS.error[600];
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
                         title="Delete"
                       >
                         <TrashIcon className="w-4 h-4" />
@@ -409,16 +451,23 @@ const AddressPage = () => {
 
       {/* Add/Edit Address Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <div className="rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" style={{ backgroundColor: COLORS.white }}>
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">
+            <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: COLORS.gray[200] }}>
+              <h2 className="text-xl font-bold" style={{ color: COLORS.gray[900] }}>
                 {editingAddress ? 'Edit Address' : 'Add New Address'}
               </h2>
               <button
                 onClick={handleCloseModal}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="transition-colors"
+                style={{ color: COLORS.gray[400] }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = COLORS.gray[600];
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = COLORS.gray[400];
+                }}
               >
                 <XMarkIcon className="w-6 h-6" />
               </button>
@@ -428,32 +477,45 @@ const AddressPage = () => {
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               {/* API Error in Modal */}
               {apiError && (
-                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm">
+                <div className="border px-4 py-3 rounded-lg text-sm" style={{ backgroundColor: COLORS.error[50], borderColor: COLORS.error[200], color: COLORS.error[800] }}>
                   {apiError}
                 </div>
               )}
 
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.gray[700] }}>
+                  Full Name <span style={{ color: COLORS.error[500] }}>*</span>
                 </label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                    errors.name ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none"
+                  style={{
+                    borderColor: errors.name ? COLORS.error[500] : COLORS.gray[300]
+                  }}
+                  onFocus={(e) => {
+                    if (!errors.name) {
+                      e.currentTarget.style.borderColor = COLORS.primary[500];
+                      e.currentTarget.style.boxShadow = `0 0 0 2px ${COLORS.primary[500]}40`;
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (!errors.name) {
+                      e.currentTarget.style.borderColor = COLORS.gray[300];
+                      e.currentTarget.style.boxShadow = 'none';
+                    }
+                  }}
                   placeholder="Enter full name"
                 />
-                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+                {errors.name && <p className="text-sm mt-1" style={{ color: COLORS.error[500] }}>{errors.name}</p>}
               </div>
 
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.gray[700] }}>
                   Email Address (Optional)
                 </label>
                 <input
@@ -461,35 +523,61 @@ const AddressPage = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                    errors.email ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none"
+                  style={{
+                    borderColor: errors.email ? COLORS.error[500] : COLORS.gray[300]
+                  }}
+                  onFocus={(e) => {
+                    if (!errors.email) {
+                      e.currentTarget.style.borderColor = COLORS.primary[500];
+                      e.currentTarget.style.boxShadow = `0 0 0 2px ${COLORS.primary[500]}40`;
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (!errors.email) {
+                      e.currentTarget.style.borderColor = COLORS.gray[300];
+                      e.currentTarget.style.boxShadow = 'none';
+                    }
+                  }}
                   placeholder="your.email@example.com"
                 />
-                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                {errors.email && <p className="text-sm mt-1" style={{ color: COLORS.error[500] }}>{errors.email}</p>}
               </div>
 
               {/* Address Line 1 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Address Line 1 <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.gray[700] }}>
+                  Address Line 1 <span style={{ color: COLORS.error[500] }}>*</span>
                 </label>
                 <input
                   type="text"
                   name="addressLine1"
                   value={formData.addressLine1}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                    errors.addressLine1 ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none"
+                  style={{
+                    borderColor: errors.addressLine1 ? COLORS.error[500] : COLORS.gray[300]
+                  }}
+                  onFocus={(e) => {
+                    if (!errors.addressLine1) {
+                      e.currentTarget.style.borderColor = COLORS.primary[500];
+                      e.currentTarget.style.boxShadow = `0 0 0 2px ${COLORS.primary[500]}40`;
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (!errors.addressLine1) {
+                      e.currentTarget.style.borderColor = COLORS.gray[300];
+                      e.currentTarget.style.boxShadow = 'none';
+                    }
+                  }}
                   placeholder="House no., Building name"
                 />
-                {errors.addressLine1 && <p className="text-red-500 text-sm mt-1">{errors.addressLine1}</p>}
+                {errors.addressLine1 && <p className="text-sm mt-1" style={{ color: COLORS.error[500] }}>{errors.addressLine1}</p>}
               </div>
 
               {/* Address Line 2 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: COLORS.gray[700] }}>
                   Address Line 2 (Optional)
                 </label>
                 <input
@@ -497,7 +585,18 @@ const AddressPage = () => {
                   name="addressLine2"
                   value={formData.addressLine2}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none"
+                  style={{
+                    borderColor: COLORS.gray[300]
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = COLORS.primary[500];
+                    e.currentTarget.style.boxShadow = `0 0 0 2px ${COLORS.primary[500]}40`;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = COLORS.gray[300];
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
                   placeholder="Road name, Area, Colony"
                 />
               </div>
@@ -505,26 +604,39 @@ const AddressPage = () => {
               {/* City and PIN Code */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    City <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium mb-1" style={{ color: COLORS.gray[700] }}>
+                    City <span style={{ color: COLORS.error[500] }}>*</span>
                   </label>
                   <input
                     type="text"
                     name="city"
                     value={formData.city}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                      errors.city ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none"
+                    style={{
+                      borderColor: errors.city ? COLORS.error[500] : COLORS.gray[300]
+                    }}
+                    onFocus={(e) => {
+                      if (!errors.city) {
+                        e.currentTarget.style.borderColor = COLORS.primary[500];
+                        e.currentTarget.style.boxShadow = `0 0 0 2px ${COLORS.primary[500]}40`;
+                      }
+                    }}
+                    onBlur={(e) => {
+                      if (!errors.city) {
+                        e.currentTarget.style.borderColor = COLORS.gray[300];
+                        e.currentTarget.style.boxShadow = 'none';
+                      }
+                    }}
                     placeholder="City"
                   />
-                  {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
+                  {errors.city && <p className="text-sm mt-1" style={{ color: COLORS.error[500] }}>{errors.city}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    PIN Code <span className="text-red-500">*</span>
-                    <span className="text-xs text-gray-500 ml-2">(Fixed from selected location)</span>
+                  <label className="block text-sm font-medium mb-1" style={{ color: COLORS.gray[700] }}>
+                    PIN Code <span style={{ color: COLORS.error[500] }}>*</span>
+                    <span className="text-xs ml-2" style={{ color: COLORS.gray[500] }}>(Fixed from selected location)</span>
                   </label>
                   <input
                     type="text"
@@ -532,10 +644,15 @@ const AddressPage = () => {
                     value={formData.pinCode}
                     readOnly
                     maxLength={6}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed"
+                    className="w-full px-4 py-2 border rounded-lg cursor-not-allowed"
+                    style={{
+                      borderColor: COLORS.gray[300],
+                      backgroundColor: COLORS.gray[50],
+                      color: COLORS.gray[700]
+                    }}
                     placeholder="6-digit PIN"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs mt-1" style={{ color: COLORS.gray[500] }}>
                     PIN code is automatically set from your selected location
                   </p>
                 </div>
@@ -548,29 +665,58 @@ const AddressPage = () => {
                   name="isDefault"
                   checked={formData.isDefault}
                   onChange={handleInputChange}
-                  className="text-emerald-600 focus:ring-emerald-500 rounded"
+                  className="rounded"
+                  style={{ accentColor: COLORS.primary[600] }}
                 />
-                <label className="ml-2 text-sm text-gray-700">Set as default address</label>
+                <label className="ml-2 text-sm" style={{ color: COLORS.gray[700] }}>Set as default address</label>
               </div>
 
               {/* Modal Footer */}
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
+              <div className="flex gap-3 pt-4 border-t" style={{ borderColor: COLORS.gray[200] }}>
                 <button
                   type="button"
                   onClick={handleCloseModal}
                   disabled={submitLoading}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2 border rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    borderColor: COLORS.gray[300],
+                    color: COLORS.gray[700],
+                    backgroundColor: COLORS.white
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!submitLoading) {
+                      e.currentTarget.style.backgroundColor = COLORS.gray[50];
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!submitLoading) {
+                      e.currentTarget.style.backgroundColor = COLORS.white;
+                    }
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitLoading}
-                  className="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  style={{
+                    backgroundColor: COLORS.primary[600]
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!submitLoading) {
+                      e.currentTarget.style.backgroundColor = COLORS.primary[700];
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!submitLoading) {
+                      e.currentTarget.style.backgroundColor = COLORS.primary[600];
+                    }
+                  }}
                 >
                   {submitLoading ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2" style={{ borderColor: COLORS.white }}></div>
                       <span>Saving...</span>
                     </>
                   ) : (
