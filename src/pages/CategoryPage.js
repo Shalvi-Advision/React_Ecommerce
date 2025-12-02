@@ -813,7 +813,7 @@ const CategoryPage = () => {
         <div 
           className={`
             ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-            ${isMobile ? 'fixed inset-y-0 left-0 z-50 w-64' : 'w-64'}
+            ${isMobile ? 'fixed inset-y-0 left-0 z-50 w-[280px] max-w-[85vw]' : 'w-64'}
             border-r transition-transform duration-300 ease-in-out
             ${isMobile ? '' : 'sticky top-0 h-screen overflow-y-auto'}
           `}
@@ -919,7 +919,7 @@ const CategoryPage = () => {
                       {/* Category Button */}
                       <button
                         onClick={() => handleCategorySelect(category)}
-                        className="w-full text-left px-4 py-2.5 transition-colors flex items-center justify-between"
+                        className="w-full text-left px-3 sm:px-4 py-2 sm:py-2.5 transition-colors flex items-center justify-between"
                         style={{
                           backgroundColor: isSelected ? COLORS.primary[50] : 'transparent'
                         }}
@@ -935,7 +935,7 @@ const CategoryPage = () => {
                         }}
                       >
                         <span 
-                          className="text-sm"
+                          className="text-xs sm:text-sm truncate"
                           style={{
                             color: isSelected ? COLORS.primary[600] : COLORS.gray[700],
                             fontWeight: isSelected ? '600' : 'normal'
@@ -944,7 +944,7 @@ const CategoryPage = () => {
                           {category.category_name}
                         </span>
                         {categoryCount > 0 && (
-                          <span className="text-xs" style={{ color: COLORS.gray[500] }}>
+                          <span className="text-[10px] sm:text-xs flex-shrink-0 ml-1" style={{ color: COLORS.gray[500] }}>
                             ({categoryCount})
                           </span>
                         )}
@@ -965,7 +965,7 @@ const CategoryPage = () => {
                               <button
                                 key={subcategory.idsub_category_master}
                                 onClick={() => handleSubcategorySelect(subcategory)}
-                                className="w-full text-left px-4 py-2 text-sm transition-colors"
+                                className="w-full text-left px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm transition-colors truncate"
                                 style={{
                                   backgroundColor: isSubSelected ? COLORS.primary[100] : 'transparent',
                                   color: isSubSelected ? COLORS.primary[700] : COLORS.gray[600],
@@ -1012,49 +1012,49 @@ const CategoryPage = () => {
         <div className="flex-1 min-w-0">
           {/* Breadcrumb and Title */}
           <div 
-            className="border-b px-4 sm:px-6 py-4"
+            className="border-b px-3 sm:px-4 md:px-6 py-3 sm:py-4"
             style={{
               backgroundColor: COLORS.white,
               borderColor: COLORS.gray[200]
             }}
           >
-            <div className="flex items-center text-sm mb-2 flex-wrap" style={{ color: COLORS.gray[500] }}>
+            <div className="flex items-center text-xs sm:text-sm mb-1.5 sm:mb-2 flex-wrap gap-1" style={{ color: COLORS.gray[500] }}>
               {selectedDepartment && (
-                <span style={{ color: COLORS.gray[700] }}>{selectedDepartment}</span>
+                <span className="truncate" style={{ color: COLORS.gray[700] }}>{selectedDepartment}</span>
               )}
               {selectedCategory && (
                 <>
-                  <span className="mx-2">›</span>
-                  <span className="font-medium" style={{ color: COLORS.gray[900] }}>{selectedCategory.category_name}</span>
+                  <span className="mx-1 sm:mx-2">›</span>
+                  <span className="font-medium truncate" style={{ color: COLORS.gray[900] }}>{selectedCategory.category_name}</span>
                 </>
               )}
               {selectedSubcategory && (
                 <>
-                  <span className="mx-2">›</span>
-                  <span style={{ color: COLORS.gray[700] }}>{selectedSubcategory.sub_category_name}</span>
+                  <span className="mx-1 sm:mx-2">›</span>
+                  <span className="truncate" style={{ color: COLORS.gray[700] }}>{selectedSubcategory.sub_category_name}</span>
                 </>
               )}
             </div>
-            <h1 className="text-2xl font-bold" style={{ color: COLORS.gray[900] }}>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate" style={{ color: COLORS.gray[900] }}>
               {selectedSubcategory?.sub_category_name || selectedCategory?.category_name || selectedDepartment || 'All Products'}
             </h1>
           </div>
 
           {/* Filters and Sort Bar */}
           <div 
-            className="border-b px-4 sm:px-6 py-3"
+            className="border-b px-3 sm:px-4 md:px-6 py-2.5 sm:py-3"
             style={{
               backgroundColor: COLORS.white,
               borderColor: COLORS.gray[200]
             }}
           >
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2 sm:gap-3">
               {/* Filter Buttons */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                 <select
                   value={filters.brand}
                   onChange={(e) => handleFilterChange('brand', e.target.value)}
-                  className="px-4 py-2 rounded-full text-sm transition-all cursor-pointer appearance-none pr-8 bg-no-repeat bg-right"
+                  className="flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm transition-all cursor-pointer appearance-none pr-7 sm:pr-8 bg-no-repeat bg-right"
                   style={{
                     backgroundColor: COLORS.white,
                     borderColor: COLORS.gray[300],
@@ -1091,7 +1091,7 @@ const CategoryPage = () => {
                 <select
                   value={filters.category}
                   onChange={(e) => handleFilterChange('category', e.target.value)}
-                  className="px-4 py-2 rounded-full text-sm transition-all cursor-pointer appearance-none pr-8 bg-no-repeat bg-right"
+                  className="flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm transition-all cursor-pointer appearance-none pr-7 sm:pr-8 bg-no-repeat bg-right"
                   style={{
                     backgroundColor: COLORS.white,
                     borderColor: COLORS.gray[300],
@@ -1124,12 +1124,12 @@ const CategoryPage = () => {
               </div>
 
               {/* Sort By */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium" style={{ color: COLORS.gray[700] }}>Sort by:</span>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <span className="text-xs sm:text-sm font-medium whitespace-nowrap" style={{ color: COLORS.gray[700] }}>Sort by:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="px-4 py-2 rounded text-sm transition-all cursor-pointer appearance-none pr-8 bg-no-repeat bg-right"
+                  className="flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded text-xs sm:text-sm transition-all cursor-pointer appearance-none pr-7 sm:pr-8 bg-no-repeat bg-right"
                   style={{
                     backgroundColor: COLORS.white,
                     borderColor: COLORS.gray[300],
@@ -1168,32 +1168,32 @@ const CategoryPage = () => {
           </div>
 
           {/* Products Grid */}
-          <div className="p-4 sm:p-6 relative min-h-screen" style={{ backgroundColor: COLORS.gray[50] }}>
+          <div className="p-2 sm:p-4 md:p-6 relative min-h-screen" style={{ backgroundColor: COLORS.gray[50] }}>
             {/* Centered Loading State - Shows when loading or no subcategory selected yet */}
             {(productsLoading || !selectedSubcategory) ? (
               <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
                   <div className="relative inline-block mb-4">
                     <div 
-                      className="w-16 h-16 border-4 border-t-transparent rounded-full animate-spin"
+                      className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-t-transparent rounded-full animate-spin"
                       style={{
                         borderColor: COLORS.primary[500],
                         borderTopColor: 'transparent'
                       }}
                     ></div>
                     <div 
-                      className="absolute inset-0 w-16 h-16 rounded-full blur-lg animate-pulse"
+                      className="absolute inset-0 w-12 h-12 sm:w-16 sm:h-16 rounded-full blur-lg animate-pulse"
                       style={{
                         backgroundColor: hexToRgba(COLORS.primary[400], 0.2)
                       }}
                     ></div>
                   </div>
-                  <p className="font-medium text-lg" style={{ color: COLORS.gray[600] }}>Loading products...</p>
+                  <p className="font-medium text-base sm:text-lg" style={{ color: COLORS.gray[600] }}>Loading products...</p>
                 </div>
               </div>
             ) : filteredProducts.length > 0 ? (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
                   {/* Product Cards */}
                   {filteredProducts.map((product, index) => {
                     const uniqueKey = product.p_code || product._id || `${product.product_name}-${index}`;
@@ -1208,7 +1208,7 @@ const CategoryPage = () => {
                       onClick={() => navigate(`/product/${product.p_code || product._id}?dept_id=${product.dept_id || departmentId}&category_id=${product.category_id || selectedCategory?.idcategory_master}&sub_category_id=${product.sub_category_id || selectedSubcategory?.idsub_category_master}`)}
                     >
                       {/* Product Image */}
-                      <div className="relative aspect-square flex items-center justify-center overflow-hidden p-4" style={{ backgroundColor: COLORS.white }}>
+                      <div className="relative aspect-square flex items-center justify-center overflow-hidden p-2 sm:p-3 md:p-4" style={{ backgroundColor: COLORS.white }}>
                         {/* Favorite Button */}
                         <button
                           onClick={(e) => {
@@ -1230,16 +1230,16 @@ const CategoryPage = () => {
                               max_quantity_allowed: product.max_quantity_allowed || 10
                             });
                           }}
-                          className="absolute top-2 right-2 z-20 p-1.5 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+                          className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-20 p-1.5 sm:p-1.5 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
                           style={{
                             backgroundColor: hexToRgba(COLORS.white, 0.95)
                           }}
                         >
                           {isFavorite(product.p_code || product._id) ? (
-                            <HeartSolid className="w-4 h-4" style={{ color: COLORS.error[500] }} />
+                            <HeartSolid className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: COLORS.error[500] }} />
                           ) : (
                             <HeartOutline 
-                              className="w-4 h-4 transition-colors duration-200" 
+                              className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors duration-200" 
                               style={{ color: COLORS.gray[400] }}
                               onMouseEnter={(e) => {
                                 e.currentTarget.style.color = COLORS.error[500];
@@ -1261,7 +1261,7 @@ const CategoryPage = () => {
                         />
                 {product.discount_percentage > 0 && (
                   <div 
-                    className="absolute top-2 left-2 text-white text-xs px-2 py-1 rounded font-semibold z-10"
+                    className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 text-white text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded font-semibold z-10"
                     style={{ backgroundColor: COLORS.warning[500] }}
                   >
                     ₹ {product.discount_percentage} OFF
@@ -1270,26 +1270,26 @@ const CategoryPage = () => {
               </div>
 
                       {/* Product Info */}
-                      <div className="p-3 border-t" style={{ borderColor: COLORS.gray[100] }}>
-                        <div className="flex items-start justify-between mb-2">
+                      <div className="p-2 sm:p-3 border-t" style={{ borderColor: COLORS.gray[100] }}>
+                        <div className="flex items-start justify-between mb-1.5 sm:mb-2 gap-2">
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs mb-1" style={{ color: COLORS.gray[500] }}>MRP <span style={{ color: COLORS.gray[400] }}></span></p>
-                            <p className="text-xs line-through" style={{ color: COLORS.gray[400] }}>₹ {product.product_mrp}</p>
+                            <p className="text-[10px] sm:text-xs mb-0.5 sm:mb-1" style={{ color: COLORS.gray[500] }}>MRP <span style={{ color: COLORS.gray[400] }}></span></p>
+                            <p className="text-[10px] sm:text-xs line-through" style={{ color: COLORS.gray[400] }}>₹ {product.product_mrp}</p>
                           </div>
-                          <div className="text-right">
-                            <p className="text-xs mb-1" style={{ color: COLORS.gray[500] }}>Selling Price <span style={{ color: COLORS.gray[400] }}></span></p>
-                            <p className="text-base font-bold" style={{ color: COLORS.gray[900] }}>₹ {product.our_price}</p>
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-[10px] sm:text-xs mb-0.5 sm:mb-1" style={{ color: COLORS.gray[500] }}>Selling Price <span style={{ color: COLORS.gray[400] }}></span></p>
+                            <p className="text-sm sm:text-base font-bold" style={{ color: COLORS.gray[900] }}>₹ {product.our_price}</p>
                           </div>
                         </div>
 
-                        <p className="text-xs mb-2" style={{ color: COLORS.gray[500] }}>(Inclusive of all taxes)</p>
+                        <p className="text-[10px] sm:text-xs mb-1.5 sm:mb-2" style={{ color: COLORS.gray[500] }}>(Inclusive of all taxes)</p>
 
-                        <h3 className="text-sm mb-2 line-clamp-2 min-h-[2.5rem]" style={{ color: COLORS.gray[900] }}>{product.product_name}</h3>
+                        <h3 className="text-xs sm:text-sm mb-1.5 sm:mb-2 line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem]" style={{ color: COLORS.gray[900] }}>{product.product_name}</h3>
 
                         {/* Package Size Display */}
                         {product.package_size && (
                           <div 
-                            className="w-full text-xs border rounded px-2 py-1.5 mb-2"
+                            className="w-full text-[10px] sm:text-xs border rounded px-1.5 sm:px-2 py-1 sm:py-1.5 mb-1.5 sm:mb-2"
                             style={{
                               borderColor: COLORS.gray[300],
                               backgroundColor: COLORS.white,
@@ -1306,7 +1306,7 @@ const CategoryPage = () => {
                         {/* Add to Cart Button or Quantity Selector */}
                         {!showQuantitySelector[product.p_code || product._id] ? (
                           <button 
-                            className="w-full py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-md text-white hover:shadow-lg transform hover:scale-105 active:scale-95"
+                            className="w-full py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 shadow-md text-white hover:shadow-lg transform hover:scale-105 active:scale-95"
                             style={{
                               background: (addingToCart[product.p_code || product._id] || !storeEnabled)
                                 ? COLORS.gray[400]
@@ -1334,16 +1334,16 @@ const CategoryPage = () => {
                             {addingToCart[product.p_code || product._id] ? (
                               <>
                                 <div 
-                                  className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+                                  className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
                                 ></div>
-                                <span>ADDING...</span>
+                                <span className="text-xs sm:text-sm">ADDING...</span>
                               </>
                             ) : (
                               <>
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                                 </svg>
-                                <span>{!storeEnabled ? 'UNAVAILABLE' : 'ADD'}</span>
+                                <span className="text-xs sm:text-sm">{!storeEnabled ? 'UNAVAILABLE' : 'ADD'}</span>
                               </>
                             )}
                           </button>
@@ -1351,7 +1351,7 @@ const CategoryPage = () => {
                           <div className="w-full" onClick={(e) => e.stopPropagation()}>
                             {/* Quantity Selector */}
                             <div 
-                              className="flex items-stretch border-2 rounded-lg overflow-hidden shadow-md w-full hover:shadow-lg transition-all duration-200"
+                              className="flex items-stretch border-2 rounded-lg overflow-hidden shadow-md w-full hover:shadow-lg transition-all duration-200 h-8 sm:h-9"
                               style={{
                                 background: `linear-gradient(to right, ${COLORS.primary[50]}, ${COLORS.success[50]})`,
                                 borderColor: COLORS.primary[200]
@@ -1364,7 +1364,7 @@ const CategoryPage = () => {
                                   handleQuantityChange(product, (quantities[product.p_code || product._id] || 1) - 1);
                                 }}
                                 disabled={(quantities[product.p_code || product._id] || 1) <= 1}
-                                className="flex items-center justify-center px-3 py-2 transition-all duration-200"
+                                className="flex items-center justify-center px-2 sm:px-3 py-1.5 sm:py-2 transition-all duration-200"
                                 style={{
                                   backgroundColor: (quantities[product.p_code || product._id] || 1) <= 1
                                     ? COLORS.gray[200]
@@ -1385,17 +1385,17 @@ const CategoryPage = () => {
                                   }
                                 }}
                               >
-                                <MinusIcon className="w-4 h-4 font-bold" strokeWidth={3} style={{ color: 'black' }} />
+                                <MinusIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 font-bold" strokeWidth={3} style={{ color: 'black' }} />
                               </button>
 
                               {/* Quantity Display */}
                               <div 
-                                className="bg-white px-4 py-2 flex-1 flex items-center justify-center border-x-2"
+                                className="bg-white px-2 sm:px-4 py-1.5 sm:py-2 flex-1 flex items-center justify-center border-x-2"
                                 style={{
                                   borderColor: COLORS.primary[200]
                                 }}
                               >
-                                <span className="text-base font-bold" style={{ color: COLORS.primary[700] }}>
+                                <span className="text-sm sm:text-base font-bold" style={{ color: COLORS.primary[700] }}>
                                   {quantities[product.p_code || product._id] || 1}
                                 </span>
                               </div>
@@ -1407,7 +1407,7 @@ const CategoryPage = () => {
                                   handleQuantityChange(product, (quantities[product.p_code || product._id] || 1) + 1);
                                 }}
                                 disabled={(quantities[product.p_code || product._id] || 1) >= (product.max_quantity_allowed || 10)}
-                                className="flex items-center justify-center px-3 py-2 transition-all duration-200"
+                                className="flex items-center justify-center px-2 sm:px-3 py-1.5 sm:py-2 transition-all duration-200"
                                 style={{
                                   backgroundColor: (quantities[product.p_code || product._id] || 1) >= (product.max_quantity_allowed || 10)
                                     ? COLORS.gray[200]
@@ -1428,7 +1428,7 @@ const CategoryPage = () => {
                                   }
                                 }}
                               >
-                                <PlusIcon className="w-4 h-4 font-bold" strokeWidth={3} style={{ color: 'black' }} />
+                                <PlusIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 font-bold" strokeWidth={3} style={{ color: 'black' }} />
                               </button>
                             </div>
                           </div>
@@ -1441,16 +1441,16 @@ const CategoryPage = () => {
 
                 {/* Modern Pagination Controls */}
                 {pagination.total_pages > 1 && (
-                  <div className="mt-10 pt-8 border-t" style={{ borderColor: COLORS.gray[200] }}>
-                    <div className="flex flex-col items-center gap-4">
-                      <div className="text-sm font-medium" style={{ color: COLORS.gray[600] }}>
+                  <div className="mt-6 sm:mt-10 pt-6 sm:pt-8 border-t px-2 sm:px-0" style={{ borderColor: COLORS.gray[200] }}>
+                    <div className="flex flex-col items-center gap-3 sm:gap-4">
+                      <div className="text-xs sm:text-sm font-medium text-center" style={{ color: COLORS.gray[600] }}>
                         Showing <span className="font-bold" style={{ color: COLORS.primary[600] }}>{products.length}</span> of <span className="font-bold" style={{ color: COLORS.primary[600] }}>{pagination.total_products}</span> products
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-1.5 sm:space-x-2 w-full sm:w-auto justify-center">
                         <button
                           onClick={() => handlePageChange(currentPage - 1)}
                           disabled={!pagination.has_prev}
-                          className="px-4 sm:px-6 py-3 text-white rounded-xl text-sm font-bold hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 disabled:cursor-not-allowed disabled:hover:scale-100"
+                          className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 text-white rounded-xl text-xs sm:text-sm font-bold hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 disabled:cursor-not-allowed disabled:hover:scale-100"
                           style={{
                             background: !pagination.has_prev 
                               ? COLORS.gray[300]
@@ -1471,7 +1471,7 @@ const CategoryPage = () => {
                           Previous
                         </button>
                         
-                        <div className="flex items-center space-x-1.5">
+                        <div className="flex items-center space-x-1 sm:space-x-1.5">
                           {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
                             const pageNum = i + 1;
                             const isActive = currentPage === pageNum;
@@ -1479,7 +1479,7 @@ const CategoryPage = () => {
                               <button
                                 key={pageNum}
                                 onClick={() => handlePageChange(pageNum)}
-                                className="px-4 py-3 text-sm font-bold rounded-xl transition-all duration-300"
+                                className="px-2.5 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-bold rounded-xl transition-all duration-300"
                                 style={{
                                   background: isActive 
                                     ? `linear-gradient(to right, ${COLORS.primary[500]}, ${COLORS.success[500]})`
@@ -1511,7 +1511,7 @@ const CategoryPage = () => {
                         <button
                           onClick={() => handlePageChange(currentPage + 1)}
                           disabled={!pagination.has_next}
-                          className="px-4 sm:px-6 py-3 text-white rounded-xl text-sm font-bold hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 disabled:cursor-not-allowed disabled:hover:scale-100"
+                          className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 text-white rounded-xl text-xs sm:text-sm font-bold hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 disabled:cursor-not-allowed disabled:hover:scale-100"
                           style={{
                             background: !pagination.has_next 
                               ? COLORS.gray[300]
@@ -1537,9 +1537,9 @@ const CategoryPage = () => {
                 )}
               </>
             ) : (
-              <div className="flex items-center justify-center min-h-[60vh]">
+              <div className="flex items-center justify-center min-h-[60vh] px-4">
                 <div className="text-center">
-                  <div className="relative inline-block mb-6">
+                  <div className="relative inline-block mb-4 sm:mb-6">
                     <div 
                       className="absolute inset-0 rounded-full blur-2xl opacity-30 animate-pulse"
                       style={{
@@ -1547,21 +1547,21 @@ const CategoryPage = () => {
                       }}
                     ></div>
                     <div 
-                      className="relative w-32 h-32 rounded-full flex items-center justify-center mx-auto shadow-xl"
+                      className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-full flex items-center justify-center mx-auto shadow-xl"
                       style={{
                         background: `linear-gradient(to bottom right, ${COLORS.primary[100]}, ${COLORS.success[100]})`
                       }}
                     >
-                      <span className="text-6xl">📦</span>
+                      <span className="text-4xl sm:text-6xl">📦</span>
                     </div>
                   </div>
-                  <h3 className="text-2xl font-bold mb-3" style={{ color: COLORS.gray[900] }}>No Products Found</h3>
-                  <p className="mb-6 max-w-md mx-auto" style={{ color: COLORS.gray[600] }}>
+                  <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3" style={{ color: COLORS.gray[900] }}>No Products Found</h3>
+                  <p className="mb-4 sm:mb-6 max-w-md mx-auto text-sm sm:text-base px-2" style={{ color: COLORS.gray[600] }}>
                     Try adjusting your filters or browse different subcategories to find what you're looking for
                   </p>
                   <button
                     onClick={clearFilters}
-                    className="px-6 py-3 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300"
+                    className="px-4 sm:px-6 py-2.5 sm:py-3 text-white rounded-xl text-sm sm:text-base font-bold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300"
                     style={{
                       background: `linear-gradient(to right, ${COLORS.primary[500]}, ${COLORS.success[500]})`
                     }}
