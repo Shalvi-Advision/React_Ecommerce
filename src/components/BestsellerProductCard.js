@@ -317,7 +317,7 @@ const BestsellerProductCard = ({ product }) => {
                     }
                   }}
                 >
-                  <MinusIcon className="w-4 h-4 font-bold" strokeWidth={3} />
+                  <MinusIcon className="w-4 h-4 font-bold" strokeWidth={3} style={{ color: 'black' }} />
                 </button>
 
                 {/* Quantity Display */}
@@ -360,7 +360,7 @@ const BestsellerProductCard = ({ product }) => {
                     }
                   }}
                 >
-                  <PlusIcon className="w-4 h-4 font-bold" strokeWidth={3} />
+                  <PlusIcon className="w-4 h-4 font-bold" strokeWidth={3} style={{ color: 'black' }} />
                 </button>
               </div>
             </div>

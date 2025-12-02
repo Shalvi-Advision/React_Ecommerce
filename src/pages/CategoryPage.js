@@ -1385,7 +1385,7 @@ const CategoryPage = () => {
                                   }
                                 }}
                               >
-                                <MinusIcon className="w-4 h-4 font-bold" strokeWidth={3} />
+                                <MinusIcon className="w-4 h-4 font-bold" strokeWidth={3} style={{ color: 'black' }} />
                               </button>
 
                               {/* Quantity Display */}
@@ -1428,7 +1428,7 @@ const CategoryPage = () => {
                                   }
                                 }}
                               >
-                                <PlusIcon className="w-4 h-4 font-bold" strokeWidth={3} />
+                                <PlusIcon className="w-4 h-4 font-bold" strokeWidth={3} style={{ color: 'black' }} />
                               </button>
                             </div>
                           </div>
