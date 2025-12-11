@@ -329,9 +329,10 @@ export const transformOrderFromAPI = (apiOrder) => {
       totalQuantity: apiOrder.order_summary?.total_quantity || 0
     },
 
-    // Items
+    // Items - handle both camelCase and snake_case formats
     itemsCount: apiOrder.items_count || apiOrder.order_summary?.total_items || 0,
-    orderItems: apiOrder.order_items || [],
+    order_items: apiOrder.order_items || [],  // Keep snake_case for consistency with API
+    orderItems: apiOrder.order_items || [],   // Also provide camelCase alias
     orderNotes: apiOrder.order_notes || '',
 
     // Keep original data for reference

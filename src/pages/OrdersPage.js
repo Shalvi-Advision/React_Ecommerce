@@ -378,47 +378,52 @@ const OrdersPage = () => {
                       <div className="border-t border-gray-200 pt-4">
                         <h4 className="font-medium text-gray-900 mb-3">Order Items</h4>
                         <div className="space-y-2">
-                          {order.orderItems && Array.isArray(order.orderItems) && order.orderItems.length > 0 ? (
-                            order.orderItems.map((item, index) => (
-                              <div key={index} className="flex justify-between items-center py-2">
-                                <div className="flex items-center">
-                                  <img
-                                    src={item.image || item.product_image || '/images/logo.jpg'}
-                                    alt={item.title || item.product_name || 'Product'}
-                                    className="w-12 h-12 object-cover rounded mr-3"
-                                  />
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-900">{item.title || item.product_name || 'Product'}</p>
-                                    <p className="text-xs text-gray-600">Quantity: {item.quantity || 0}</p>
-                                  </div>
-                                </div>
-                                <p className="text-sm font-medium text-gray-900">
-                                  ₹{((item.price || item.unit_price || 0) * (item.quantity || 0)).toFixed(2)}
-                                </p>
-                              </div>
-                            ))
-                          ) : order.items && Array.isArray(order.items) && order.items.length > 0 ? (
-                            order.items.map((item, index) => (
-                              <div key={index} className="flex justify-between items-center py-1.5 sm:py-2 gap-2">
+                          {(() => {
+                            // Get items from various possible sources
+                            const items = order.order_items || order.orderItems || order.items || [];
+
+                            if (!Array.isArray(items) || items.length === 0) {
+                              return <p className="text-xs sm:text-sm text-gray-500 py-2">No items found</p>;
+                            }
+
+                            return items.map((item, index) => (
+                              <div key={index} className="flex justify-between items-center py-1.5 sm:py-2 gap-2 hover:bg-gray-50 px-2 rounded transition-colors">
                                 <div className="flex items-center min-w-0 flex-1">
                                   <img
-                                    src={item.image || '/images/logo.jpg'}
-                                    alt={item.title || 'Product'}
-                                    className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded mr-2 sm:mr-3 flex-shrink-0"
+                                    src={item.product_image || item.image || '/images/logo.jpg'}
+                                    alt={item.product_name || item.title || 'Product'}
+                                    className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded mr-2 sm:mr-3 flex-shrink-0 border border-gray-200"
+                                    onError={(e) => {
+                                      e.target.src = '/images/logo.jpg';
+                                    }}
                                   />
                                   <div className="min-w-0 flex-1">
-                                    <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">{item.title || 'Product'}</p>
-                                    <p className="text-[10px] sm:text-xs text-gray-600">Quantity: {item.quantity || 0}</p>
+                                    <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">
+                                      {item.product_name || item.title || 'Product'}
+                                    </p>
+                                    {item.product_brand && (
+                                      <p className="text-[10px] sm:text-xs text-gray-500 truncate">
+                                        {item.product_brand}
+                                      </p>
+                                    )}
+                                    <p className="text-[10px] sm:text-xs text-gray-600">
+                                      Qty: {item.quantity || 0} {item.uom ? `× ${item.uom}` : ''}
+                                    </p>
                                   </div>
                                 </div>
-                                <p className="text-xs sm:text-sm font-medium text-gray-900 flex-shrink-0">
-                                  ₹{((item.price || 0) * (item.quantity || 0)).toFixed(2)}
-                                </p>
+                                <div className="flex flex-col items-end flex-shrink-0">
+                                  <p className="text-xs sm:text-sm font-medium text-gray-900">
+                                    ₹{(item.total_price || (item.unit_price || item.price || 0) * (item.quantity || 0)).toFixed(2)}
+                                  </p>
+                                  {item.unit_price && (
+                                    <p className="text-[10px] sm:text-xs text-gray-500">
+                                      ₹{item.unit_price}/unit
+                                    </p>
+                                  )}
+                                </div>
                               </div>
-                            ))
-                          ) : (
-                            <p className="text-xs sm:text-sm text-gray-500 py-2">No items found</p>
-                          )}
+                            ));
+                          })()}
                         </div>
 
                         <div className="border-t border-gray-200 mt-3 sm:mt-4 pt-3 sm:pt-4">

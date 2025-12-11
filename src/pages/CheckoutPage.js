@@ -6,6 +6,7 @@ import { useOrders } from '../context/OrderContext';
 import { usePincode } from '../context/PincodeContext';
 import { useToast } from '../context/ToastContext';
 import { useResponsive } from '../hooks/useResponsive';
+import useRazorpay from '../hooks/useRazorpay';
 import { getPincodeStores, formatStoreData } from '../api/pincodeService';
 import { getAddresses, transformAddressFromAPI } from '../api/addressApi';
 import { getDeliverySlots, generateTimeSlotsFromAPI, transformDeliverySlotFromAPI } from '../api/deliverySlotsApi';
@@ -43,10 +44,12 @@ const CheckoutPage = () => {
   const { showError, showSuccess } = useToast();
   const navigate = useNavigate();
   const { isMobile, isTablet, getResponsiveValue } = useResponsive();
+  const { processPayment, loading: razorpayLoading } = useRazorpay();
 
   // State for dynamic time slots
   const [timeSlots, setTimeSlots] = useState([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+  const [slotsErrorMessage, setSlotsErrorMessage] = useState(null);
 
   // State for dynamic pickup stores
   const [pickupStores, setPickupStores] = useState([]);
@@ -489,13 +492,7 @@ const CheckoutPage = () => {
     if (step === 2 || step === 3) {
       // Payment validation based on selected method
       if (formData.paymentMethod === 'card') {
-        if (!formData.cardNumber || !formData.cardNumber.trim()) newErrors.cardNumber = 'Card number is required';
-        else if (!/^\d{12}$/.test(formData.cardNumber.replace(/\s/g, ''))) newErrors.cardNumber = 'Card number must be exactly 12 digits';
-        if (!formData.expiryDate || !formData.expiryDate.trim()) newErrors.expiryDate = 'Expiry date is required';
-        else if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(formData.expiryDate)) newErrors.expiryDate = 'Expiry date must be in MM/YY format';
-        if (!formData.cvv || !formData.cvv.trim()) newErrors.cvv = 'CVV is required';
-        else if (!/^\d{3}$/.test(formData.cvv)) newErrors.cvv = 'CVV must be exactly 3 digits';
-        if (!formData.nameOnCard || !formData.nameOnCard.trim()) newErrors.nameOnCard = 'Name on card is required';
+        // No validation needed for Razorpay - payment will be handled at checkout
       } else if (formData.paymentMethod === 'upi') {
         if (!formData.upiId || !formData.upiId.trim()) newErrors.upiId = 'UPI ID is required';
         else if (!formData.upiId.includes('@')) newErrors.upiId = 'Please enter a valid UPI ID';
@@ -593,11 +590,22 @@ const CheckoutPage = () => {
       return;
     }
 
+    // If payment method is card (online payment), initiate Razorpay first
+    if (formData.paymentMethod === 'card') {
+      await handleRazorpayPayment();
+      return;
+    }
+
+    // For COD and other payment methods, proceed with normal order placement
+    await placeOrderAfterPayment(null);
+  };
+
+  const handleRazorpayPayment = async () => {
     setLoading(true);
 
     try {
       // Step 1: Validate Cart one last time
-      console.log('🔄 Verifying cart before placement...');
+      console.log('🔄 Verifying cart before payment...');
       const valResponse = await cartService.validateCart();
 
       if (!valResponse.success || (valResponse.validation && !valResponse.validation.valid)) {
@@ -607,12 +615,51 @@ const CheckoutPage = () => {
           msg += ` (${valResponse.validation.invalidItems[0].message})`;
         }
         alert(msg + "\nPlease review your cart.");
-        // Optionally navigate back to cart
         navigate('/cart');
         return;
       }
 
-      // Step 2: Prepare Order Data
+      // Step 2: Initiate Razorpay payment
+      console.log('💳 Initiating Razorpay payment...');
+
+      processPayment({
+        amount: Math.round(totalPrice), // Round to nearest rupee
+        currency: 'INR',
+        notes: {
+          orderId: `ORDER_${Date.now()}`,
+          userId: user?.id || user?.mobile,
+          deliveryDate: checkoutData.selectedDate,
+        },
+        prefill: {
+          name: user?.name || '',
+          email: user?.email || '',
+          contact: user?.mobile || '',
+        },
+        onSuccess: async (paymentResponse) => {
+          console.log('✅ Payment successful:', paymentResponse);
+          setLoading(false);
+          // Place order with payment details
+          await placeOrderAfterPayment(paymentResponse);
+        },
+        onFailure: (error) => {
+          console.error('❌ Payment failed:', error);
+          setLoading(false);
+          showError('Payment failed. Please try again.');
+        },
+      });
+
+    } catch (error) {
+      console.error('Payment initiation error:', error);
+      alert(`Payment Failed: ${error.message || 'Unknown error'}`);
+      setLoading(false);
+    }
+  };
+
+  const placeOrderAfterPayment = async (paymentResponse) => {
+    setLoading(true);
+
+    try {
+      // Prepare Order Data
       const locationData = localStorage.getItem('confirmedLocation');
       const storeCode = locationData ? (JSON.parse(locationData)?.store?.storeCode || JSON.parse(locationData)?.store?.store_code) : null;
 
@@ -626,6 +673,20 @@ const CheckoutPage = () => {
 
       const paymentModeId = selectedPaymentModeObj ? selectedPaymentModeObj.idpayment_mode : (formData.paymentMethod === 'cod' ? 1 : 2);
 
+      // Prepare payment details
+      let paymentDetails = getPaymentDetails();
+      if (paymentResponse) {
+        // Add Razorpay payment details
+        paymentDetails = {
+          ...paymentDetails,
+          razorpay_payment_id: paymentResponse.paymentDetails?.paymentId,
+          razorpay_order_id: paymentResponse.paymentDetails?.orderId,
+          payment_status: 'completed',
+          payment_method: paymentResponse.paymentDetails?.method,
+          amount_paid: paymentResponse.paymentDetails?.amount / 100, // Convert from paise to rupees
+        };
+      }
+
       const orderPayload = {
         store_code: storeCode,
         project_code: PROJECT_CODE,
@@ -635,12 +696,12 @@ const CheckoutPage = () => {
         address_id: checkoutData.selectedAddress?.id,
         payment_mode_id: paymentModeId,
         order_notes: '',
-        payment_details: getPaymentDetails()
+        payment_details: paymentDetails
       };
 
       console.log('📦 Placing Order:', orderPayload);
 
-      // Step 3: Place Order using apiPost (more compatible with existing error handling)
+      // Place Order using apiPost
       const response = await apiPost('/orders/place-order', orderPayload);
 
       if (response.success) {
@@ -649,12 +710,13 @@ const CheckoutPage = () => {
         setOrderNumber(savedOrder.order_number);
         setShowOrderSuccessModal(true);
         setSuccessMessage(`Order #${savedOrder.order_number} placed successfully!`);
+        showSuccess(`Order placed successfully!`);
       } else {
         throw new Error(response.message || 'Failed to place order');
       }
 
     } catch (error) {
-      console.error('Checkout error:', error);
+      console.error('Order placement error:', error);
       alert(`Order Failed: ${error.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
@@ -665,9 +727,8 @@ const CheckoutPage = () => {
     switch (formData.paymentMethod) {
       case 'card':
         return {
-          cardNumber: `**** **** **** ${formData.cardNumber.slice(-4)}`,
-          expiryDate: formData.expiryDate,
-          nameOnCard: formData.nameOnCard,
+          payment_method: 'Online Payment',
+          gateway: 'Razorpay',
         };
       case 'upi':
         return { upiId: formData.upiId };
@@ -1213,50 +1274,19 @@ const CheckoutPage = () => {
                   {/* Conditional Payment Forms */}
                   {formData.paymentMethod === 'card' && (
                     <div className="space-y-4 mt-6 p-4 rounded-lg" style={{ backgroundColor: COLORS.gray[50] }}>
-                      <h3 className="text-lg font-medium" style={{ color: COLORS.gray[900] }}>Card Details</h3>
-
-                      <Input
-                        label="Name on Card"
-                        name="nameOnCard"
-                        value={formData.nameOnCard}
-                        onChange={handleInputChange}
-                        error={errors.nameOnCard}
-                        required
-                      />
-
-                      <Input
-                        label="Card Number"
-                        name="cardNumber"
-                        value={formData.cardNumber}
-                        onChange={handleInputChange}
-                        error={errors.cardNumber}
-                        placeholder="123456789012"
-                        maxLength="12"
-                        required
-                      />
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <Input
-                          label="Expiry Date"
-                          name="expiryDate"
-                          value={formData.expiryDate}
-                          onChange={handleInputChange}
-                          error={errors.expiryDate}
-                          placeholder="MM/YY"
-                          maxLength="5"
-                          required
-                        />
-                        <Input
-                          label="CVV"
-                          name="cvv"
-                          value={formData.cvv}
-                          onChange={handleInputChange}
-                          error={errors.cvv}
-                          placeholder="123"
-                          maxLength="3"
-                          required
-                        />
+                      <h3 className="text-lg font-medium" style={{ color: COLORS.gray[900] }}>Online Payment</h3>
+                      <p className="text-sm" style={{ color: COLORS.gray[600] }}>
+                        Pay securely using Razorpay - Credit/Debit Card, UPI, Net Banking, and more.
+                      </p>
+                      <div className="flex items-center space-x-2 mt-4">
+                        <svg className="w-5 h-5" style={{ color: COLORS.success[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        <span className="text-sm" style={{ color: COLORS.gray[700] }}>Secured by Razorpay</span>
                       </div>
+                      <p className="text-xs mt-2" style={{ color: COLORS.gray[500] }}>
+                        Payment gateway will open at final checkout. No card details are stored on our servers.
+                      </p>
                     </div>
                   )}
 
