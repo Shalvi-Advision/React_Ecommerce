@@ -123,8 +123,8 @@ export const formatTime = (timeString) => {
  */
 export const generateTimeSlotsFromAPI = (apiSlots) => {
   if (!apiSlots || apiSlots.length === 0) {
-    // Return default slots if no API data
-    return generateDefaultTimeSlots();
+    // Return empty array if no API data - no fallback slots
+    return [];
   }
 
   const today = new Date();
@@ -224,6 +224,7 @@ export const generateDefaultTimeSlots = () => {
  * @param {string} fromTime - Start time in HH:MM:SS format
  * @param {string} toTime - End time in HH:MM:SS format
  * @param {number} startSlotId - Starting slot ID
+ * @param {number|string} deliverySlotId - Delivery slot ID from API (iddelivery_slot)
  * @returns {Array} - Array of time slots
  */
 const generateSlotsForTimeRange = (fromTime, toTime, startSlotId, deliverySlotId = null) => {

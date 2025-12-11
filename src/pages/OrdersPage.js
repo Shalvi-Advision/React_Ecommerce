@@ -77,13 +77,13 @@ const OrdersPage = () => {
 
   const getDeliveryMethodDisplay = (checkoutData) => {
     if (!checkoutData) return 'Standard Delivery';
-    
+
     if (checkoutData.deliveryMode === 'pickup') {
       return `Pick Up Point - ${checkoutData.selectedPickupPoint?.name || 'Selected Location'}`;
     } else if (checkoutData.deliveryMode === 'home') {
       return 'Home Delivery';
     }
-    
+
     return 'Standard Delivery';
   };
 
@@ -206,14 +206,16 @@ const OrdersPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        {/* Sidebar */}
-        <AccountSidebar />
+      <div className="flex flex-col lg:flex-row">
+        {/* Sidebar - Hidden on mobile, visible on desktop */}
+        <div className="hidden lg:block lg:w-64">
+          <AccountSidebar />
+        </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-4 sm:p-8">
-          <div className="max-w-4xl">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-8">My Orders</h1>
+        <div className="flex-1 p-2 sm:p-4 lg:p-6 xl:p-8">
+          <div className="max-w-4xl mx-auto w-full">
+            <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 lg:mb-8">My Orders</h1>
 
             {/* Loading State */}
             {loading && (
@@ -254,11 +256,11 @@ const OrdersPage = () => {
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <span className="text-2xl">📦</span>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No orders yet</h3>
-                  <p className="text-gray-600 mb-6">Your order history will appear here</p>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1.5 sm:mb-2">No orders yet</h3>
+                  <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6">Your order history will appear here</p>
                   <button
                     onClick={() => navigate('/')}
-                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-md transition-colors"
+                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 sm:py-2 px-4 sm:px-6 rounded-md transition-colors min-h-[44px] sm:min-h-0 text-sm sm:text-base"
                   >
                     Start Shopping
                   </button>
@@ -292,31 +294,31 @@ const OrdersPage = () => {
                       </div>
                     </div>
 
-                    <div className="border-t border-gray-200 pt-4">
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-4">
+                    <div className="border-t border-gray-200 pt-3 sm:pt-4">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 lg:gap-6 mb-3 sm:mb-4">
                         {/* Delivery Information */}
-                        <div className="space-y-4">
+                        <div className="space-y-3 sm:space-y-4">
                           <div>
-                            <h4 className="font-medium text-gray-900 mb-2 flex items-center">
-                              <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <h4 className="font-medium text-sm sm:text-base text-gray-900 mb-1.5 sm:mb-2 flex items-center">
+                              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                               </svg>
-                              Delivery Method
+                              <span className="truncate">Delivery Method</span>
                             </h4>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-xs sm:text-sm text-gray-600 break-words">
                               {getDeliveryMethodDisplay(order.checkoutData)}
                             </p>
                           </div>
 
                           <div>
-                            <h4 className="font-medium text-gray-900 mb-2 flex items-center">
-                              <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <h4 className="font-medium text-sm sm:text-base text-gray-900 mb-1.5 sm:mb-2 flex items-center">
+                              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                               </svg>
-                              {getDeliveryAddressDisplay(order).type}
+                              <span className="truncate">{getDeliveryAddressDisplay(order).type}</span>
                             </h4>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-xs sm:text-sm text-gray-600 break-words">
                               {getDeliveryAddressDisplay(order).name}<br />
                               {getDeliveryAddressDisplay(order).address}
                             </p>
@@ -325,13 +327,13 @@ const OrdersPage = () => {
                         </div>
 
                         {/* Payment & Shipping Information */}
-                        <div className="space-y-4">
+                        <div className="space-y-3 sm:space-y-4">
                           <div>
-                            <h4 className="font-medium text-gray-900 mb-2 flex items-center">
-                              <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <h4 className="font-medium text-sm sm:text-base text-gray-900 mb-1.5 sm:mb-2 flex items-center">
+                              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                               </svg>
-                              Payment Method
+                              <span className="truncate">Payment Method</span>
                             </h4>
                             <p className="text-sm text-gray-600">
                               {getPaymentMethodDisplay(order.paymentMode || order.paymentMethod || 'N/A')}
@@ -339,14 +341,14 @@ const OrdersPage = () => {
                           </div>
 
                           <div>
-                            <h4 className="font-medium text-gray-900 mb-2 flex items-center">
-                              <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <h4 className="font-medium text-sm sm:text-base text-gray-900 mb-1.5 sm:mb-2 flex items-center">
+                              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                               </svg>
-                              Shipping Address
+                              <span className="truncate">Shipping Address</span>
                             </h4>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-xs sm:text-sm text-gray-600 break-words">
                               {order.shippingInfo ? (
                                 <>
                                   {order.shippingInfo.firstName || ''} {order.shippingInfo.lastName || ''}<br />
@@ -360,13 +362,13 @@ const OrdersPage = () => {
                           </div>
 
                           <div>
-                            <h4 className="font-medium text-gray-900 mb-2 flex items-center">
-                              <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <h4 className="font-medium text-sm sm:text-base text-gray-900 mb-1.5 sm:mb-2 flex items-center">
+                              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                               </svg>
-                              Delivery Date & Time
+                              <span className="truncate">Delivery Date & Time</span>
                             </h4>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-xs sm:text-sm text-gray-600 break-words">
                               {getDeliveryDateDisplay(order)}
                             </p>
                           </div>
@@ -397,29 +399,29 @@ const OrdersPage = () => {
                             ))
                           ) : order.items && Array.isArray(order.items) && order.items.length > 0 ? (
                             order.items.map((item, index) => (
-                              <div key={index} className="flex justify-between items-center py-2">
-                                <div className="flex items-center">
+                              <div key={index} className="flex justify-between items-center py-1.5 sm:py-2 gap-2">
+                                <div className="flex items-center min-w-0 flex-1">
                                   <img
                                     src={item.image || '/images/logo.jpg'}
                                     alt={item.title || 'Product'}
-                                    className="w-12 h-12 object-cover rounded mr-3"
+                                    className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded mr-2 sm:mr-3 flex-shrink-0"
                                   />
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-900">{item.title || 'Product'}</p>
-                                    <p className="text-xs text-gray-600">Quantity: {item.quantity || 0}</p>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">{item.title || 'Product'}</p>
+                                    <p className="text-[10px] sm:text-xs text-gray-600">Quantity: {item.quantity || 0}</p>
                                   </div>
                                 </div>
-                                <p className="text-sm font-medium text-gray-900">
+                                <p className="text-xs sm:text-sm font-medium text-gray-900 flex-shrink-0">
                                   ₹{((item.price || 0) * (item.quantity || 0)).toFixed(2)}
                                 </p>
                               </div>
                             ))
                           ) : (
-                            <p className="text-sm text-gray-500 py-2">No items found</p>
+                            <p className="text-xs sm:text-sm text-gray-500 py-2">No items found</p>
                           )}
                         </div>
 
-                        <div className="border-t border-gray-200 mt-4 pt-4">
+                        <div className="border-t border-gray-200 mt-3 sm:mt-4 pt-3 sm:pt-4">
                           <div className="flex justify-between items-center">
                             <span className="text-lg font-semibold text-gray-900">Total</span>
                             <span className="text-lg font-semibold text-gray-900">

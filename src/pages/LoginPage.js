@@ -2,6 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { COLORS } from '../constants/theme';
+
+// Helper function to convert hex color to rgba with opacity
+const hexToRgba = (hex, opacity = 1) => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return hex;
+  const r = parseInt(result[1], 16);
+  const g = parseInt(result[2], 16);
+  const b = parseInt(result[3], 16);
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+};
 
 const LoginPage = () => {
   const [loginMethod, setLoginMethod] = useState('otp'); // Only OTP authentication now
@@ -11,6 +22,7 @@ const LoginPage = () => {
     mobileNo: '',
   });
   const [errors, setErrors] = useState({});
+  const [logoError, setLogoError] = useState(false);
 
   const { login, loading, error, clearError, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -85,17 +97,35 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left side - Illustration (hidden on mobile) */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.1)_0%,transparent_50%)]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(14,165,233,0.1)_0%,transparent_50%)]"></div>
+      <div 
+        className="hidden lg:flex lg:w-1/2 relative overflow-hidden"
+        style={{
+          background: `linear-gradient(to bottom right, ${COLORS.primary[50]}, ${COLORS.success[50]}, ${COLORS.primary[100]})`
+        }}
+      >
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: `radial-gradient(circle at 30% 20%, ${hexToRgba(COLORS.primary[500], 0.1)} 0%, transparent 50%)`
+          }}
+        ></div>
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: `radial-gradient(circle at 70% 80%, ${hexToRgba(COLORS.success[400], 0.1)} 0%, transparent 50%)`
+          }}
+        ></div>
         
         <div className="flex items-center justify-center w-full p-12 relative z-10">
           <div className="max-w-md text-center">
             {/* Logo */}
             <div className="mb-8">
-              <div className="inline-flex items-center gap-2 bg-white px-6 py-3 rounded-2xl shadow-lg">
+              <div 
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl shadow-lg"
+                style={{ backgroundColor: COLORS.white }}
+              >
                 <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold text-emerald-600">Pagariya Mart</span>
+                  <span className="text-xl font-bold" style={{ color: COLORS.primary[600] }}>Pagariya Mart</span>
                 </div>
               </div>
             </div>
@@ -167,7 +197,7 @@ const LoginPage = () => {
             </div>
 
             {/* Text below illustration */}
-            <p className="mt-8 text-lg text-gray-600 font-medium">
+            <p className="mt-8 text-lg font-medium" style={{ color: COLORS.gray[600] }}>
               Fresh groceries delivered to your doorstep
             </p>
           </div>
@@ -175,35 +205,78 @@ const LoginPage = () => {
       </div>
 
       {/* Right side - Login Form */}
-      <div className="flex-1 lg:w-1/2 bg-white flex items-center justify-center p-4 sm:p-8 relative">
+      <div 
+        className="flex-1 lg:w-1/2 flex items-center justify-center p-4 sm:p-8 relative"
+        style={{ backgroundColor: COLORS.white }}
+      >
         {/* Close Button */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 rounded-full hover:bg-gray-100 transition-colors duration-200 z-10"
+          className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 rounded-full transition-colors duration-200 z-10"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = COLORS.gray[100];
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }}
           aria-label="Close"
         >
-          <XMarkIcon className="w-6 h-6 sm:w-8 sm:h-8 text-gray-500 hover:text-gray-700" />
+          <XMarkIcon 
+            className="w-6 h-6 sm:w-8 sm:h-8 transition-colors" 
+            style={{ color: COLORS.gray[500] }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = COLORS.gray[700];
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = COLORS.gray[500];
+            }}
+          />
         </button>
 
         <div className="w-full max-w-md mx-auto">
           {/* Mobile Logo (visible only on mobile) */}
           <div className="lg:hidden flex justify-center mb-6">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-br from-emerald-50 to-teal-50 px-6 py-3 rounded-2xl shadow-sm">
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-emerald-600">Pagariya Mart</span>
+            {logoError ? (
+              <div 
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl shadow-sm"
+                style={{
+                  background: `linear-gradient(to bottom right, ${COLORS.primary[50]}, ${COLORS.success[50]})`
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-bold" style={{ color: COLORS.primary[600] }}>Pagariya Mart</span>
+                </div>
               </div>
-            </div>
+            ) : (
+              <img
+                src={`${process.env.PUBLIC_URL}/images/Main_Logo.jpg?v=2`}
+                alt="Pagariya Mart"
+                className="h-12 w-auto object-contain"
+                style={{
+                  maxHeight: '60px',
+                  maxWidth: '200px',
+                  display: 'block'
+                }}
+                onError={() => setLogoError(true)}
+              />
+            )}
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 text-center lg:text-left">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-center lg:text-left" style={{ color: COLORS.gray[900] }}>
             Let's Get You Logged In
           </h1>
 
           {/* Error Message */}
           {error && (
-            <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-red-800 text-sm">{error}</p>
+            <div 
+              className="mt-4 border rounded-lg p-3"
+              style={{
+                backgroundColor: COLORS.error[50],
+                borderColor: COLORS.error[200]
+              }}
+            >
+              <p className="text-sm" style={{ color: COLORS.error[800] }}>{error}</p>
             </div>
           )}
 
@@ -211,12 +284,12 @@ const LoginPage = () => {
           <form onSubmit={handleSubmit} className="mt-8 space-y-6">
             {/* Mobile Number Input */}
             <div>
-              <label htmlFor="mobileNo" className="block text-sm font-medium text-gray-500 mb-3">
+              <label htmlFor="mobileNo" className="block text-sm font-medium mb-3" style={{ color: COLORS.gray[500] }}>
                 Enter your 10 digit mobile number
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                  <span className="text-gray-700 text-base font-medium">+91</span>
+                  <span className="text-base font-medium" style={{ color: COLORS.gray[700] }}>+91</span>
                 </div>
                 <input
                   id="mobileNo"
@@ -226,31 +299,69 @@ const LoginPage = () => {
                   onChange={handleChange}
                   maxLength={10}
                   placeholder=""
-                  className={`block w-full pl-16 pr-4 py-3.5 text-base border-2 rounded-lg focus:outline-none transition-colors duration-200 ${
-                    errors.mobileNo 
-                      ? 'border-red-300 focus:border-red-500' 
-                      : 'border-gray-200 focus:border-emerald-500'
-                  }`}
+                  className="block w-full pl-16 pr-4 py-3.5 text-base border-2 rounded-lg focus:outline-none transition-colors duration-200"
+                  style={{
+                    borderColor: errors.mobileNo ? COLORS.error[300] : COLORS.gray[200],
+                    color: COLORS.gray[800]
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = errors.mobileNo ? COLORS.error[500] : COLORS.primary[500];
+                    e.currentTarget.style.boxShadow = `0 0 0 2px ${hexToRgba(errors.mobileNo ? COLORS.error[500] : COLORS.primary[500], 0.5)}`;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = errors.mobileNo ? COLORS.error[300] : COLORS.gray[200];
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
                   required
                 />
               </div>
               {errors.mobileNo && (
-                <p className="mt-2 text-sm text-red-600">{errors.mobileNo}</p>
+                <p className="mt-2 text-sm" style={{ color: COLORS.error[600] }}>{errors.mobileNo}</p>
               )}
             </div>
 
             {/* Terms and Privacy */}
-            <div className="text-sm text-gray-600">
+            <div className="text-sm" style={{ color: COLORS.gray[600] }}>
               By continuing, you agree to our{' '}
-              <Link to="/terms" className="text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
+              <Link 
+                to="/terms" 
+                className="font-medium transition-colors"
+                style={{ color: COLORS.primary[600] }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = COLORS.primary[700];
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = COLORS.primary[600];
+                }}
+              >
                 Terms
               </Link>
               ,{' '}
-              <Link to="/refunds" className="text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
+              <Link 
+                to="/refunds" 
+                className="font-medium transition-colors"
+                style={{ color: COLORS.primary[600] }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = COLORS.primary[700];
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = COLORS.primary[600];
+                }}
+              >
                 Refunds
               </Link>
               {' '}and{' '}
-              <Link to="/privacy" className="text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
+              <Link 
+                to="/privacy" 
+                className="font-medium transition-colors"
+                style={{ color: COLORS.primary[600] }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = COLORS.primary[700];
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = COLORS.primary[600];
+                }}
+              >
                 Privacy Policy
               </Link>
             </div>
@@ -259,7 +370,22 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3.5 px-6 rounded-lg transition-all duration-200 uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full font-semibold py-3.5 px-6 rounded-lg transition-all duration-200 uppercase tracking-wide disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: loading ? COLORS.gray[300] : COLORS.primary[600],
+                color: loading ? COLORS.gray[700] : COLORS.white,
+                opacity: loading ? 0.5 : 1
+              }}
+              onMouseEnter={(e) => {
+                if (!loading) {
+                  e.currentTarget.style.backgroundColor = COLORS.primary[700];
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!loading) {
+                  e.currentTarget.style.backgroundColor = COLORS.primary[600];
+                }
+              }}
             >
               {loading ? 'Please wait...' : 'CONTINUE'}
             </button>
@@ -267,9 +393,19 @@ const LoginPage = () => {
 
           {/* Register Link */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm" style={{ color: COLORS.gray[600] }}>
               Don't have an account?{' '}
-              <Link to="/register" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">
+              <Link 
+                to="/register" 
+                className="font-semibold transition-colors"
+                style={{ color: COLORS.primary[600] }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = COLORS.primary[700];
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = COLORS.primary[600];
+                }}
+              >
                 Sign up
               </Link>
             </p>

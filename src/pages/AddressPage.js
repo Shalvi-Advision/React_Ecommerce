@@ -3,6 +3,7 @@ import AccountSidebar from '../components/AccountSidebar';
 import { PlusIcon, PencilIcon, TrashIcon, MapPinIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { usePincode } from '../context/PincodeContext';
+import { COLORS } from '../constants/theme';
 import { 
   getAddresses, 
   addAddress, 
@@ -49,7 +50,7 @@ const AddressPage = () => {
     }
   }, [confirmedLocation, getCurrentPincode]);
 
-  // Auto-hide success message after 3 seconds
+  
   useEffect(() => {
     if (successMessage) {
       const timer = setTimeout(() => {
@@ -277,126 +278,170 @@ const AddressPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        <AccountSidebar />
+    <div className="min-h-screen" style={{ backgroundColor: COLORS.gray[50] }}>
+      <div className="flex flex-col lg:flex-row">
+        {/* Sidebar - Hidden on mobile, visible on desktop */}
+        <div className="hidden lg:block lg:w-64">
+          <AccountSidebar />
+        </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-4 sm:p-8">
-          <div className="max-w-6xl">
+        <div className="flex-1 p-2 sm:p-4 lg:p-6 xl:p-8">
+          <div className="max-w-6xl mx-auto w-full">
             {/* Success Message */}
             {successMessage && (
-              <div className="mb-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CheckCircleIcon className="w-5 h-5" />
-                  <span>{successMessage}</span>
+              <div className="mb-3 sm:mb-4 border px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center justify-between gap-2" style={{ backgroundColor: COLORS.success[50], borderColor: COLORS.success[200], color: COLORS.success[800] }}>
+                <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
+                  <CheckCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm truncate">{successMessage}</span>
                 </div>
-                <button onClick={() => setSuccessMessage('')} className="text-green-600 hover:text-green-800">
-                  <XMarkIcon className="w-5 h-5" />
+                <button onClick={() => setSuccessMessage('')} className="flex-shrink-0 min-h-[44px] sm:min-h-0 p-1 sm:p-0" style={{ color: COLORS.success[600] }} onMouseEnter={(e) => { e.currentTarget.style.color = COLORS.success[800]; }} onMouseLeave={(e) => { e.currentTarget.style.color = COLORS.success[600]; }}>
+                  <XMarkIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
             )}
 
             {/* Error Message */}
             {apiError && (
-              <div className="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
-                <span>{apiError}</span>
-                <button onClick={() => setApiError('')} className="text-red-600 hover:text-red-800">
-                  <XMarkIcon className="w-5 h-5" />
+              <div className="mb-3 sm:mb-4 border px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center justify-between gap-2" style={{ backgroundColor: COLORS.error[50], borderColor: COLORS.error[200], color: COLORS.error[800] }}>
+                <span className="text-xs sm:text-sm flex-1 min-w-0">{apiError}</span>
+                <button onClick={() => setApiError('')} className="flex-shrink-0 min-h-[44px] sm:min-h-0 p-1 sm:p-0" style={{ color: COLORS.error[600] }} onMouseEnter={(e) => { e.currentTarget.style.color = COLORS.error[800]; }} onMouseLeave={(e) => { e.currentTarget.style.color = COLORS.error[600]; }}>
+                  <XMarkIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
             )}
 
-            <div className="flex items-center justify-between mb-8">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Addresses</h1>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6 lg:mb-8">
+              <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold" style={{ color: COLORS.gray[900] }}>My Addresses</h1>
               <button
                 onClick={handleAddAddress}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 sm:px-6 rounded-lg transition-colors flex items-center gap-2"
+                className="text-white font-semibold py-2.5 sm:py-2 px-3 sm:px-4 lg:px-6 rounded-lg transition-colors flex items-center justify-center gap-1.5 sm:gap-2 min-h-[44px] sm:min-h-0 text-sm sm:text-base w-full sm:w-auto"
+                style={{ backgroundColor: COLORS.primary[600] }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = COLORS.primary[700];
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = COLORS.primary[600];
+                }}
               >
-                <PlusIcon className="w-5 h-5" />
+                <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span className="hidden sm:inline">Add New Address</span>
                 <span className="sm:hidden">Add</span>
               </button>
             </div>
             
             {loading ? (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading addresses...</p>
+              <div className="rounded-lg sm:rounded-xl shadow-sm border p-4 sm:p-6" style={{ backgroundColor: COLORS.white, borderColor: COLORS.gray[200] }}>
+                <div className="text-center py-8 sm:py-12">
+                  <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 mx-auto mb-3 sm:mb-4" style={{ borderColor: COLORS.primary[600] }}></div>
+                  <p className="text-xs sm:text-sm" style={{ color: COLORS.gray[600] }}>Loading addresses...</p>
                 </div>
               </div>
             ) : addresses.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <MapPinIcon className="w-8 h-8 text-gray-400" />
+              <div className="rounded-lg sm:rounded-xl shadow-sm border p-4 sm:p-6" style={{ backgroundColor: COLORS.white, borderColor: COLORS.gray[200] }}>
+                <div className="text-center py-8 sm:py-12">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4" style={{ backgroundColor: COLORS.gray[100] }}>
+                    <MapPinIcon className="w-6 h-6 sm:w-8 sm:h-8" style={{ color: COLORS.gray[400] }} />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No addresses saved</h3>
-                  <p className="text-gray-600 mb-6">Add your first address to get started</p>
+                  <h3 className="text-base sm:text-lg font-semibold mb-1.5 sm:mb-2" style={{ color: COLORS.gray[900] }}>No addresses saved</h3>
+                  <p className="text-xs sm:text-sm mb-4 sm:mb-6" style={{ color: COLORS.gray[600] }}>Add your first address to get started</p>
                   <button
                     onClick={handleAddAddress}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+                    className="text-white font-bold py-2.5 sm:py-2 px-4 sm:px-6 rounded-lg transition-colors min-h-[44px] sm:min-h-0 text-sm sm:text-base"
+                    style={{ backgroundColor: COLORS.primary[600] }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = COLORS.primary[700];
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = COLORS.primary[600];
+                    }}
                   >
                     Add New Address
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
                 {addresses.map((address, index) => (
                   <div
                     key={address.mongoId || address.id || `address-${index}`}
-                    className={`bg-white rounded-lg shadow-sm border-2 p-4 sm:p-6 relative transition-all hover:shadow-md ${
-                      address.isDefault ? 'border-emerald-500' : 'border-gray-200'
-                    }`}
+                    className="rounded-lg sm:rounded-xl shadow-sm border-2 p-3 sm:p-4 lg:p-6 relative transition-all hover:shadow-md"
+                    style={{
+                      backgroundColor: COLORS.white,
+                      borderColor: address.isDefault ? COLORS.primary[500] : COLORS.gray[200]
+                    }}
                   >
                     {/* Default Badge */}
                     {address.isDefault && (
-                      <div className="flex items-center justify-end mb-3">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                          <CheckCircleIcon className="w-3 h-3 mr-1" />
+                      <div className="flex items-center justify-end mb-2 sm:mb-3">
+                        <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium" style={{ backgroundColor: COLORS.primary[100], color: COLORS.primary[800] }}>
+                          <CheckCircleIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5 sm:mr-1" />
                           Default
                         </span>
                       </div>
                     )}
 
                     {/* Address Details */}
-                    <div className="mb-4">
-                      <h3 className="font-semibold text-gray-900 mb-1">{address.name}</h3>
-                      {address.email && <p className="text-sm text-gray-600 mb-1">Email: {address.email}</p>}
-                      <p className="text-sm text-gray-600 mt-2">
+                    <div className="mb-3 sm:mb-4">
+                      <h3 className="font-semibold mb-1 text-sm sm:text-base" style={{ color: COLORS.gray[900] }}>{address.name}</h3>
+                      {address.email && <p className="text-xs sm:text-sm mb-1 break-all" style={{ color: COLORS.gray[600] }}>Email: {address.email}</p>}
+                      <p className="text-xs sm:text-sm mt-1.5 sm:mt-2" style={{ color: COLORS.gray[600] }}>
                         {address.addressLine1}
                         {address.addressLine2 && <>, {address.addressLine2}</>}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-xs sm:text-sm mt-1" style={{ color: COLORS.gray[600] }}>
                         {address.city} - {address.pinCode}
                       </p>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-1.5 sm:gap-2 pt-3 sm:pt-4 border-t" style={{ borderColor: COLORS.gray[100] }}>
                       {!address.isDefault && (
                         <button
                           onClick={() => handleSetDefault(address)}
-                          className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                          className="text-[10px] sm:text-xs font-medium min-h-[44px] sm:min-h-0 py-2 sm:py-0"
+                          style={{ color: COLORS.primary[600] }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.color = COLORS.primary[700];
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.color = COLORS.primary[600];
+                          }}
                         >
                           Set as Default
                         </button>
                       )}
                       <button
                         onClick={() => handleEditAddress(address)}
-                        className="ml-auto text-blue-600 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-colors"
+                        className="ml-auto p-2 sm:p-2 rounded-lg transition-colors min-h-[44px] sm:min-h-0 min-w-[44px] sm:min-w-0 flex items-center justify-center"
+                        style={{ color: COLORS.primary[600] }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = COLORS.primary[700];
+                          e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = COLORS.primary[600];
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
                         title="Edit"
                       >
-                        <PencilIcon className="w-4 h-4" />
+                        <PencilIcon className="w-4 h-4 sm:w-4 sm:h-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteAddress(address)}
-                        className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                        className="p-2 sm:p-2 rounded-lg transition-colors min-h-[44px] sm:min-h-0 min-w-[44px] sm:min-w-0 flex items-center justify-center"
+                        style={{ color: COLORS.error[600] }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = COLORS.error[700];
+                          e.currentTarget.style.backgroundColor = COLORS.error[50];
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = COLORS.error[600];
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
                         title="Delete"
                       >
-                        <TrashIcon className="w-4 h-4" />
+                        <TrashIcon className="w-4 h-4 sm:w-4 sm:h-4" />
                       </button>
                     </div>
                   </div>
@@ -409,51 +454,71 @@ const AddressPage = () => {
 
       {/* Add/Edit Address Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-2 sm:p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <div className="rounded-lg sm:rounded-xl shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto" style={{ backgroundColor: COLORS.white }}>
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">
+            <div className="flex items-center justify-between p-3 sm:p-4 lg:p-6 border-b sticky top-0 bg-white z-10" style={{ borderColor: COLORS.gray[200] }}>
+              <h2 className="text-base sm:text-lg lg:text-xl font-bold" style={{ color: COLORS.gray[900] }}>
                 {editingAddress ? 'Edit Address' : 'Add New Address'}
               </h2>
               <button
                 onClick={handleCloseModal}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="transition-colors p-1 sm:p-0 min-h-[44px] sm:min-h-0 min-w-[44px] sm:min-w-0 flex items-center justify-center"
+                style={{ color: COLORS.gray[400] }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = COLORS.gray[600];
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = COLORS.gray[400];
+                }}
               >
-                <XMarkIcon className="w-6 h-6" />
+                <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4">
               {/* API Error in Modal */}
               {apiError && (
-                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm">
+                <div className="border px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-xs sm:text-sm" style={{ backgroundColor: COLORS.error[50], borderColor: COLORS.error[200], color: COLORS.error[800] }}>
                   {apiError}
                 </div>
               )}
 
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name <span className="text-red-500">*</span>
+                <label className="block text-xs sm:text-sm font-medium mb-1 sm:mb-1.5" style={{ color: COLORS.gray[700] }}>
+                  Full Name <span style={{ color: COLORS.error[500] }}>*</span>
                 </label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                    errors.name ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:outline-none text-sm sm:text-base min-h-[44px] sm:min-h-0"
+                  style={{
+                    borderColor: errors.name ? COLORS.error[500] : COLORS.gray[300]
+                  }}
+                  onFocus={(e) => {
+                    if (!errors.name) {
+                      e.currentTarget.style.borderColor = COLORS.primary[500];
+                      e.currentTarget.style.boxShadow = `0 0 0 2px ${COLORS.primary[500]}40`;
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (!errors.name) {
+                      e.currentTarget.style.borderColor = COLORS.gray[300];
+                      e.currentTarget.style.boxShadow = 'none';
+                    }
+                  }}
                   placeholder="Enter full name"
                 />
-                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+                {errors.name && <p className="text-xs sm:text-sm mt-1" style={{ color: COLORS.error[500] }}>{errors.name}</p>}
               </div>
 
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs sm:text-sm font-medium mb-1 sm:mb-1.5" style={{ color: COLORS.gray[700] }}>
                   Email Address (Optional)
                 </label>
                 <input
@@ -461,35 +526,61 @@ const AddressPage = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                    errors.email ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:outline-none text-sm sm:text-base min-h-[44px] sm:min-h-0"
+                  style={{
+                    borderColor: errors.email ? COLORS.error[500] : COLORS.gray[300]
+                  }}
+                  onFocus={(e) => {
+                    if (!errors.email) {
+                      e.currentTarget.style.borderColor = COLORS.primary[500];
+                      e.currentTarget.style.boxShadow = `0 0 0 2px ${COLORS.primary[500]}40`;
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (!errors.email) {
+                      e.currentTarget.style.borderColor = COLORS.gray[300];
+                      e.currentTarget.style.boxShadow = 'none';
+                    }
+                  }}
                   placeholder="your.email@example.com"
                 />
-                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                {errors.email && <p className="text-xs sm:text-sm mt-1" style={{ color: COLORS.error[500] }}>{errors.email}</p>}
               </div>
 
               {/* Address Line 1 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Address Line 1 <span className="text-red-500">*</span>
+                <label className="block text-xs sm:text-sm font-medium mb-1 sm:mb-1.5" style={{ color: COLORS.gray[700] }}>
+                  Address Line 1 <span style={{ color: COLORS.error[500] }}>*</span>
                 </label>
                 <input
                   type="text"
                   name="addressLine1"
                   value={formData.addressLine1}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                    errors.addressLine1 ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:outline-none text-sm sm:text-base min-h-[44px] sm:min-h-0"
+                  style={{
+                    borderColor: errors.addressLine1 ? COLORS.error[500] : COLORS.gray[300]
+                  }}
+                  onFocus={(e) => {
+                    if (!errors.addressLine1) {
+                      e.currentTarget.style.borderColor = COLORS.primary[500];
+                      e.currentTarget.style.boxShadow = `0 0 0 2px ${COLORS.primary[500]}40`;
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (!errors.addressLine1) {
+                      e.currentTarget.style.borderColor = COLORS.gray[300];
+                      e.currentTarget.style.boxShadow = 'none';
+                    }
+                  }}
                   placeholder="House no., Building name"
                 />
-                {errors.addressLine1 && <p className="text-red-500 text-sm mt-1">{errors.addressLine1}</p>}
+                {errors.addressLine1 && <p className="text-xs sm:text-sm mt-1" style={{ color: COLORS.error[500] }}>{errors.addressLine1}</p>}
               </div>
 
               {/* Address Line 2 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs sm:text-sm font-medium mb-1 sm:mb-1.5" style={{ color: COLORS.gray[700] }}>
                   Address Line 2 (Optional)
                 </label>
                 <input
@@ -497,34 +588,58 @@ const AddressPage = () => {
                   name="addressLine2"
                   value={formData.addressLine2}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:outline-none text-sm sm:text-base min-h-[44px] sm:min-h-0"
+                  style={{
+                    borderColor: COLORS.gray[300]
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = COLORS.primary[500];
+                    e.currentTarget.style.boxShadow = `0 0 0 2px ${COLORS.primary[500]}40`;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = COLORS.gray[300];
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
                   placeholder="Road name, Area, Colony"
                 />
               </div>
 
               {/* City and PIN Code */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    City <span className="text-red-500">*</span>
+                  <label className="block text-xs sm:text-sm font-medium mb-1 sm:mb-1.5" style={{ color: COLORS.gray[700] }}>
+                    City <span style={{ color: COLORS.error[500] }}>*</span>
                   </label>
                   <input
                     type="text"
                     name="city"
                     value={formData.city}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                      errors.city ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:outline-none text-sm sm:text-base min-h-[44px] sm:min-h-0"
+                    style={{
+                      borderColor: errors.city ? COLORS.error[500] : COLORS.gray[300]
+                    }}
+                    onFocus={(e) => {
+                      if (!errors.city) {
+                        e.currentTarget.style.borderColor = COLORS.primary[500];
+                        e.currentTarget.style.boxShadow = `0 0 0 2px ${COLORS.primary[500]}40`;
+                      }
+                    }}
+                    onBlur={(e) => {
+                      if (!errors.city) {
+                        e.currentTarget.style.borderColor = COLORS.gray[300];
+                        e.currentTarget.style.boxShadow = 'none';
+                      }
+                    }}
                     placeholder="City"
                   />
-                  {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
+                  {errors.city && <p className="text-xs sm:text-sm mt-1" style={{ color: COLORS.error[500] }}>{errors.city}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    PIN Code <span className="text-red-500">*</span>
-                    <span className="text-xs text-gray-500 ml-2">(Fixed from selected location)</span>
+                  <label className="block text-xs sm:text-sm font-medium mb-1 sm:mb-1.5" style={{ color: COLORS.gray[700] }}>
+                    PIN Code <span style={{ color: COLORS.error[500] }}>*</span>
+                    <span className="text-[10px] sm:text-xs ml-1 sm:ml-2" style={{ color: COLORS.gray[500] }}>(Fixed)</span>
                   </label>
                   <input
                     type="text"
@@ -532,10 +647,15 @@ const AddressPage = () => {
                     value={formData.pinCode}
                     readOnly
                     maxLength={6}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg cursor-not-allowed text-sm sm:text-base min-h-[44px] sm:min-h-0"
+                    style={{
+                      borderColor: COLORS.gray[300],
+                      backgroundColor: COLORS.gray[50],
+                      color: COLORS.gray[700]
+                    }}
                     placeholder="6-digit PIN"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-[10px] sm:text-xs mt-1" style={{ color: COLORS.gray[500] }}>
                     PIN code is automatically set from your selected location
                   </p>
                 </div>
@@ -548,29 +668,58 @@ const AddressPage = () => {
                   name="isDefault"
                   checked={formData.isDefault}
                   onChange={handleInputChange}
-                  className="text-emerald-600 focus:ring-emerald-500 rounded"
+                  className="rounded w-4 h-4 sm:w-4 sm:h-4"
+                  style={{ accentColor: COLORS.primary[600] }}
                 />
-                <label className="ml-2 text-sm text-gray-700">Set as default address</label>
+                <label className="ml-2 text-xs sm:text-sm" style={{ color: COLORS.gray[700] }}>Set as default address</label>
               </div>
 
               {/* Modal Footer */}
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3 sm:pt-4 border-t" style={{ borderColor: COLORS.gray[200] }}>
                 <button
                   type="button"
                   onClick={handleCloseModal}
                   disabled={submitLoading}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] sm:min-h-0 text-sm sm:text-base"
+                  style={{
+                    borderColor: COLORS.gray[300],
+                    color: COLORS.gray[700],
+                    backgroundColor: COLORS.white
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!submitLoading) {
+                      e.currentTarget.style.backgroundColor = COLORS.gray[50];
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!submitLoading) {
+                      e.currentTarget.style.backgroundColor = COLORS.white;
+                    }
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitLoading}
-                  className="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 px-3 sm:px-4 py-2.5 sm:py-2 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px] sm:min-h-0 text-sm sm:text-base"
+                  style={{
+                    backgroundColor: COLORS.primary[600]
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!submitLoading) {
+                      e.currentTarget.style.backgroundColor = COLORS.primary[700];
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!submitLoading) {
+                      e.currentTarget.style.backgroundColor = COLORS.primary[600];
+                    }
+                  }}
                 >
                   {submitLoading ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2" style={{ borderColor: COLORS.white }}></div>
                       <span>Saving...</span>
                     </>
                   ) : (
