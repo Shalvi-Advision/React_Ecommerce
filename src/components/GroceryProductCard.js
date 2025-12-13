@@ -90,9 +90,9 @@ const GroceryProductCard = ({ product, onAddToCart }) => {
     <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 w-full max-w-sm mx-auto flex flex-col" style={{ minHeight: '420px' }}>
       {/* Image Container */}
       <div className="relative bg-gradient-to-br from-orange-50 to-orange-100 h-40 flex items-center justify-center p-6 flex-shrink-0">
-        <Link 
-          to={`/product/${displayPcode}`} 
-          className="block w-full h-full flex items-center justify-center"
+        <Link
+          to={`/product/${displayPcode}?dept_id=${product.dept_id || '2'}&category_id=${product.category_id || '72'}&sub_category_id=${product.sub_category_id || '391'}`}
+          className="block w-full h-full flex items-center justify-center z-10"
           onClick={() => {
             console.log('🖼️ GroceryProductCard Product Image clicked - PCode:', displayPcode, 'Product Name:', displayName);
           }}
@@ -145,16 +145,17 @@ const GroceryProductCard = ({ product, onAddToCart }) => {
       {/* Product Details */}
       <div className="p-4 flex-grow flex flex-col">
         {/* Product Name */}
-        <h3 
-          className="font-semibold text-gray-900 text-sm leading-tight mb-2 line-clamp-2 cursor-pointer hover:text-green-600 transition-colors"
+        <Link
+          to={`/product/${displayPcode}?dept_id=${product.dept_id || '2'}&category_id=${product.category_id || '72'}&sub_category_id=${product.sub_category_id || '391'}`}
           onClick={() => {
             console.log('🔗 GroceryProductCard Product Name clicked - PCode:', displayPcode, 'Product Name:', displayName);
-            // Navigate to product details with required parameters
-            window.location.href = `/product/${displayPcode}?dept_id=${product.dept_id || '2'}&category_id=${product.category_id || '72'}&sub_category_id=${product.sub_category_id || '391'}`;
           }}
+          className="block"
         >
-          {displayName}
-        </h3>
+          <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-2 line-clamp-2 cursor-pointer hover:text-green-600 transition-colors">
+            {displayName}
+          </h3>
+        </Link>
 
         {/* Pricing */}
         <div className="mb-3">

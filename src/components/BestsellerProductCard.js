@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { HeartIcon as HeartOutline, MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
 import { ShoppingCartIcon } from '@heroicons/react/24/outline';
@@ -206,7 +207,10 @@ const BestsellerProductCard = ({ product }) => {
         )}
 
         {/* Product Image */}
-        <div className="w-full flex flex-col items-center">
+        <Link
+          to={`/product/${productId}?dept_id=${product.dept_id || '2'}&category_id=${product.category_id || '72'}&sub_category_id=${product.sub_category_id || '391'}`}
+          className="w-full flex flex-col items-center z-10"
+        >
           <img
             src={displayImage}
             alt={displayName}
@@ -216,15 +220,20 @@ const BestsellerProductCard = ({ product }) => {
             }}
           />
           {/* Placeholder for prepared dish image - can be added later */}
-        </div>
+        </Link>
       </div>
 
       {/* Product Info */}
       <div className="p-3 flex-grow flex flex-col">
         {/* Product Name */}
-        <h3 className="text-xs mb-1 line-clamp-2 min-h-[2rem] font-medium" style={{ color: COLORS.gray[900] }}>
-          {displayName}
-        </h3>
+        <Link
+          to={`/product/${productId}?dept_id=${product.dept_id || '2'}&category_id=${product.category_id || '72'}&sub_category_id=${product.sub_category_id || '391'}`}
+          className="block"
+        >
+          <h3 className="text-xs mb-1 line-clamp-2 min-h-[2rem] font-medium cursor-pointer hover:text-green-600 transition-colors" style={{ color: COLORS.gray[900] }}>
+            {displayName}
+          </h3>
+        </Link>
 
         {/* Weight */}
         <p className="text-xs mb-2" style={{ color: COLORS.gray[600] }}>

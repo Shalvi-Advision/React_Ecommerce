@@ -6,7 +6,7 @@ import { useResponsive } from '../hooks/useResponsive';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Loading from '../components/Loading';
-import { APP_CONSTANTS } from '../constants';
+import { APP_CONSTANTS, PROJECT_CODE, DEFAULT_STORE_CODE } from '../constants';
 import { COLORS } from '../constants/theme';
 
 // Helper function to convert hex color to rgba with opacity
@@ -54,17 +54,18 @@ const ProductDetailsPage = () => {
   console.log('🔍 ProductDetailsPage ID length:', id?.length);
 
   // Get store code from localStorage
+  // Get store code from localStorage
   const getStoreCode = () => {
     const locationData = localStorage.getItem('confirmedLocation');
     if (locationData) {
       try {
         const location = JSON.parse(locationData);
-        return location?.store?.store_code || 'AVB';
+        return location?.store?.store_code || DEFAULT_STORE_CODE;
       } catch (error) {
         console.warn('Failed to parse location data:', error);
       }
     }
-    return 'AVB'; // Default store code
+    return DEFAULT_STORE_CODE; // Default store code
   };
 
 
@@ -72,12 +73,7 @@ const ProductDetailsPage = () => {
     console.log('🔄 useEffect triggered with id:', id);
     if (id) {
       // Check if required parameters are present
-      if (!dept_id || !category_id || !sub_category_id) {
-        console.log('❌ Missing required parameters:', { dept_id, category_id, sub_category_id });
-        setError('Missing required product parameters. Please navigate from a product listing.');
-        setLoading(false);
-        return;
-      }
+
       console.log('✅ Valid ID and parameters found, calling loadProduct');
       loadProduct();
     } else {
@@ -93,21 +89,18 @@ const ProductDetailsPage = () => {
       console.log('⏳ Setting loading to true and clearing error');
       setLoading(true);
       setError(null);
-      
+
       // Validate product ID
       if (!id || id.trim() === '') {
         console.log('❌ Product ID validation failed:', id);
         throw new Error('Product ID is required');
       }
-      
+
       // Validate required parameters
-      if (!dept_id || !category_id || !sub_category_id) {
-        console.log('❌ Missing required parameters:', { dept_id, category_id, sub_category_id });
-        throw new Error('Missing required product parameters');
-      }
-      
+
+
       const storeCode = getStoreCode();
-      
+
       console.log('✅ Product ID and parameters validation passed:', { id, dept_id, category_id, sub_category_id, storeCode });
       console.log('🔍 ProductDetailsPage loadProduct called with:', {
         id,
@@ -116,7 +109,7 @@ const ProductDetailsPage = () => {
         sub_category_id,
         storeCode
       });
-      
+
       console.log('📡 Calling getProductDetails API...');
       console.log('📡 API Request Details:', {
         pcode: id,
@@ -126,17 +119,17 @@ const ProductDetailsPage = () => {
         storeCode,
         apiUrl: process.env.REACT_APP_API_URL || 'https://ecommerceapi-web.onrender.com/api'
       });
-      
+
       const response = await getProductDetails(id, dept_id, category_id, sub_category_id, storeCode);
       console.log('📦 getProductDetails API response received:', response);
-      
+
       console.log('🔍 Analyzing API response...');
       console.log('Response exists:', !!response);
       console.log('Response success:', response?.success);
       console.log('Response data exists:', !!response?.data);
       console.log('Response data type:', typeof response?.data);
       console.log('Response data content:', response?.data);
-      
+
       if (response && response.success && response.data) {
         console.log('✅ API response is valid, setting product data');
         console.log('📦 Product data to be set:', response.data);
@@ -159,11 +152,11 @@ const ProductDetailsPage = () => {
       console.error('❌ Error message:', err.message);
       console.error('❌ Error stack:', err.stack);
       console.error('❌ Full error object:', err);
-      
+
       console.log('❌ API failed, setting error message');
       // Provide more specific error messages
       let errorMessage = 'Failed to load product details';
-      
+
       if (err.message) {
         errorMessage = err.message;
         console.log('📝 Using error message:', errorMessage);
@@ -180,7 +173,7 @@ const ProductDetailsPage = () => {
       } else if (err.code === 'NETWORK_ERROR') {
         errorMessage = 'Network error. Please check your connection';
       }
-      
+
       console.log('📝 Final error message:', errorMessage);
       setError(errorMessage);
     } finally {
@@ -206,7 +199,7 @@ const ProductDetailsPage = () => {
         maxQuantity: product.max_quantity_allowed || 10,
         stock: product.store_quantity || 0
       };
-      
+
       console.log('🛒 Cart item:', cartItem);
       addItem(cartItem, quantity);
       // Don't navigate to cart - stay on product page
@@ -254,12 +247,12 @@ const ProductDetailsPage = () => {
   if (error) {
     console.log('🎨 Rendering error state:', error);
     return (
-      <div 
+      <div
         className="container mx-auto px-4 py-8"
         style={{ backgroundColor: COLORS.white }}
       >
         <div className="text-center">
-          <div 
+          <div
             className="mb-6 p-6 rounded-xl border max-w-md mx-auto"
             style={{
               backgroundColor: COLORS.error[50],
@@ -270,11 +263,11 @@ const ProductDetailsPage = () => {
           </div>
           <div className="space-y-2">
             <Button onClick={loadProduct}>Try Again</Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 console.log('Current product ID:', id);
-                console.log('Store Code:', STORE_CODE);
+                console.log('Store Code:', DEFAULT_STORE_CODE);
                 console.log('Project Code:', PROJECT_CODE);
               }}
             >
@@ -289,7 +282,7 @@ const ProductDetailsPage = () => {
   if (!product) {
     console.log('🎨 Rendering no product state');
     return (
-      <div 
+      <div
         className="container mx-auto px-4 py-8"
         style={{ backgroundColor: COLORS.white }}
       >
@@ -304,7 +297,7 @@ const ProductDetailsPage = () => {
   console.log('🎨 Rendering product details for:', product);
 
   return (
-    <div 
+    <div
       className="container mx-auto px-2 sm:px-4 py-4 sm:py-8"
       style={{ backgroundColor: COLORS.white }}
     >
@@ -315,11 +308,11 @@ const ProductDetailsPage = () => {
             <Card className={`${isMobile ? 'p-2' : 'p-3 sm:p-4 lg:p-8'} w-full`}>
               <div className="relative">
                 {imageLoading && (
-                  <div 
+                  <div
                     className="absolute inset-0 flex items-center justify-center rounded-lg"
                     style={{ backgroundColor: COLORS.gray[100] }}
                   >
-                    <div 
+                    <div
                       className={`animate-spin rounded-full border-b-2 ${isMobile ? 'h-6 w-6' : 'h-8 w-8 sm:h-12 sm:w-12'}`}
                       style={{ borderColor: COLORS.primary[600] }}
                     ></div>
@@ -329,24 +322,23 @@ const ProductDetailsPage = () => {
                   <img
                     src={product.pcode_img}
                     alt={product.product_name}
-                    className={`w-full ${isMobile ? 'h-56' : 'h-48 sm:h-64 lg:h-80 xl:h-96'} object-contain rounded-lg transition-opacity duration-300 ${
-                      imageLoading ? 'opacity-0' : 'opacity-100'
-                    }`}
+                    className={`w-full ${isMobile ? 'h-56' : 'h-48 sm:h-64 lg:h-80 xl:h-96'} object-contain rounded-lg transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'
+                      }`}
                     onLoad={() => setImageLoading(false)}
                     onError={() => setImageLoading(false)}
                     loading="lazy"
                   />
                 ) : (
-                  <div 
+                  <div
                     className={`w-full ${isMobile ? 'h-56' : 'h-48 sm:h-64 lg:h-80 xl:h-96'} rounded-lg flex items-center justify-center`}
                     style={{ backgroundColor: COLORS.gray[100] }}
                   >
                     <div className="text-center" style={{ color: COLORS.gray[500] }}>
-                      <svg 
+                      <svg
                         className={`${isMobile ? 'w-10 h-10' : 'w-12 h-12 sm:w-16 sm:h-16'} mx-auto mb-2`}
                         style={{ color: COLORS.gray[400] }}
-                        fill="none" 
-                        stroke="currentColor" 
+                        fill="none"
+                        stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -395,7 +387,7 @@ const ProductDetailsPage = () => {
                   )}
                 </div>
                 {getDiscountPercentage() > 0 && (
-                  <span 
+                  <span
                     className={`px-2 py-1 rounded-full ${isMobile ? 'text-xs' : 'text-xs sm:text-sm'} font-medium`}
                     style={{
                       backgroundColor: COLORS.warning[100],
@@ -411,7 +403,7 @@ const ProductDetailsPage = () => {
               <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4'} ${isMobile ? 'mb-3' : 'mb-3 sm:mb-4 lg:mb-6'}`}>
                 <span className={`${isMobile ? 'text-sm' : 'text-sm sm:text-base'} font-medium`} style={{ color: COLORS.gray[700] }}>Quantity:</span>
                 <div className="flex items-center space-x-2">
-                  <div 
+                  <div
                     className="flex items-center border rounded-lg"
                     style={{
                       borderColor: COLORS.gray[300],
@@ -441,7 +433,7 @@ const ProductDetailsPage = () => {
                     >
                       -
                     </button>
-                    <span 
+                    <span
                       className={`${isMobile ? 'px-4 py-2 min-w-12' : 'px-3 sm:px-4 py-2 min-w-10 sm:min-w-12'} text-center ${isMobile ? 'text-base' : 'text-sm sm:text-base'}`}
                       style={{ color: COLORS.gray[900] }}
                     >
@@ -484,7 +476,7 @@ const ProductDetailsPage = () => {
                   disabled={!isInStock()}
                   className={`flex-1 ${isMobile ? 'py-3' : 'py-2.5 sm:py-3'} px-4 ${isMobile ? 'text-sm' : 'sm:px-6 text-sm sm:text-base'} font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-md text-white ${isMobile ? '' : 'hover:shadow-lg transform hover:scale-105 active:scale-95'} disabled:cursor-not-allowed`}
                   style={{
-                    background: !isInStock() 
+                    background: !isInStock()
                       ? COLORS.gray[400]
                       : `linear-gradient(to right, ${COLORS.primary[600]}, ${COLORS.success[600]})`,
                     opacity: !isInStock() ? 0.5 : 1
@@ -505,13 +497,13 @@ const ProductDetailsPage = () => {
                   ) : (
                     <>
                       <span className="hidden sm:inline">
-                        {isInStock() 
+                        {isInStock()
                           ? `Add to Cart - ₹${(parseFloat(formatPrice(product.our_price)) * quantity).toFixed(2)}`
                           : 'Out of Stock'
                         }
                       </span>
                       <span className="sm:hidden">
-                        {isInStock() 
+                        {isInStock()
                           ? `Add - ₹${(parseFloat(formatPrice(product.our_price)) * quantity).toFixed(2)}`
                           : 'Out of Stock'
                         }

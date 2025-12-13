@@ -229,9 +229,9 @@ const ProductCard = ({ product, onAddToCart }) => {
         )}
 
         {/* Product Image Link */}
-        <Link 
-          to={`/product/${safePcode}?dept_id=${product.dept_id || '2'}&category_id=${product.category_id || '72'}&sub_category_id=${product.sub_category_id || '391'}`} 
-          className="block w-full h-full flex items-center justify-center relative overflow-hidden rounded-lg"
+        <Link
+          to={`/product/${safePcode}?dept_id=${product.dept_id || '2'}&category_id=${product.category_id || '72'}&sub_category_id=${product.sub_category_id || '391'}`}
+          className="block w-full h-full flex items-center justify-center relative overflow-hidden rounded-lg z-10"
           onClick={() => {
             console.log('🖼️ ProductCard Product Image clicked - PCode:', safePcode, 'Product ID:', safeId, 'Product Name:', safeName);
           }}
@@ -274,7 +274,7 @@ const ProductCard = ({ product, onAddToCart }) => {
           )}
 
           {/* Hover Overlay */}
-          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition-all duration-300 rounded-lg"></div>
+          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition-all duration-300 rounded-lg pointer-events-none"></div>
         </Link>
       </div>
 
@@ -291,14 +291,14 @@ const ProductCard = ({ product, onAddToCart }) => {
             )}
 
             {/* Product Name - Fixed height */}
-            <Link 
+            <Link
               to={`/product/${safePcode}`}
               onClick={() => {
                 console.log('🔗 ProductCard Product Name clicked - PCode:', safePcode, 'Product ID:', safeId, 'Product Name:', safeName);
               }}
-              className="block"
+              className="block cursor-pointer"
             >
-              <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-green-600 transition-colors leading-tight h-10 sm:h-12">
+              <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-green-600 transition-colors leading-tight h-10 sm:h-12 cursor-pointer">
                 {safeName}
               </h3>
             </Link>

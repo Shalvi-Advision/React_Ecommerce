@@ -458,8 +458,8 @@ const PRODUCT_CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
 
 export const getProductDetails = async (p_code, dept_id, category_id, sub_category_id, store_code) => {
   try {
-    // Generate cache key based on parameters
-    const cacheKey = `product:${p_code}:${dept_id}:${category_id}:${sub_category_id}:${store_code}`;
+    // Generate cache key based on p_code and store_code (these are the only required params now)
+    const cacheKey = `product:${p_code}:${store_code}`;
 
     // Check if we have a cached version
     const cachedProduct = productDetailsCache.get(cacheKey);
@@ -471,38 +471,23 @@ export const getProductDetails = async (p_code, dept_id, category_id, sub_catego
     // Enhanced logging for debugging
     console.log('🔍 getProductDetails called with:', {
       p_code,
-      dept_id,
-      category_id,
-      sub_category_id,
       store_code,
       API_BASE_URL,
-      endpoint: '/products/get-product-by-pcode'
+      endpoint: '/products/productdetails'
     });
 
     // Validate parameters
     if (!p_code) {
       throw new Error('Product code (p_code) is required');
     }
-    if (!dept_id) {
-      throw new Error('Department ID is required');
-    }
-    if (!category_id) {
-      throw new Error('Category ID is required');
-    }
-    if (!sub_category_id) {
-      throw new Error('Sub-category ID is required');
-    }
     if (!store_code) {
       throw new Error('Store code is required');
     }
 
-    const url = `${API_BASE_URL}/products/get-product-by-pcode`;
+    const url = `${API_BASE_URL}/products/productdetails`;
     const requestBody = {
       store_code,
-      dept_id,
-      category_id,
-      sub_category_id,
-      pcode: p_code
+      p_code: p_code
     };
 
     const response = await fetch(url, {
