@@ -28,6 +28,8 @@ const useRazorpay = () => {
     onSuccess,
     onFailure,
   }) => {
+    let rzp = null;
+
     try {
       setLoading(true);
       setError(null);
@@ -65,6 +67,19 @@ const useRazorpay = () => {
         theme: {
           color: '#10b981', // Primary green color
         },
+        modal: {
+          backdropclose: false,
+          escape: true,
+          handleback: true,
+          confirm_close: true,
+          ondismiss: function () {
+            setLoading(false);
+            const dismissError = new Error('Payment cancelled by user');
+            setError(dismissError.message);
+            onFailure && onFailure(dismissError);
+          },
+          animation: true,
+        },
         handler: async function (response) {
           try {
             // Verify payment on backend
@@ -86,14 +101,6 @@ const useRazorpay = () => {
             onFailure && onFailure(verifyError);
           }
         },
-        modal: {
-          ondismiss: function () {
-            setLoading(false);
-            const dismissError = new Error('Payment cancelled by user');
-            setError(dismissError.message);
-            onFailure && onFailure(dismissError);
-          },
-        },
       };
 
       // Open Razorpay checkout
@@ -102,18 +109,19 @@ const useRazorpay = () => {
       }
 
       try {
-        const rzp = new window.Razorpay(options);
+        rzp = new window.Razorpay(options);
 
         // Add event listener for payment failure if supported
         if (rzp.on) {
           rzp.on('payment.failed', function (response) {
             console.error('⚠️ Razorpay Payment Failed Event:', response.error);
-            // We don't trigger onFailure here because the modal might still be open 
+            // We don't trigger onFailure here because the modal might still be open
             // or the user might retry. The 'handler' or 'modal.ondismiss' usually manages flow.
             // However, capturing it is good for debugging.
           });
         }
 
+        // Open immediately to prevent popup blocking
         rzp.open();
       } catch (rzpError) {
         console.error('❌ Failed to open Razorpay:', rzpError);
