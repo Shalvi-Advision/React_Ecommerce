@@ -568,11 +568,14 @@ export const getProductDetails = async (p_code, dept_id, category_id, sub_catego
 };
 
 
-export const getStoresByPincode = async (pincode) => {
+export const getStoresByPincode = async (pincode, store_code = null) => {
   try {
-    const response = await api.post('/stores/by-pincode', {
-      pincode
-    });
+    const payload = { pincode };
+    if (store_code) {
+      payload.store_code = store_code;
+    }
+
+    const response = await api.post('/stores/by-pincode', payload);
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
