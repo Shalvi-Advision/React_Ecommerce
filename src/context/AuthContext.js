@@ -1,8 +1,17 @@
 import React, { createContext, useContext, useReducer, useEffect, useRef } from 'react';
 import { login as apiLogin, register as apiRegister, getCurrentUser, logout as apiLogout } from '../api/authApi';
 import { setStoredToken, clearStoredToken, otpAuth } from '../services/api';
-import { TokenStorage, UserDataStorage, StoreCodeStorage, initializeStorage } from '../services/secureStorage';
 import { throttle } from '../utils/asyncUtils';
+import {
+  setAuthToken,
+  getAuthToken,
+  clearAuthToken,
+  setUserData,
+  getUserData,
+  clearAuthSession,
+  refreshAllExpiries,
+  STORAGE_KEYS
+} from '../utils/persistentStorage';
 
 // Auth Context
 const AuthContext = createContext();
@@ -275,31 +284,31 @@ export const AuthProvider = ({ children }) => {
   // Store last verification time to avoid excessive checks
   const lastVerificationTime = useRef(0);
 
-  // Load user from localStorage and verify token on mount
+  // Load user from persistent storage and verify token on mount
   useEffect(() => {
-    // Initialize secure storage (clears expired items)
-    initializeStorage();
-
     const initializeAuth = async () => {
-      const token = TokenStorage.getToken();
-      const user = UserDataStorage.getUserData();
+      // Use persistent storage with 30-day expiry check
+      const token = getAuthToken();
+      const userData = getUserData();
       const tokenTimestamp = parseInt(localStorage.getItem('token_timestamp') || '0', 10);
       const now = Date.now();
 
       // Skip verification if token was verified recently (within last 5 minutes)
       const skipVerification = now - lastVerificationTime.current < 5 * 60 * 1000;
 
-      if (token && user) {
+      if (token && userData) {
         try {
           // Auto-load user without verification if token is fresh (less than 10 minutes old)
           if (now - tokenTimestamp < 10 * 60 * 1000) {
             dispatch({
               type: authActions.LOAD_USER,
               payload: {
-                user: user,
+                user: userData,
                 token,
               },
             });
+            // Refresh expiry on successful load to extend 30-day period
+            refreshAllExpiries();
             return;
           }
 
@@ -313,13 +322,14 @@ export const AuthProvider = ({ children }) => {
             try {
               const verifyResult = await throttledVerifyToken(token);
               if (verifyResult.success && verifyResult.data.valid) {
-                // Update token timestamp
+                // Update token timestamp and refresh 30-day expiry
                 localStorage.setItem('token_timestamp', now.toString());
+                await refreshAllExpiries();
 
                 dispatch({
                   type: authActions.TOKEN_VERIFY_SUCCESS,
                   payload: {
-                    user: user,
+                    user: userData,
                     token,
                   },
                 });
@@ -328,13 +338,14 @@ export const AuthProvider = ({ children }) => {
                 try {
                   const refreshResult = await throttledRefreshToken(token);
                   if (refreshResult.success) {
-                    await setStoredToken(refreshResult.data.token);
+                    // Store new token with 30-day expiry
+                    await setAuthToken(refreshResult.data.token);
                     localStorage.setItem('token_timestamp', now.toString());
 
                     dispatch({
                       type: authActions.TOKEN_VERIFY_SUCCESS,
                       payload: {
-                        user: user,
+                        user: userData,
                         token: refreshResult.data.token,
                       },
                     });
@@ -344,33 +355,31 @@ export const AuthProvider = ({ children }) => {
                 } catch (refreshError) {
                   console.error('Token refresh failed:', refreshError);
                   dispatch({ type: authActions.TOKEN_VERIFY_FAILURE });
-                  TokenStorage.clearToken();
-                  UserDataStorage.clearUserData();
-                  localStorage.removeItem('token_timestamp');
+                  // Clear all auth data using persistent storage
+                  await clearAuthSession();
                 }
               }
             } catch (verifyError) {
               console.error('Token verification failed:', verifyError);
               dispatch({ type: authActions.TOKEN_VERIFY_FAILURE });
-              TokenStorage.clearToken();
-              UserDataStorage.clearUserData();
-              localStorage.removeItem('token_timestamp');
+              // Clear all auth data using persistent storage
+              await clearAuthSession();
             }
           } else {
-            // Skip verification, just load user from localStorage
+            // Skip verification, just load user from storage
             dispatch({
               type: authActions.LOAD_USER,
               payload: {
-                user: user,
+                user: userData,
                 token,
               },
             });
+            // Refresh expiry on successful load
+            refreshAllExpiries();
           }
         } catch (error) {
-          console.error('Error loading user from localStorage:', error);
-          TokenStorage.clearToken();
-          UserDataStorage.clearUserData();
-          localStorage.removeItem('token_timestamp');
+          console.error('Error loading user from storage:', error);
+          await clearAuthSession();
           dispatch({ type: authActions.TOKEN_VERIFY_FAILURE });
         }
       }
@@ -466,44 +475,16 @@ export const AuthProvider = ({ children }) => {
       // Call the new logout API endpoint
       await otpAuth.logout();
 
-      // Clear stored token using our PWA-compatible storage
-      clearStoredToken();
-
-      // Clear user-specific data from localStorage
-      const user = localStorage.getItem('user');
-      if (user) {
-        try {
-          const userData = JSON.parse(user);
-          const userId = userData.id;
-          // Clear user-specific cart and orders
-          localStorage.removeItem(`cart_${userId}`);
-          localStorage.removeItem(`orders_${userId}`);
-          localStorage.removeItem('session_id');
-        } catch (error) {
-          console.error('Error clearing user data:', error);
-        }
-      }
+      // Clear auth session using persistent storage (clears token, user data, session)
+      // This preserves location/store data as per 30-day caching requirement
+      await clearAuthSession();
 
       dispatch({ type: authActions.LOGOUT });
       return { success: true };
     } catch (error) {
       console.error('Logout error:', error);
-      // Even if API call fails, clear stored token
-      clearStoredToken();
-
-      // Clear user-specific data from localStorage even if API fails
-      const user = localStorage.getItem('user');
-      if (user) {
-        try {
-          const userData = JSON.parse(user);
-          const userId = userData.id;
-          localStorage.removeItem(`cart_${userId}`);
-          localStorage.removeItem(`orders_${userId}`);
-          localStorage.removeItem('session_id');
-        } catch (error) {
-          console.error('Error clearing user data:', error);
-        }
-      }
+      // Even if API call fails, clear auth session
+      await clearAuthSession();
 
       dispatch({ type: authActions.LOGOUT });
       return { success: false, error: error.message };
@@ -589,9 +570,9 @@ export const AuthProvider = ({ children }) => {
           favorites: result.data.user.favorites || []
         };
 
-        // Store token and user data with 30-day expiration
-        await setStoredToken(result.data.token);
-        UserDataStorage.setUserData(user);
+        // Store token and user data with 30-day expiry using persistent storage
+        await setAuthToken(result.data.token);
+        await setUserData(user);
         localStorage.setItem('token_timestamp', Date.now().toString());
 
         dispatch({

@@ -3,7 +3,12 @@ import axios from 'axios';
 import { APP_CONSTANTS } from '../constants';
 import { optimizedFetch, generateCacheKey, cacheResponse, getCachedResponse } from '../utils/apiOptimizer';
 import { throttle } from '../utils/asyncUtils';
-import { TokenStorage } from './secureStorage';
+import {
+  getAuthToken,
+  setAuthToken,
+  clearAuthToken,
+  getConfirmedLocation as getPersistentLocation
+} from '../utils/persistentStorage';
 
 // OTP Authentication Configuration
 const API_BASE_URL = APP_CONSTANTS.API_BASE_URL;
@@ -21,18 +26,17 @@ const api = axios.create({
 // Request interceptor to add auth token and store_code
 api.interceptors.request.use(
   (config) => {
-    // Get token from storage
-    const token = getStoredToken();
+    // Get token from persistent storage (with 30-day expiry check)
+    const token = getAuthToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Add store_code from localStorage to all API requests
-    const locationData = localStorage.getItem('confirmedLocation');
+    // Add store_code from persistent storage to all API requests
+    const locationData = getPersistentLocation();
     if (locationData) {
       try {
-        const location = JSON.parse(locationData);
-        const storeCode = location?.store?.store_code;
+        const storeCode = locationData?.store?.store_code || locationData?.store?.storeCode;
 
         if (storeCode) {
           // Add to POST/PUT/PATCH request body
@@ -70,8 +74,8 @@ api.interceptors.response.use(
   (error) => {
     // Handle common error cases
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      clearStoredToken();
+      // Token expired or invalid - clear using persistent storage
+      clearAuthToken();
       // You might want to redirect to login or dispatch logout action
       window.location.href = '/login';
     }
@@ -83,50 +87,18 @@ api.interceptors.response.use(
   }
 );
 
-// Token storage utilities with 30-day expiration
-
+// Token storage utilities - Using persistent storage with 30-day caching
+// Re-export from persistent storage for backward compatibility
 export const getStoredToken = () => {
-  return TokenStorage.getToken();
+  return getAuthToken();
 };
 
 export const setStoredToken = async (token) => {
-  TokenStorage.setToken(token);
-
-  // For PWA compatibility with IndexedDB (handled internally by TokenStorage)
-  // The TokenStorage.setToken already handles IndexedDB storage
+  return await setAuthToken(token);
 };
 
 export const clearStoredToken = () => {
-  TokenStorage.clearToken();
-};
-
-// IndexedDB utilities for PWA token persistence
-const openAuthDB = () => {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open('AuthDB', 1);
-
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      if (!db.objectStoreNames.contains('tokens')) {
-        db.createObjectStore('tokens', { keyPath: 'id' });
-      }
-    };
-  });
-};
-
-const clearIndexedDBToken = async () => {
-  try {
-    const db = await openAuthDB();
-    const transaction = db.transaction(['tokens'], 'readwrite');
-    const store = transaction.objectStore('tokens');
-    await store.delete('auth_token');
-    db.close();
-  } catch (error) {
-    console.warn('IndexedDB clear failed:', error);
-  }
+  clearAuthToken();
 };
 
 // Reusable API methods

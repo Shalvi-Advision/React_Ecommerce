@@ -1,4 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import {
+  setConfirmedLocation as setPersistentLocation,
+  getConfirmedLocation as getPersistentLocation,
+  clearConfirmedLocation as clearPersistentLocation,
+  refreshLocationExpiry
+} from '../utils/persistentStorage';
 
 const PincodeContext = createContext();
 
@@ -37,9 +43,12 @@ export const PincodeProvider = ({ children }) => {
   const [pincodesList, setPincodesList] = useState([]);
   const [availableStores, setAvailableStores] = useState([]);
 
-  // Sync state with localStorage helper
-  const syncWithLocalStorage = useCallback(() => {
+  // Sync state with persistent storage helper (30-day expiry)
+  const syncWithLocalStorage = useCallback(async () => {
     if (confirmedLocation) {
+      // Store with 30-day expiry using persistent storage
+      await setPersistentLocation(confirmedLocation);
+      // Also keep in localStorage for backward compatibility
       localStorage.setItem('confirmedLocation', JSON.stringify(confirmedLocation));
       // Dispatch custom event to notify components of location change
       window.dispatchEvent(new CustomEvent('locationUpdated', {
@@ -48,20 +57,36 @@ export const PincodeProvider = ({ children }) => {
     }
   }, [confirmedLocation]);
 
-  // Load saved location from localStorage on mount
+  // Load saved location from persistent storage on mount (with 30-day expiry check)
   useEffect(() => {
-    const savedLocation = localStorage.getItem('confirmedLocation');
-    if (savedLocation) {
-      try {
-        const parsed = JSON.parse(savedLocation);
-        setConfirmedLocation(parsed);
-        setSelectedPincode(parsed.pincode);
-        setSelectedStore(parsed.store);
-      } catch (error) {
-        console.error('Error parsing saved location:', error);
-        localStorage.removeItem('confirmedLocation');
+    const loadSavedLocation = async () => {
+      // Try persistent storage first (has expiry check built-in)
+      const savedLocation = getPersistentLocation();
+      if (savedLocation) {
+        setConfirmedLocation(savedLocation);
+        setSelectedPincode(savedLocation.pincode);
+        setSelectedStore(savedLocation.store);
+        // Refresh expiry on successful load (extends 30-day period)
+        await refreshLocationExpiry();
+      } else {
+        // Fallback to old localStorage (for migration)
+        const oldLocation = localStorage.getItem('confirmedLocation');
+        if (oldLocation) {
+          try {
+            const parsed = JSON.parse(oldLocation);
+            setConfirmedLocation(parsed);
+            setSelectedPincode(parsed.pincode);
+            setSelectedStore(parsed.store);
+            // Migrate to persistent storage with 30-day expiry
+            await setPersistentLocation(parsed);
+          } catch (error) {
+            console.error('Error parsing saved location:', error);
+            localStorage.removeItem('confirmedLocation');
+          }
+        }
       }
-    }
+    };
+    loadSavedLocation();
   }, []);
 
   // Check if location is required on mount
@@ -79,7 +104,7 @@ export const PincodeProvider = ({ children }) => {
     }
   }, [hasCheckedInitialLocation, confirmedLocation]);
 
-  // Sync with localStorage whenever confirmedLocation changes
+  // Sync with persistent storage whenever confirmedLocation changes
   useEffect(() => {
     syncWithLocalStorage();
   }, [syncWithLocalStorage]);
@@ -238,11 +263,13 @@ export const PincodeProvider = ({ children }) => {
   };
 
   // Reset location selection
-  const resetLocation = () => {
+  const resetLocation = async () => {
     setSelectedPincode(null);
     setSelectedStore(null);
     setConfirmedLocation(null);
     setServiceabilityError(null);
+    // Clear from both persistent storage and localStorage
+    clearPersistentLocation();
     localStorage.removeItem('confirmedLocation');
     setIsLocationRequired(true);
     setIsPincodeModalOpen(true);
