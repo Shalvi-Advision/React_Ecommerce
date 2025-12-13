@@ -160,7 +160,9 @@ const CartDrawer = ({ isOpen, onClose }) => {
         {/* Footer */}
         <div className="border-t border-gray-200 p-3 sm:p-4 flex-shrink-0">
           {(() => {
-            const minOrderAmount = parseFloat(confirmedLocation?.store?.min_order_amount || 0);
+            const store = confirmedLocation?.store;
+            const minAmountRaw = store?.minOrderAmount || store?.min_order_amount;
+            const minOrderAmount = parseFloat(minAmountRaw || 0);
             const currentTotal = parseFloat(totalPrice || 0);
             const isBelowMinOrder = items.length > 0 && minOrderAmount > 0 && currentTotal < minOrderAmount;
 

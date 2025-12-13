@@ -508,7 +508,9 @@ const CartPage = () => {
 
                 {/* Minimum Order Warning */}
                 {(() => {
-                  const minOrderAmount = parseFloat(confirmedLocation?.store?.min_order_amount || 0);
+                  const store = confirmedLocation?.store;
+                  const minAmountRaw = store?.minOrderAmount || store?.min_order_amount;
+                  const minOrderAmount = parseFloat(minAmountRaw || 0);
                   const currentTotal = parseFloat(totalPrice || 0);
                   const isBelowMinOrder = minOrderAmount > 0 && currentTotal < minOrderAmount;
 
@@ -530,43 +532,44 @@ const CartPage = () => {
 
                 {/* Checkout Button */}
                 {(() => {
-                  const minOrderAmount = parseFloat(confirmedLocation?.store?.min_order_amount || 0);
+                  const store = confirmedLocation?.store;
+                  const minAmountRaw = store?.minOrderAmount || store?.min_order_amount;
+                  const minOrderAmount = parseFloat(minAmountRaw || 0);
                   const currentTotal = parseFloat(totalPrice || 0);
                   const isBelowMinOrder = minOrderAmount > 0 && currentTotal < minOrderAmount;
 
-                  return (
-                    <button
-                      onClick={handleProceedToCheckout}
-                      disabled={processingCheckout || isBelowMinOrder}
-                      className="w-full mt-4 sm:mt-6 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg transition-colors text-sm sm:text-base flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-70"
-                      style={{
-                        backgroundColor: (processingCheckout || isBelowMinOrder)
-                          ? COLORS.gray[400]
-                          : COLORS.primary[600]
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!processingCheckout && !isBelowMinOrder) {
-                          e.target.style.backgroundColor = COLORS.primary[700];
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!processingCheckout && !isBelowMinOrder) {
-                          e.target.style.backgroundColor = COLORS.primary[600];
-                        }
-                      }}
-                    >
-                      {processingCheckout ? (
-                        <>
-                          <ArrowPathIcon className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                          <span>Processing...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="hidden sm:inline">PROCEED TO CHECKOUT</span>
-                          <span className="sm:hidden">CHECKOUT</span>
-                        </>
-                      )}
-                    </button>
+                  return (<button
+                    onClick={handleProceedToCheckout}
+                    disabled={processingCheckout || isBelowMinOrder}
+                    className="w-full mt-4 sm:mt-6 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg transition-colors text-sm sm:text-base flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-70"
+                    style={{
+                      backgroundColor: (processingCheckout || isBelowMinOrder)
+                        ? COLORS.gray[400]
+                        : COLORS.primary[600]
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!processingCheckout && !isBelowMinOrder) {
+                        e.target.style.backgroundColor = COLORS.primary[700];
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!processingCheckout && !isBelowMinOrder) {
+                        e.target.style.backgroundColor = COLORS.primary[600];
+                      }
+                    }}
+                  >
+                    {processingCheckout ? (
+                      <>
+                        <ArrowPathIcon className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="hidden sm:inline">PROCEED TO CHECKOUT</span>
+                        <span className="sm:hidden">CHECKOUT</span>
+                      </>
+                    )}
+                  </button>
                   );
                 })()}
               </div>
