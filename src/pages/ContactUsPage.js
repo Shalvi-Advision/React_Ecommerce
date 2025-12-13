@@ -5,7 +5,7 @@ import { usePincode } from '../context/PincodeContext';
 import Loading from '../components/Loading';
 
 const ContactUsPage = () => {
-  const { selectedPincode } = usePincode();
+  const { confirmedLocation } = usePincode();
   const [storeInfo, setStoreInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,18 +14,39 @@ const ContactUsPage = () => {
     const fetchStoreInfo = async () => {
       try {
         setLoading(true);
-        // Use selectedPincode if available, otherwise fallback or error
-        // For now, let's try to fetch using the selected pincode if it exists
-        if (!selectedPincode) {
+
+        // Use confirmedLocation to get pincode and store code
+        if (!confirmedLocation) {
           setError('Please select a location to view store information.');
           setLoading(false);
           return;
         }
 
-        const data = await getStoresByPincode(selectedPincode);
+        // Extract pincode string correctly - confirmedLocation.pincode is likely an object
+        const pincodeObj = confirmedLocation.pincode;
+        const pincode = typeof pincodeObj === 'object' ? pincodeObj.pincode : pincodeObj;
+
+        // Extract store code
+        const storeCode = confirmedLocation.store?.store_code || confirmedLocation.store?.storeCode;
+
+        if (!pincode) {
+          setError('Invalid location data. Please re-select your location.');
+          setLoading(false);
+          return;
+        }
+
+        const data = await getStoresByPincode(pincode, storeCode);
+
         if (data.success && data.data && data.data.length > 0) {
-          // Assuming we show the first store for now, or the one matching current logic
-          setStoreInfo(data.data[0]);
+          // If we have a storeCode, try to find the matching store
+          let matchedStore = data.data[0];
+
+          if (storeCode) {
+            const found = data.data.find(s => s.store_code === storeCode);
+            if (found) matchedStore = found;
+          }
+
+          setStoreInfo(matchedStore);
         } else {
           setError('No store information found for this location.');
         }
@@ -38,7 +59,7 @@ const ContactUsPage = () => {
     };
 
     fetchStoreInfo();
-  }, [selectedPincode]);
+  }, [confirmedLocation]);
 
   if (loading) {
     return (

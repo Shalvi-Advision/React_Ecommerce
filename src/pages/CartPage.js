@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { usePincode } from '../context/PincodeContext';
 import { useToast } from '../context/ToastContext';
 import cartService from '../services/cartService';
 import Button from '../components/Button';
@@ -38,6 +39,7 @@ const CartPage = () => {
     userMobile,
     applyValidationFixes
   } = useCart();
+  const { confirmedLocation } = usePincode();
   const { showSuccess, showError, showInfo } = useToast();
   const navigate = useNavigate();
   const [showClearModal, setShowClearModal] = useState(false);
@@ -504,21 +506,36 @@ const CartPage = () => {
                   </div>
                 </div>
 
+                {/* Minimum Order Warning */}
+                {confirmedLocation?.store?.min_order_amount > 0 && totalPrice < confirmedLocation.store.min_order_amount && (
+                  <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg text-sm text-orange-800">
+                    <p className="font-medium flex items-center gap-2">
+                      <InformationCircleIcon className="w-5 h-5 flex-shrink-0" />
+                      Minimum order amount is ₹{confirmedLocation.store.min_order_amount}
+                    </p>
+                    <p className="mt-1 text-xs text-orange-700 pl-7">
+                      Add items worth ₹{confirmedLocation.store.min_order_amount - totalPrice} more to proceed
+                    </p>
+                  </div>
+                )}
+
                 {/* Checkout Button */}
                 <button
                   onClick={handleProceedToCheckout}
-                  disabled={processingCheckout}
-                  className="w-full mt-4 sm:mt-6 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg transition-colors text-sm sm:text-base flex items-center justify-center gap-2 disabled:cursor-not-allowed"
+                  disabled={processingCheckout || (confirmedLocation?.store?.min_order_amount > 0 && totalPrice < confirmedLocation.store.min_order_amount)}
+                  className="w-full mt-4 sm:mt-6 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg transition-colors text-sm sm:text-base flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-70"
                   style={{
-                    backgroundColor: processingCheckout ? COLORS.gray[400] : COLORS.primary[600]
+                    backgroundColor: (processingCheckout || (confirmedLocation?.store?.min_order_amount > 0 && totalPrice < confirmedLocation.store.min_order_amount))
+                      ? COLORS.gray[400]
+                      : COLORS.primary[600]
                   }}
                   onMouseEnter={(e) => {
-                    if (!processingCheckout) {
+                    if (!processingCheckout && !(confirmedLocation?.store?.min_order_amount > 0 && totalPrice < confirmedLocation.store.min_order_amount)) {
                       e.target.style.backgroundColor = COLORS.primary[700];
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (!processingCheckout) {
+                    if (!processingCheckout && !(confirmedLocation?.store?.min_order_amount > 0 && totalPrice < confirmedLocation.store.min_order_amount)) {
                       e.target.style.backgroundColor = COLORS.primary[600];
                     }
                   }}

@@ -1,16 +1,19 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { usePincode } from '../context/PincodeContext';
 import { useResponsive } from '../hooks/useResponsive';
 import {
   XMarkIcon,
   MinusIcon,
   PlusIcon,
   TrashIcon,
+  InformationCircleIcon
 } from '@heroicons/react/24/outline';
 
 const CartDrawer = ({ isOpen, onClose }) => {
   const { items, totalItems, totalPrice, updateQuantity, removeItem } = useCart();
+  const { confirmedLocation } = usePincode();
   const { isMobile } = useResponsive();
 
   // Calculate savings (assuming 20% discount for demo purposes)
@@ -29,16 +32,15 @@ const CartDrawer = ({ isOpen, onClose }) => {
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
         onClick={onClose}
       />
-      
+
       {/* Drawer */}
-      <div className={`fixed top-0 right-0 h-full bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${
-        isOpen ? 'translate-x-0' : 'translate-x-full'
-      } ${isMobile ? 'w-full sm:w-96' : 'w-96'}`}>
-        
+      <div className={`fixed top-0 right-0 h-full bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'
+        } ${isMobile ? 'w-full sm:w-96' : 'w-96'}`}>
+
         {/* Header */}
         <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
@@ -53,7 +55,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
               <p className="text-xs sm:text-sm text-gray-500">{totalItems} items</p>
             </div>
           </div>
-          
+
           {/* Summary Cards */}
           <div className="flex gap-2 sm:gap-3 flex-shrink-0">
             <div className="text-right">
@@ -81,7 +83,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
             items.map((item) => {
               const itemSavings = calculateSavings(item.price);
               const originalPrice = item.price + itemSavings;
-              
+
               return (
                 <div key={item.id} className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 shadow-sm">
                   <div className="flex gap-2 sm:gap-3">
@@ -102,7 +104,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                       <h3 className="font-medium text-gray-900 text-xs sm:text-sm leading-tight mb-1 line-clamp-2">
                         {item.title} : {item.quantity > 1 ? `${item.quantity} units` : '1 unit'}
                       </h3>
-                      
+
                       <div className="flex items-center gap-2 sm:gap-3 mb-2">
                         <div>
                           <span className="text-xs text-gray-500">You Pay</span>
@@ -157,6 +159,17 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
         {/* Footer */}
         <div className="border-t border-gray-200 p-3 sm:p-4 flex-shrink-0">
+          {items.length > 0 && confirmedLocation?.store?.min_order_amount > 0 && totalPrice < confirmedLocation.store.min_order_amount && (
+            <div className="mb-3 p-2 bg-orange-50 border border-orange-200 rounded text-xs text-orange-800">
+              <p className="flex items-center gap-1 font-medium">
+                <InformationCircleIcon className="w-4 h-4" />
+                Min order: ₹{confirmedLocation.store.min_order_amount}
+              </p>
+              <p className="pl-5 text-orange-700">
+                Add ₹{confirmedLocation.store.min_order_amount - totalPrice} more
+              </p>
+            </div>
+          )}
           {items.length > 0 ? (
             <Link
               to="/cart"
