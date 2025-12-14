@@ -312,59 +312,89 @@ const Header = () => {
     >
       {/* Mobile Layout */}
       <div className="lg:hidden">
-        {/* Top Row: Logo, Location, Profile */}
+        {/* Top Row: Pincode (Left), Logo (Center), Icons (Right) */}
         <div className="w-full px-1 sm:px-2">
-          <div className="flex items-center gap-1.5 py-2">
-            {/* Logo */}
-            <Link to="/" className="flex items-center flex-shrink-0">
-              <img
-                src={`${process.env.PUBLIC_URL}/images/Main_Logo.jpg`}
-                alt="Pagariya Mart"
-                className="h-10 w-auto object-contain"
+          <div className="flex items-center justify-between gap-2 sm:gap-3 py-2 relative">
+            {/* Left Side: Location - Only show pincode */}
+            <div className="flex-1 flex justify-start">
+              <button
+                onClick={openPincodeModal}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border transition-colors flex-shrink-0 whitespace-nowrap"
                 style={{
-                  maxHeight: '50px',
-                  maxWidth: '150px',
-                  display: 'block'
+                  borderColor: COLORS.gray[200],
+                  color: COLORS.gray[700]
                 }}
-                onLoad={() => {
-                  console.log('🖼️ Main Logo loaded successfully');
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = COLORS.primary[300];
                 }}
-                onError={() => {
-                  console.log('❌ Main Logo failed to load');
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = COLORS.gray[200];
                 }}
-              />
-            </Link>
+              >
+                <MapPinIcon style={{ color: COLORS.primary[600] }} className="w-4 h-4 flex-shrink-0" />
+                <span className="text-xs font-medium">
+                  {isLocationSet ? getLocationDisplayText() : 'Set Location'}
+                </span>
+              </button>
+            </div>
 
-            {/* Location */}
-            <button
-              onClick={openPincodeModal}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border transition-colors flex-1 min-w-0"
-              style={{
-                borderColor: COLORS.gray[200],
-                color: COLORS.gray[700]
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = COLORS.primary[300];
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = COLORS.gray[200];
-              }}
-            >
-              <MapPinIcon style={{ color: COLORS.primary[600] }} className="w-4 h-4 flex-shrink-0" />
-              <span className="text-xs font-medium truncate min-w-0">
-                {isLocationSet ? (
-                  <>
-                    {getLocationDisplayText()}
-                    {getStoreDisplayText() && ` • ${getStoreDisplayText()}`}
-                  </>
-                ) : (
-                  'Set Location'
+            {/* Center: Logo */}
+            <div className="flex-1 flex justify-center absolute left-1/2 transform -translate-x-1/2">
+              <Link to="/" className="flex items-center flex-shrink-0">
+                <img
+                  src={`${process.env.PUBLIC_URL}/images/Main_Logo.jpg`}
+                  alt="Pagariya Mart"
+                  className="h-12 sm:h-14 w-auto object-contain"
+                  style={{
+                    maxHeight: '60px',
+                    maxWidth: '180px',
+                    display: 'block'
+                  }}
+                  onLoad={() => {
+                    console.log('🖼️ Main Logo loaded successfully');
+                  }}
+                  onError={() => {
+                    console.log('❌ Main Logo failed to load');
+                  }}
+                />
+              </Link>
+            </div>
+
+            {/* Right Side Icons: Cart and Profile */}
+            <div className="flex-1 flex justify-end">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+              {/* Cart Icon */}
+              <button 
+                onClick={openDrawer}
+                className="relative inline-flex p-2 rounded-lg focus:outline-none transition-colors flex-shrink-0"
+                style={{ color: COLORS.gray[700] }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = COLORS.gray[100];
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.boxShadow = `0 0 0 2px ${hexToRgba(COLORS.primary[500], 0.5)}`;
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+                aria-label="Shopping Cart"
+              >
+                <ShoppingCartIcon style={{ color: COLORS.primary[600] }} className="w-5 h-5" />
+                {totalItems > 0 && (
+                  <span 
+                    className="absolute -top-1 -right-1 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center"
+                    style={{ backgroundColor: COLORS.primary[600] }}
+                  >
+                    {totalItems}
+                  </span>
                 )}
-              </span>
-            </button>
+              </button>
 
-            {/* Profile Icon */}
-            <div className="relative user-menu-container flex-shrink-0">
+              {/* Profile Icon */}
+              <div className="relative user-menu-container flex-shrink-0">
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="inline-flex p-2 rounded-full focus:outline-none transition-colors"
@@ -626,14 +656,37 @@ const Header = () => {
                   )}
                 </div>
               )}
+              </div>
+            </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom Row: Search, About Us, Cart */}
+        {/* Bottom Row: Categories, Search, About Us */}
         <div className="border-t" style={{ borderColor: COLORS.gray[200] }}>
           <div className="container mx-auto px-2 sm:px-4">
             <div className="flex items-center gap-2 py-2">
+              {/* Categories Drawer Hamburger */}
+              <button
+                onClick={handleAllCategoriesClick}
+                className="inline-flex items-center justify-center p-2 rounded-lg border transition-colors flex-shrink-0"
+                style={{
+                  borderColor: COLORS.gray[200],
+                  color: COLORS.gray[700]
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = COLORS.primary[300];
+                  e.currentTarget.style.color = COLORS.primary[600];
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = COLORS.gray[200];
+                  e.currentTarget.style.color = COLORS.gray[700];
+                }}
+                aria-label="All Categories"
+              >
+                <Bars3Icon style={{ color: COLORS.primary[600] }} className="w-5 h-5" />
+              </button>
+
               {/* Search Bar */}
               <form onSubmit={handleSearchSubmit} className="flex-1 relative">
                 <div className="flex">
@@ -725,36 +778,6 @@ const Header = () => {
               >
                 <InformationCircleIcon style={{ color: COLORS.primary[600] }} className="w-5 h-5" />
               </Link>
-
-              {/* Cart Icon */}
-              <button 
-                onClick={openDrawer}
-                className="relative inline-flex p-2 rounded-lg focus:outline-none transition-colors flex-shrink-0"
-                style={{ color: COLORS.gray[700] }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = COLORS.gray[100];
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.boxShadow = `0 0 0 2px ${hexToRgba(COLORS.primary[500], 0.5)}`;
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-                aria-label="Shopping Cart"
-              >
-                <ShoppingCartIcon style={{ color: COLORS.primary[600] }} className="w-5 h-5" />
-                {totalItems > 0 && (
-                  <span 
-                    className="absolute -top-1 -right-1 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center"
-                    style={{ backgroundColor: COLORS.primary[600] }}
-                  >
-                    {totalItems}
-                  </span>
-                )}
-              </button>
             </div>
           </div>
         </div>
@@ -1203,8 +1226,9 @@ const Header = () => {
       >
         <div className="container mx-auto px-2 sm:px-4">
           <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 h-10 sm:h-12 overflow-x-auto scrollbar-hide">
+            {/* All Categories button - hidden on mobile, visible on desktop */}
             <button
-              className="inline-flex items-center gap-1 sm:gap-2 font-medium whitespace-nowrap text-xs sm:text-sm flex-shrink-0 px-2 py-1 rounded-md transition-colors"
+              className="hidden lg:inline-flex items-center gap-1 sm:gap-2 font-medium whitespace-nowrap text-xs sm:text-sm flex-shrink-0 px-2 py-1 rounded-md transition-colors"
               style={{ color: COLORS.gray[800] }}
               onClick={handleAllCategoriesClick}
               onMouseEnter={(e) => {
