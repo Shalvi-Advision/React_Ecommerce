@@ -213,6 +213,31 @@ const CheckoutPage = () => {
     }
   }, [checkoutData.deliveryMode, getCurrentPincode]);
 
+  // Validate and set default delivery mode based on store settings
+  useEffect(() => {
+    if (confirmedLocation?.store) {
+      const { homeDelivery, selfPickup } = confirmedLocation.store;
+
+      // If no valid mode is selected yet or current mode is invalid
+      let newMode = null;
+
+      if (checkoutData.deliveryMode === 'home' && !homeDelivery && selfPickup) {
+        newMode = 'pickup';
+      } else if (checkoutData.deliveryMode === 'pickup' && !selfPickup && homeDelivery) {
+        newMode = 'home';
+      } else if (!checkoutData.deliveryMode) {
+        // Initialize if empty
+        if (homeDelivery) newMode = 'home';
+        else if (selfPickup) newMode = 'pickup';
+      }
+
+      if (newMode) {
+        console.log(`🔄 Auto-switching delivery mode to ${newMode} based on store availability`);
+        handleDeliveryModeChange(newMode);
+      }
+    }
+  }, [confirmedLocation, checkoutData.deliveryMode]);
+
   // Load saved addresses from API on component mount
   useEffect(() => {
     const loadSavedAddresses = async () => {
@@ -850,54 +875,58 @@ const CheckoutPage = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Pick Up Point Option */}
-                      <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${checkoutData.deliveryMode === 'pickup'
-                        ? 'border-green-500 bg-green-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                        }`}>
-                        <input
-                          type="radio"
-                          name="deliveryMode"
-                          value="pickup"
-                          checked={checkoutData.deliveryMode === 'pickup'}
-                          onChange={(e) => handleDeliveryModeChange(e.target.value)}
-                          style={{ accentColor: COLORS.primary[600] }}
-                        />
-                        <div className="ml-3 flex items-center flex-1">
-                          <div className="text-2xl mr-3">🏪</div>
-                          <div className="flex-1">
-                            <p className="font-medium" style={{ color: COLORS.gray[900] }}>Pick Up Point</p>
-                            <span className="inline-block text-xs px-2 py-1 rounded-full mt-1" style={{ backgroundColor: COLORS.primary[100], color: COLORS.primary[800] }}>
-                              Free Delivery
-                            </span>
-                          </div>
-                        </div>
-                      </label>
-
-                      {/* Home Delivery Option */}
-                      <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${checkoutData.deliveryMode === 'home'
-                        ? 'border-green-500 bg-green-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                        }`}>
-                        <input
-                          type="radio"
-                          name="deliveryMode"
-                          value="home"
-                          checked={checkoutData.deliveryMode === 'home'}
-                          onChange={(e) => handleDeliveryModeChange(e.target.value)}
-                          style={{ accentColor: COLORS.primary[600] }}
-                        />
-                        <div className="ml-3 flex items-center flex-1">
-                          <div className="text-2xl mr-3">🏠</div>
-                          <div className="flex-1">
-                            <p className="font-medium" style={{ color: COLORS.gray[900] }}>Home Delivery</p>
-                            <div className="flex items-center mt-1">
-                              <span className="text-sm line-through mr-2" style={{ color: COLORS.gray[500] }}>₹49.00</span>
-                              <span className="font-semibold" style={{ color: COLORS.warning[600] }}>₹0</span>
+                      {/* Pick Up Point Option - Only show if enabled */}
+                      {confirmedLocation?.store?.selfPickup && (
+                        <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${checkoutData.deliveryMode === 'pickup'
+                          ? 'border-green-500 bg-green-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                          }`}>
+                          <input
+                            type="radio"
+                            name="deliveryMode"
+                            value="pickup"
+                            checked={checkoutData.deliveryMode === 'pickup'}
+                            onChange={(e) => handleDeliveryModeChange(e.target.value)}
+                            style={{ accentColor: COLORS.primary[600] }}
+                          />
+                          <div className="ml-3 flex items-center flex-1">
+                            <div className="text-2xl mr-3">🏪</div>
+                            <div className="flex-1">
+                              <p className="font-medium" style={{ color: COLORS.gray[900] }}>Pick Up Point</p>
+                              <span className="inline-block text-xs px-2 py-1 rounded-full mt-1" style={{ backgroundColor: COLORS.primary[100], color: COLORS.primary[800] }}>
+                                Free Delivery
+                              </span>
                             </div>
                           </div>
-                        </div>
-                      </label>
+                        </label>
+                      )}
+
+                      {/* Home Delivery Option - Only show if enabled */}
+                      {confirmedLocation?.store?.homeDelivery && (
+                        <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${checkoutData.deliveryMode === 'home'
+                          ? 'border-green-500 bg-green-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                          }`}>
+                          <input
+                            type="radio"
+                            name="deliveryMode"
+                            value="home"
+                            checked={checkoutData.deliveryMode === 'home'}
+                            onChange={(e) => handleDeliveryModeChange(e.target.value)}
+                            style={{ accentColor: COLORS.primary[600] }}
+                          />
+                          <div className="ml-3 flex items-center flex-1">
+                            <div className="text-2xl mr-3">🏠</div>
+                            <div className="flex-1">
+                              <p className="font-medium" style={{ color: COLORS.gray[900] }}>Home Delivery</p>
+                              <div className="flex items-center mt-1">
+                                <span className="text-sm line-through mr-2" style={{ color: COLORS.gray[500] }}>₹49.00</span>
+                                <span className="font-semibold" style={{ color: COLORS.warning[600] }}>₹0</span>
+                              </div>
+                            </div>
+                          </div>
+                        </label>
+                      )}
                     </div>
                   </div>
 
