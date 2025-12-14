@@ -19,7 +19,7 @@ import {
   Bars3Icon,
   MagnifyingGlassIcon,
   ChevronDownIcon,
-  UserIcon,
+  UserCircleIcon,
   HeartIcon,
   InformationCircleIcon,
   ArrowPathIcon,
@@ -415,7 +415,7 @@ const Header = () => {
                 }}
                 aria-label="User menu"
               >
-                <UserIcon style={{ color: COLORS.primary[600] }} className="w-5 h-5" />
+                <UserCircleIcon style={{ color: COLORS.primary[600] }} className="w-5 h-5" />
               </button>
 
               {/* Mobile User Dropdown Menu */}
