@@ -348,7 +348,7 @@ const CheckoutPage = () => {
   const getPaymentMethodDetails = (paymentMode) => {
     const methodMap = {
       'POD': { value: 'cod', icon: '💵', name: 'Cash on Delivery', description: 'Pay when you receive your order' },
-      'Online Payment': { value: 'card', icon: '💳', name: 'Credit/Debit Card', description: 'Visa, Mastercard, RuPay' },
+      'Online Payment': { value: 'card', icon: '💳', name: 'Online Payment', description: 'Visa, Mastercard, UPI, Netbanking' },
       'Bank Transfer': { value: 'netbanking', icon: '🏦', name: 'Net Banking', description: 'All major banks supported' },
       'Redeem Points': { value: 'points', icon: '⭐', name: 'Redeem Points', description: 'Use loyalty points' },
     };

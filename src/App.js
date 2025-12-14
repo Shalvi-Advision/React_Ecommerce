@@ -18,7 +18,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import OtpInputPage from './pages/OtpInputPage';
 import OtpVerifyPage from './pages/OtpVerifyPage';
-import CheckoutPage from './pages/CheckoutPage';
+import CheckoutPage from './pages/CheckoutPageNew';
 import ProfilePage from './pages/ProfilePage';
 import AddressPage from './pages/AddressPage';
 import SavedCardsPage from './pages/SavedCardsPage';
@@ -66,10 +66,10 @@ const ToastContainerWrapper = () => {
 function AppContent() {
   const { successMessage, clearSuccessMessage, user } = useAuth();
   const [showLoginSuccess, setShowLoginSuccess] = useState(false);
-  
+
   // Initialize cart-auth sync
   useCartAuthSync();
-  
+
   // Effect to detect successful login message and show the modal
   useEffect(() => {
     if (successMessage && (successMessage.includes('Login successful') || successMessage.includes('Logged in successfully'))) {
@@ -78,7 +78,7 @@ function AppContent() {
       clearSuccessMessage();
     }
   }, [successMessage, clearSuccessMessage]);
-  
+
   // Function to close the login success modal
   const closeLoginSuccessModal = () => {
     setShowLoginSuccess(false);
@@ -156,13 +156,13 @@ function AppContent() {
           </ApiErrorBoundary>
         </main>
         <Footer />
-        
+
         {/* Cart Drawer - Global */}
-        <CartDrawer 
-          isOpen={isCartDrawerOpen} 
-          onClose={closeDrawer} 
+        <CartDrawer
+          isOpen={isCartDrawerOpen}
+          onClose={closeDrawer}
         />
-        
+
         <PWAInstallPrompt />
         <PWAStatus />
         <DevTools />
@@ -174,9 +174,9 @@ function AppContent() {
           isVisible={!!successMessage && !successMessage.includes('Login successful') && !successMessage.includes('Logged in successfully')}
           onClose={clearSuccessMessage}
         />
-        
+
         {/* Login Success Modal */}
-        <LoginSuccessModal 
+        <LoginSuccessModal
           isVisible={showLoginSuccess}
           onClose={closeLoginSuccessModal}
           userName={user?.name || ''}
@@ -189,7 +189,7 @@ function AppContent() {
           onPincodeSelect={handlePincodeSelect}
           isRequired={isLocationRequired}
         />
-        
+
         <StoreSelectionModal
           isOpen={isStoreModalOpen}
           onClose={closeStoreModal}
@@ -197,7 +197,7 @@ function AppContent() {
           selectedPincode={selectedPincode}
           isRequired={isLocationRequired}
         />
-        
+
         <StoreDetailsModal
           isOpen={isStoreDetailsModalOpen}
           onClose={closeStoreDetailsModal}
@@ -206,7 +206,7 @@ function AppContent() {
           selectedStore={selectedStore}
           isRequired={isLocationRequired}
         />
-        
+
         {/* Toast Container - Global */}
         <ToastContainerWrapper />
       </div>
@@ -227,7 +227,7 @@ function App() {
     };
 
     registerPWA();
-    
+
     // Clean up any expired cache on app load
     const { clearExpiredCache } = require('./utils/apiOptimizer');
     clearExpiredCache();
@@ -235,7 +235,7 @@ function App() {
     // Check for updates periodically
     const updateInterval = setInterval(() => {
       pwaUtils.checkForUpdates();
-      
+
       // Also periodically clean expired cache
       clearExpiredCache();
     }, 60000); // Check every minute
