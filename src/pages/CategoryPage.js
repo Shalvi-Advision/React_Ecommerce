@@ -5,7 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { useFavorite } from '../context/FavoriteContext';
 import GroceryProductCard from '../components/GroceryProductCard';
-import { ChevronDownIcon, Bars3Icon, XMarkIcon, HeartIcon as HeartOutline, MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { ChevronDownIcon, Squares2X2Icon, XMarkIcon, HeartIcon as HeartOutline, MinusIcon, PlusIcon, TagIcon, ArrowsUpDownIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
 import { getProductsOptimized } from '../api/productsApi';
 import groceryApiService from '../services/groceryApi';
@@ -69,6 +69,8 @@ const CategoryPage = () => {
   const [showQuantitySelector, setShowQuantitySelector] = useState({});
   const [quantities, setQuantities] = useState({});
   const [storeEnabled, setStoreEnabled] = useState(true);
+  const [showBrandDropdown, setShowBrandDropdown] = useState(false);
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
 
   // Check store status on mount and when location changes
   useEffect(() => {
@@ -85,6 +87,21 @@ const CategoryPage = () => {
       window.removeEventListener('locationUpdated', checkStoreStatus);
     };
   }, []);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showBrandDropdown && !event.target.closest('.brand-filter-container')) {
+        setShowBrandDropdown(false);
+      }
+      if (showSortDropdown && !event.target.closest('.sort-filter-container')) {
+        setShowSortDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showBrandDropdown, showSortDropdown]);
 
   // Sync quantity selector state with cart items
   useEffect(() => {
@@ -772,7 +789,7 @@ const CategoryPage = () => {
                 e.currentTarget.style.backgroundColor = 'transparent';
               }}
             >
-              <Bars3Icon className="w-6 h-6" style={{ color: COLORS.gray[700] }} />
+              <Squares2X2Icon className="w-6 h-6" style={{ color: COLORS.gray[700] }} />
             </button>
             <div className="flex items-center gap-2">
               {departmentImage && (
@@ -1010,162 +1027,199 @@ const CategoryPage = () => {
 
         {/* Main Content */}
         <div className="flex-1 min-w-0">
-          {/* Breadcrumb and Title */}
+          {/* Title */}
           <div 
             className="border-b px-3 sm:px-4 md:px-6 py-3 sm:py-4"
             style={{
               backgroundColor: COLORS.white,
-              borderColor: COLORS.gray[200]
+              borderColor: COLORS.gray[200],
+              position: 'relative',
+              overflow: 'visible'
             }}
           >
-            <div className="flex items-center text-xs sm:text-sm mb-1.5 sm:mb-2 flex-wrap gap-1" style={{ color: COLORS.gray[500] }}>
-              {selectedDepartment && (
-                <span className="truncate" style={{ color: COLORS.gray[700] }}>{selectedDepartment}</span>
-              )}
-              {selectedCategory && (
-                <>
-                  <span className="mx-1 sm:mx-2">›</span>
-                  <span className="font-medium truncate" style={{ color: COLORS.gray[900] }}>{selectedCategory.category_name}</span>
-                </>
-              )}
-              {selectedSubcategory && (
-                <>
-                  <span className="mx-1 sm:mx-2">›</span>
-                  <span className="truncate" style={{ color: COLORS.gray[700] }}>{selectedSubcategory.sub_category_name}</span>
-                </>
-              )}
+            <div className="flex items-center justify-between gap-3" style={{ position: 'relative', overflow: 'visible' }}>
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate flex-1" style={{ color: COLORS.gray[900] }}>
+                {selectedSubcategory?.sub_category_name || selectedCategory?.category_name || selectedDepartment || 'All Products'}
+              </h1>
+              
+              {/* Filter Icons */}
+              <div className="flex items-center gap-2 flex-shrink-0" style={{ position: 'relative', zIndex: 10000 }}>
+                {/* Brand Filter Icon */}
+                <div className="relative brand-filter-container" style={{ zIndex: 10001 }}>
+                  <button
+                    onClick={() => {
+                      setShowBrandDropdown(!showBrandDropdown);
+                      setShowSortDropdown(false);
+                    }}
+                    className="p-2 rounded-lg border transition-colors"
+                    style={{
+                      borderColor: filters.brand ? COLORS.primary[500] : COLORS.gray[200],
+                      backgroundColor: filters.brand ? COLORS.primary[50] : COLORS.white,
+                      color: filters.brand ? COLORS.primary[600] : COLORS.gray[700]
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = COLORS.primary[300];
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!filters.brand) {
+                        e.currentTarget.style.borderColor = COLORS.gray[200];
+                      }
+                    }}
+                  >
+                    <TagIcon className="w-5 h-5" />
+                  </button>
+                  
+                  {/* Brand Dropdown */}
+                  {showBrandDropdown && (
+                    <div 
+                      className="absolute right-0 mt-2 w-56 rounded-lg shadow-xl border py-2"
+                      style={{
+                        backgroundColor: COLORS.white,
+                        borderColor: COLORS.primary[200],
+                        boxShadow: `0 10px 25px ${hexToRgba(COLORS.primary[900], 0.15)}`,
+                        zIndex: 9999,
+                        minWidth: '200px',
+                        maxWidth: '280px'
+                      }}
+                    >
+                      <div className="px-3 py-2.5 border-b" style={{ borderColor: COLORS.primary[200] }}>
+                        <p className="text-sm font-semibold" style={{ color: COLORS.primary[700] }}>Filter by Brand</p>
+                      </div>
+                      <div className="max-h-64 overflow-y-auto custom-scrollbar">
+                        <button
+                          onClick={() => {
+                            handleFilterChange('brand', '');
+                            setShowBrandDropdown(false);
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-opacity-80"
+                          style={{ 
+                            color: !filters.brand ? COLORS.primary[700] : COLORS.gray[700],
+                            backgroundColor: !filters.brand ? COLORS.primary[50] : 'transparent'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (filters.brand) {
+                              e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (filters.brand) {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }
+                          }}
+                        >
+                          All Brands
+                        </button>
+                        {availableBrands.map(brand => (
+                          <button
+                            key={brand}
+                            onClick={() => {
+                              handleFilterChange('brand', brand);
+                              setShowBrandDropdown(false);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-opacity-80"
+                            style={{ 
+                              color: filters.brand === brand ? COLORS.primary[700] : COLORS.gray[700],
+                              backgroundColor: filters.brand === brand ? COLORS.primary[50] : 'transparent'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (filters.brand !== brand) {
+                                e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (filters.brand !== brand) {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                              }
+                            }}
+                          >
+                            {brand}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Sort By Icon */}
+                <div className="relative sort-filter-container" style={{ zIndex: 10001 }}>
+                  <button
+                    onClick={() => {
+                      setShowSortDropdown(!showSortDropdown);
+                      setShowBrandDropdown(false);
+                    }}
+                    className="p-2 rounded-lg border transition-colors"
+                    style={{
+                      borderColor: sortBy !== 'relevance' ? COLORS.primary[500] : COLORS.gray[200],
+                      backgroundColor: sortBy !== 'relevance' ? COLORS.primary[50] : COLORS.white,
+                      color: sortBy !== 'relevance' ? COLORS.primary[600] : COLORS.gray[700]
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = COLORS.primary[300];
+                    }}
+                    onMouseLeave={(e) => {
+                      if (sortBy === 'relevance') {
+                        e.currentTarget.style.borderColor = COLORS.gray[200];
+                      }
+                    }}
+                  >
+                    <ArrowsUpDownIcon className="w-5 h-5" />
+                  </button>
+                  
+                  {/* Sort Dropdown */}
+                  {showSortDropdown && (
+                    <div 
+                      className="absolute right-0 mt-2 w-64 rounded-lg shadow-xl border py-2"
+                      style={{
+                        backgroundColor: COLORS.white,
+                        borderColor: COLORS.primary[200],
+                        boxShadow: `0 10px 25px ${hexToRgba(COLORS.primary[900], 0.15)}`,
+                        zIndex: 9999,
+                        minWidth: '220px',
+                        maxWidth: '300px'
+                      }}
+                    >
+                      <div className="px-3 py-2.5 border-b" style={{ borderColor: COLORS.primary[200] }}>
+                        <p className="text-sm font-semibold" style={{ color: COLORS.primary[700] }}>Sort by</p>
+                      </div>
+                      {[
+                        { value: 'relevance', label: 'Relevance' },
+                        { value: 'price-low', label: 'Price: Low to High' },
+                        { value: 'price-high', label: 'Price: High to Low' },
+                        { value: 'discount', label: 'Discount' },
+                        { value: 'name', label: 'Name' }
+                      ].map(option => (
+                        <button
+                          key={option.value}
+                          onClick={() => {
+                            setSortBy(option.value);
+                            setShowSortDropdown(false);
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-opacity-80"
+                          style={{ 
+                            color: sortBy === option.value ? COLORS.primary[700] : COLORS.gray[700],
+                            backgroundColor: sortBy === option.value ? COLORS.primary[50] : 'transparent'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (sortBy !== option.value) {
+                              e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (sortBy !== option.value) {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }
+                          }}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate" style={{ color: COLORS.gray[900] }}>
-              {selectedSubcategory?.sub_category_name || selectedCategory?.category_name || selectedDepartment || 'All Products'}
-            </h1>
           </div>
 
-          {/* Filters and Sort Bar */}
-          <div 
-            className="border-b px-3 sm:px-4 md:px-6 py-2.5 sm:py-3"
-            style={{
-              backgroundColor: COLORS.white,
-              borderColor: COLORS.gray[200]
-            }}
-          >
-            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2 sm:gap-3">
-              {/* Filter Buttons */}
-              <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                <select
-                  value={filters.brand}
-                  onChange={(e) => handleFilterChange('brand', e.target.value)}
-                  className="flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm transition-all cursor-pointer appearance-none pr-7 sm:pr-8 bg-no-repeat bg-right"
-                  style={{
-                    backgroundColor: COLORS.white,
-                    borderColor: COLORS.gray[300],
-                    color: COLORS.gray[700],
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2371717a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                    backgroundSize: '1.25rem',
-                    backgroundPosition: 'right 0.5rem center'
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.primary[500];
-                    e.currentTarget.style.boxShadow = `0 0 0 2px ${hexToRgba(COLORS.primary[500], 0.5)}`;
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.gray[300];
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                  onMouseEnter={(e) => {
-                    if (document.activeElement !== e.currentTarget) {
-                      e.currentTarget.style.borderColor = COLORS.gray[400];
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (document.activeElement !== e.currentTarget) {
-                      e.currentTarget.style.borderColor = COLORS.gray[300];
-                    }
-                  }}
-                >
-                  <option value="">Brand</option>
-                  {availableBrands.map(brand => (
-                    <option key={brand} value={brand}>{brand}</option>
-                  ))}
-                </select>
-
-                <select
-                  value={filters.category}
-                  onChange={(e) => handleFilterChange('category', e.target.value)}
-                  className="flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm transition-all cursor-pointer appearance-none pr-7 sm:pr-8 bg-no-repeat bg-right"
-                  style={{
-                    backgroundColor: COLORS.white,
-                    borderColor: COLORS.gray[300],
-                    color: COLORS.gray[700],
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2371717a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                    backgroundSize: '1.25rem',
-                    backgroundPosition: 'right 0.5rem center'
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.primary[500];
-                    e.currentTarget.style.boxShadow = `0 0 0 2px ${hexToRgba(COLORS.primary[500], 0.5)}`;
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.gray[300];
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                  onMouseEnter={(e) => {
-                    if (document.activeElement !== e.currentTarget) {
-                      e.currentTarget.style.borderColor = COLORS.gray[400];
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (document.activeElement !== e.currentTarget) {
-                      e.currentTarget.style.borderColor = COLORS.gray[300];
-                    }
-                  }}
-                >
-                  <option value="">Category</option>
-                </select>
-              </div>
-
-              {/* Sort By */}
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <span className="text-xs sm:text-sm font-medium whitespace-nowrap" style={{ color: COLORS.gray[700] }}>Sort by:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded text-xs sm:text-sm transition-all cursor-pointer appearance-none pr-7 sm:pr-8 bg-no-repeat bg-right"
-                  style={{
-                    backgroundColor: COLORS.white,
-                    borderColor: COLORS.gray[300],
-                    color: COLORS.gray[700],
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2371717a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                    backgroundSize: '1.25rem',
-                    backgroundPosition: 'right 0.5rem center'
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.primary[500];
-                    e.currentTarget.style.boxShadow = `0 0 0 2px ${hexToRgba(COLORS.primary[500], 0.5)}`;
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.gray[300];
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                  onMouseEnter={(e) => {
-                    if (document.activeElement !== e.currentTarget) {
-                      e.currentTarget.style.borderColor = COLORS.gray[400];
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (document.activeElement !== e.currentTarget) {
-                      e.currentTarget.style.borderColor = COLORS.gray[300];
-                    }
-                  }}
-                >
-                  <option value="relevance">Relevance</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                  <option value="discount">Discount</option>
-                  <option value="name">Name</option>
-                </select>
-              </div>
-            </div>
-          </div>
 
           {/* Products Grid */}
           <div className="p-2 sm:p-4 md:p-6 relative min-h-screen" style={{ backgroundColor: COLORS.gray[50] }}>
