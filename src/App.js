@@ -228,6 +228,63 @@ function App() {
 
     registerPWA();
 
+    // Initialize Firebase Cloud Messaging
+    const initializeFCM = async () => {
+      // Check if browser supports notifications and service workers
+      if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+        console.warn('FCM: Browser does not support notifications or service workers');
+        return;
+      }
+
+      try {
+        // Import FCM helpers
+        const {
+          requestNotificationPermission,
+          getFcmToken,
+          subscribeForegroundMessages,
+        } = await import('./firebase-messaging-init');
+
+        // Register FCM service worker
+        const fcmRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+          scope: '/',
+        });
+        console.log('FCM: Service worker registered successfully');
+
+        // Wait for service worker to be ready
+        await navigator.serviceWorker.ready;
+
+        // Request notification permission
+        await requestNotificationPermission();
+
+        // Get FCM token
+        const token = await getFcmToken();
+        if (token) {
+          // TODO: Send token to your backend
+          // You can call your API here to save the token for this user
+          // Example: await saveTokenToBackend(token);
+          console.log('FCM: Token obtained successfully');
+        }
+
+        // Subscribe to foreground messages
+        subscribeForegroundMessages((payload) => {
+          console.log('FCM: Foreground message received:', payload);
+
+          // Show custom in-app notification (you can customize this)
+          if (payload.notification) {
+            // You can trigger a toast notification here
+            console.log('Notification:', payload.notification.title, payload.notification.body);
+          }
+        });
+
+        console.log('FCM: Initialization complete');
+      } catch (error) {
+        console.error('FCM: Initialization failed', error);
+        // Don't throw - FCM is not critical for app functionality
+      }
+    };
+
+    initializeFCM();
+
     // Clean up any expired cache on app load
     const { clearExpiredCache } = require('./utils/apiOptimizer');
     clearExpiredCache();
@@ -244,6 +301,7 @@ function App() {
       clearInterval(updateInterval);
     };
   }, []);
+
 
   return (
     <AuthProvider>
