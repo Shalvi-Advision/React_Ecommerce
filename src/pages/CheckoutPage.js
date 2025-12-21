@@ -808,92 +808,321 @@ const CheckoutPage = () => {
   const currentPincode = getCurrentPincode();
   const hasPincode = !!currentPincode || !!checkoutData.selectedPincode;
 
+  // Fixed header height
+  const headerHeight = 80;
+
   return (
-    <div className="container mx-auto px-4 py-4 sm:py-8">
+    <>
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+      <div style={{ 
+      width: '100%', 
+      minHeight: '100vh',
+      backgroundColor: COLORS.gray[50],
+      paddingTop: `${headerHeight}px`
+    }}>
+      {/* Fixed Header */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: `${headerHeight}px`,
+        backgroundColor: COLORS.white,
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderBottom: `1px solid ${COLORS.gray[200]}`
+      }}>
+        <div style={{
+          width: '100%',
+          maxWidth: isMobile ? '100%' : '700px',
+          margin: '0 auto',
+          padding: '0 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <h1 style={{
+            fontSize: '20px',
+            fontWeight: '700',
+            color: COLORS.gray[900],
+            margin: 0
+          }}>
+            Checkout
+          </h1>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <span style={{
+              fontSize: '14px',
+              color: COLORS.gray[600],
+              fontWeight: '500'
+            }}>
+              Step {currentStep} of {steps.length}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Container */}
+      <div style={{
+        width: '100%',
+        maxWidth: isMobile ? '100%' : '900px',
+        margin: '0 auto',
+        padding: isMobile ? '32px 16px' : '48px 24px',
+        boxSizing: 'border-box'
+      }}>
       {/* Warning if no pincode is selected */}
       {!hasPincode && (
-        <div className="mb-4 px-4 py-3 rounded-lg flex items-center" style={{ backgroundColor: COLORS.warning[50], borderColor: COLORS.warning[200], borderWidth: '1px', borderStyle: 'solid', color: COLORS.warning[800] }}>
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div style={{
+            marginBottom: '24px',
+            padding: '16px 20px',
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            backgroundColor: COLORS.warning[50],
+            border: `1px solid ${COLORS.warning[200]}`,
+            color: COLORS.warning[800]
+          }}>
+            <svg style={{ width: '20px', height: '20px', marginRight: '12px', flexShrink: 0 }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
-          <div className="flex-1">
-            <p className="font-medium">Please select a pincode to continue</p>
-            <p className="text-sm">Please use the pincode selector in the header to select your delivery location.</p>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontWeight: '600', margin: '0 0 4px 0', fontSize: '15px' }}>Please select a pincode to continue</p>
+              <p style={{ fontSize: '13px', margin: 0, opacity: 0.9 }}>Please use the pincode selector in the header to select your delivery location.</p>
           </div>
         </div>
       )}
-      <div className={`mx-auto ${currentStep === 3 ? 'max-w-6xl' : 'max-w-4xl'}`}>
+        
+        <div style={{
+          width: '100%',
+          maxWidth: isMobile ? '100%' : '700px',
+          margin: '0 auto'
+        }}>
         {/* Progress Indicator */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex items-center justify-center overflow-x-auto pb-2">
+          <div style={{
+            marginBottom: isMobile ? '32px' : '40px',
+            padding: '24px',
+            backgroundColor: COLORS.white,
+            borderRadius: '16px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflowX: 'auto',
+              paddingBottom: '8px',
+              gap: isMobile ? '8px' : '16px'
+            }}>
             {steps.map((step, index) => (
               <React.Fragment key={step.id}>
-                <div className={`flex items-center flex-shrink-0 ${currentStep >= step.id ? 'text-primary-600' : 'text-gray-400'}`}>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 text-sm ${currentStep >= step.id ? 'border-primary-600 bg-primary-600 text-white' : 'border-gray-300'
-                    }`}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    flexShrink: 0
+                  }}>
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: `2px solid ${currentStep >= step.id ? COLORS.primary[600] : COLORS.gray[300]}`,
+                      backgroundColor: currentStep >= step.id ? COLORS.primary[600] : 'transparent',
+                      color: currentStep >= step.id ? COLORS.white : COLORS.gray[400],
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      transition: 'all 0.3s ease'
+                    }}>
                     {step.id}
                   </div>
-                  <div className={`ml-2 ${isMobile ? 'hidden' : 'hidden sm:block'}`}>
-                    <p className="text-sm font-medium">{step.name}</p>
-                    <p className="text-xs">{step.description}</p>
+                    {!isMobile && (
+                      <div style={{
+                        marginLeft: '12px',
+                        display: 'flex',
+                        flexDirection: 'column'
+                      }}>
+                        <p style={{
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          margin: 0,
+                          color: currentStep >= step.id ? COLORS.primary[600] : COLORS.gray[400]
+                        }}>
+                          {step.name}
+                        </p>
+                        <p style={{
+                          fontSize: '12px',
+                          margin: '2px 0 0 0',
+                          color: COLORS.gray[500]
+                        }}>
+                          {step.description}
+                        </p>
                   </div>
+                    )}
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={`w-8 sm:w-12 h-0.5 mx-2 sm:mx-4 flex-shrink-0 ${currentStep > step.id ? 'bg-primary-600' : 'bg-gray-300'
-                    }`} />
+                    <div style={{
+                      width: isMobile ? '32px' : '48px',
+                      height: '2px',
+                      margin: '0 8px',
+                      flexShrink: 0,
+                      backgroundColor: currentStep > step.id ? COLORS.primary[600] : COLORS.gray[300],
+                      transition: 'background-color 0.3s ease'
+                    }} />
                 )}
               </React.Fragment>
             ))}
           </div>
         </div>
 
-        <div className={`grid grid-cols-1 ${isMobile ? 'gap-6' : currentStep === 3 ? 'lg:grid-cols-7 gap-8' : 'lg:grid-cols-5 gap-8'}`}>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: isMobile ? '24px' : '32px'
+          }}>
           {/* Main Content */}
-          <div className={`${isMobile ? 'order-2' : currentStep === 3 ? 'lg:col-span-4' : 'lg:col-span-3'}`}>
-            <Card>
+            <div style={{
+              width: '100%',
+              order: isMobile ? 2 : 1
+            }}>
+              <div style={{
+                backgroundColor: COLORS.white,
+                borderRadius: '16px',
+                padding: isMobile ? '24px' : '32px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                border: `1px solid ${COLORS.gray[200]}`
+              }}>
               {/* Step 1: Checkout - Delivery Mode & Time Slot */}
               {currentStep === 1 && (
-                <div className="space-y-6">
-                  <h2 className="text-2xl font-semibold" style={{ color: COLORS.gray[900] }}>Checkout</h2>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                    <div>
+                      <h2 style={{
+                        fontSize: '28px',
+                        fontWeight: '700',
+                        color: COLORS.gray[900],
+                        margin: '0 0 24px 0'
+                      }}>
+                        Checkout
+                      </h2>
 
                   {/* Selected Pincode */}
-                  <div className="flex items-center mb-6" style={{ color: COLORS.gray[600] }}>
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        marginBottom: '32px',
+                        padding: '12px 16px',
+                        backgroundColor: COLORS.primary[50],
+                        borderRadius: '10px',
+                        color: COLORS.gray[700]
+                      }}>
+                        <svg style={{ width: '18px', height: '18px', marginRight: '10px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    <span>Selected Pincode: {checkoutData.selectedPincode || getCurrentPincode() || 'Not selected'}</span>
+                        <span style={{ fontSize: '14px', fontWeight: '500' }}>
+                          Selected Pincode: <strong>{checkoutData.selectedPincode || getCurrentPincode() || 'Not selected'}</strong>
+                        </span>
+                      </div>
                   </div>
 
                   {/* Step 1: Select a delivery mode */}
-                  <div className="space-y-4">
-                    <div className="flex items-center">
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3" style={{ backgroundColor: COLORS.primary[500] }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                        <div style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: COLORS.primary[500],
+                          color: COLORS.white,
+                          fontSize: '14px',
+                          fontWeight: '700',
+                          marginRight: '12px',
+                          flexShrink: 0
+                        }}>
                         1
                       </div>
-                      <h3 className="text-lg font-semibold" style={{ color: COLORS.gray[900] }}>Select a delivery mode</h3>
+                        <h3 style={{
+                          fontSize: '20px',
+                          fontWeight: '700',
+                          color: COLORS.gray[900],
+                          margin: 0
+                        }}>
+                          Select a delivery mode
+                        </h3>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                        gap: '16px'
+                      }}>
                       {/* Pick Up Point Option - Only show if enabled */}
                       {confirmedLocation?.store?.selfPickup && (
-                        <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${checkoutData.deliveryMode === 'pickup'
-                          ? 'border-green-500 bg-green-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                          }`}>
+                          <label style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '20px',
+                            border: `2px solid ${checkoutData.deliveryMode === 'pickup' ? COLORS.success[500] : COLORS.gray[200]}`,
+                            borderRadius: '12px',
+                            cursor: 'pointer',
+                            backgroundColor: checkoutData.deliveryMode === 'pickup' ? COLORS.success[50] : COLORS.white,
+                            transition: 'all 0.2s ease',
+                            boxShadow: checkoutData.deliveryMode === 'pickup' ? '0 4px 12px rgba(20, 159, 109, 0.15)' : '0 2px 4px rgba(0, 0, 0, 0.04)'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (checkoutData.deliveryMode !== 'pickup') {
+                              e.currentTarget.style.borderColor = COLORS.gray[300];
+                              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.08)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (checkoutData.deliveryMode !== 'pickup') {
+                              e.currentTarget.style.borderColor = COLORS.gray[200];
+                              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.04)';
+                            }
+                          }}>
                           <input
                             type="radio"
                             name="deliveryMode"
                             value="pickup"
                             checked={checkoutData.deliveryMode === 'pickup'}
                             onChange={(e) => handleDeliveryModeChange(e.target.value)}
-                            style={{ accentColor: COLORS.primary[600] }}
-                          />
-                          <div className="ml-3 flex items-center flex-1">
-                            <div className="text-2xl mr-3">🏪</div>
-                            <div className="flex-1">
-                              <p className="font-medium" style={{ color: COLORS.gray[900] }}>Pick Up Point</p>
-                              <span className="inline-block text-xs px-2 py-1 rounded-full mt-1" style={{ backgroundColor: COLORS.primary[100], color: COLORS.primary[800] }}>
+                              style={{ accentColor: COLORS.primary[600], marginRight: '12px' }}
+                            />
+                            <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                              <div style={{ fontSize: '28px', marginRight: '12px' }}>🏪</div>
+                              <div style={{ flex: 1 }}>
+                                <p style={{
+                                  fontWeight: '600',
+                                  color: COLORS.gray[900],
+                                  margin: '0 0 6px 0',
+                                  fontSize: '16px'
+                                }}>
+                                  Pick Up Point
+                                </p>
+                                <span style={{
+                                  display: 'inline-block',
+                                  fontSize: '12px',
+                                  padding: '4px 10px',
+                                  borderRadius: '12px',
+                                  backgroundColor: COLORS.primary[100],
+                                  color: COLORS.primary[800],
+                                  fontWeight: '500'
+                                }}>
                                 Free Delivery
                               </span>
                             </div>
@@ -903,25 +1132,64 @@ const CheckoutPage = () => {
 
                       {/* Home Delivery Option - Only show if enabled */}
                       {confirmedLocation?.store?.homeDelivery && (
-                        <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${checkoutData.deliveryMode === 'home'
-                          ? 'border-green-500 bg-green-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                          }`}>
+                          <label style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '20px',
+                            border: `2px solid ${checkoutData.deliveryMode === 'home' ? COLORS.success[500] : COLORS.gray[200]}`,
+                            borderRadius: '12px',
+                            cursor: 'pointer',
+                            backgroundColor: checkoutData.deliveryMode === 'home' ? COLORS.success[50] : COLORS.white,
+                            transition: 'all 0.2s ease',
+                            boxShadow: checkoutData.deliveryMode === 'home' ? '0 4px 12px rgba(20, 159, 109, 0.15)' : '0 2px 4px rgba(0, 0, 0, 0.04)'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (checkoutData.deliveryMode !== 'home') {
+                              e.currentTarget.style.borderColor = COLORS.gray[300];
+                              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.08)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (checkoutData.deliveryMode !== 'home') {
+                              e.currentTarget.style.borderColor = COLORS.gray[200];
+                              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.04)';
+                            }
+                          }}>
                           <input
                             type="radio"
                             name="deliveryMode"
                             value="home"
                             checked={checkoutData.deliveryMode === 'home'}
                             onChange={(e) => handleDeliveryModeChange(e.target.value)}
-                            style={{ accentColor: COLORS.primary[600] }}
-                          />
-                          <div className="ml-3 flex items-center flex-1">
-                            <div className="text-2xl mr-3">🏠</div>
-                            <div className="flex-1">
-                              <p className="font-medium" style={{ color: COLORS.gray[900] }}>Home Delivery</p>
-                              <div className="flex items-center mt-1">
-                                <span className="text-sm line-through mr-2" style={{ color: COLORS.gray[500] }}>₹49.00</span>
-                                <span className="font-semibold" style={{ color: COLORS.warning[600] }}>₹0</span>
+                              style={{ accentColor: COLORS.primary[600], marginRight: '12px' }}
+                            />
+                            <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                              <div style={{ fontSize: '28px', marginRight: '12px' }}>🏠</div>
+                              <div style={{ flex: 1 }}>
+                                <p style={{
+                                  fontWeight: '600',
+                                  color: COLORS.gray[900],
+                                  margin: '0 0 6px 0',
+                                  fontSize: '16px'
+                                }}>
+                                  Home Delivery
+                                </p>
+                                <div style={{ display: 'flex', alignItems: 'center', marginTop: '4px' }}>
+                                  <span style={{
+                                    fontSize: '14px',
+                                    textDecoration: 'line-through',
+                                    marginRight: '8px',
+                                    color: COLORS.gray[500]
+                                  }}>
+                                    ₹49.00
+                                  </span>
+                                  <span style={{
+                                    fontWeight: '700',
+                                    color: COLORS.warning[600],
+                                    fontSize: '15px'
+                                  }}>
+                                    ₹0
+                                  </span>
                               </div>
                             </div>
                           </div>
@@ -932,17 +1200,35 @@ const CheckoutPage = () => {
 
                   {/* Pickup Points Selection */}
                   {checkoutData.deliveryMode === 'pickup' && (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap',
+                          gap: '12px'
+                        }}>
                         <div>
-                          <h3 className="text-lg font-semibold" style={{ color: COLORS.gray[900] }}>Pickup Points</h3>
+                            <h3 style={{
+                              fontSize: '20px',
+                              fontWeight: '700',
+                              color: COLORS.gray[900],
+                              margin: '0 0 6px 0'
+                            }}>
+                              Pickup Points
+                            </h3>
                           {confirmedLocation?.pincode && (
-                            <p className="text-sm mt-1" style={{ color: COLORS.gray[600] }}>
+                              <p style={{
+                                fontSize: '14px',
+                                marginTop: '4px',
+                                color: COLORS.gray[600],
+                                margin: 0
+                              }}>
                               Available stores in {confirmedLocation.pincode.pincode}
                             </p>
                           )}
                         </div>
-                        <div className="flex items-center gap-2">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <button
                             onClick={() => {
                               const currentPincode = getCurrentPincode();
@@ -951,16 +1237,28 @@ const CheckoutPage = () => {
                               }
                             }}
                             disabled={isLoadingStores}
-                            className="text-sm font-medium disabled:opacity-50 transition-colors"
-                            style={{ color: COLORS.primary[600] }}
+                              style={{
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                color: COLORS.primary[600],
+                                background: 'none',
+                                border: 'none',
+                                cursor: isLoadingStores ? 'not-allowed' : 'pointer',
+                                opacity: isLoadingStores ? 0.5 : 1,
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                transition: 'all 0.2s ease'
+                              }}
                             onMouseEnter={(e) => {
                               if (!isLoadingStores) {
                                 e.target.style.color = COLORS.primary[700];
+                                  e.target.style.backgroundColor = COLORS.primary[50];
                               }
                             }}
                             onMouseLeave={(e) => {
                               if (!isLoadingStores) {
                                 e.target.style.color = COLORS.primary[600];
+                                  e.target.style.backgroundColor = 'transparent';
                               }
                             }}
                           >
@@ -970,30 +1268,95 @@ const CheckoutPage = () => {
                       </div>
 
                       {isLoadingStores ? (
-                        <div className="flex items-center justify-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: COLORS.primary[500] }}></div>
-                          <span className="ml-2" style={{ color: COLORS.gray[600] }}>Loading stores...</span>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '48px 0'
+                          }}>
+                            <div style={{
+                              width: '32px',
+                              height: '32px',
+                              border: `3px solid ${COLORS.gray[200]}`,
+                              borderTopColor: COLORS.primary[500],
+                              borderRadius: '50%',
+                              animation: 'spin 1s linear infinite',
+                              marginRight: '12px'
+                            }}></div>
+                            <span style={{ color: COLORS.gray[600], fontSize: '14px' }}>Loading stores...</span>
                         </div>
                       ) : pickupStores.length === 0 ? (
-                        <div className="text-center py-8">
-                          <div className="w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: COLORS.gray[100] }}>
-                            <svg className="w-6 h-6" style={{ color: COLORS.gray[400] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div style={{
+                            textAlign: 'center',
+                            padding: '48px 0'
+                          }}>
+                            <div style={{
+                              width: '48px',
+                              height: '48px',
+                              margin: '0 auto 16px',
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              backgroundColor: COLORS.gray[100]
+                            }}>
+                              <svg style={{ width: '24px', height: '24px', color: COLORS.gray[400] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                           </div>
-                          <p className="font-medium mb-2" style={{ color: COLORS.gray[700] }}>No pickup points available</p>
-                          <p className="text-sm" style={{ color: COLORS.gray[500] }}>
+                            <p style={{
+                              fontWeight: '600',
+                              marginBottom: '8px',
+                              color: COLORS.gray[700],
+                              fontSize: '15px'
+                            }}>
+                              No pickup points available
+                            </p>
+                            <p style={{
+                              fontSize: '14px',
+                              color: COLORS.gray[500],
+                              margin: 0
+                            }}>
                             {storesError || 'Please select a different location or try home delivery.'}
                           </p>
                         </div>
                       ) : (
-                        <div className="space-y-3">
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                           {pickupStores.map((point) => (
-                            <label key={point.id} className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-colors ${checkoutData.selectedPickupPoint?.id === point.id
-                              ? 'border-green-500 bg-green-50'
-                              : 'border-gray-200 hover:border-gray-300'
-                              } ${!point.isAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                              <label
+                                key={point.id}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'flex-start',
+                                  padding: '20px',
+                                  border: `2px solid ${checkoutData.selectedPickupPoint?.id === point.id
+                                    ? COLORS.success[500]
+                                    : COLORS.gray[200]}`,
+                                  borderRadius: '12px',
+                                  cursor: point.isAvailable ? 'pointer' : 'not-allowed',
+                                  backgroundColor: checkoutData.selectedPickupPoint?.id === point.id
+                                    ? COLORS.success[50]
+                                    : COLORS.white,
+                                  opacity: point.isAvailable ? 1 : 0.5,
+                                  transition: 'all 0.2s ease',
+                                  boxShadow: checkoutData.selectedPickupPoint?.id === point.id
+                                    ? '0 4px 12px rgba(20, 159, 109, 0.15)'
+                                    : '0 2px 4px rgba(0, 0, 0, 0.04)'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (point.isAvailable && checkoutData.selectedPickupPoint?.id !== point.id) {
+                                    e.currentTarget.style.borderColor = COLORS.gray[300];
+                                    e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.08)';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (point.isAvailable && checkoutData.selectedPickupPoint?.id !== point.id) {
+                                    e.currentTarget.style.borderColor = COLORS.gray[200];
+                                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.04)';
+                                  }
+                                }}
+                              >
                               <input
                                 type="radio"
                                 name="pickupPoint"
@@ -1001,35 +1364,85 @@ const CheckoutPage = () => {
                                 checked={checkoutData.selectedPickupPoint?.id === point.id}
                                 onChange={() => handlePickupPointSelect(point)}
                                 disabled={!point.isAvailable}
-                                className="text-green-600 focus:ring-green-500 mt-1"
-                              />
-                              <div className="ml-3 flex-1">
-                                <div className="flex items-start justify-between">
-                                  <div className="flex-1">
-                                    <div className="flex items-center">
-                                      <svg className="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  style={{
+                                    accentColor: COLORS.success[600],
+                                    marginTop: '4px',
+                                    marginRight: '12px',
+                                    flexShrink: 0
+                                  }}
+                                />
+                                <div style={{ marginLeft: '12px', flex: 1 }}>
+                                  <div style={{
+                                    display: 'flex',
+                                    alignItems: 'flex-start',
+                                    justifyContent: 'space-between',
+                                    gap: '12px'
+                                  }}>
+                                    <div style={{ flex: 1 }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                                        <svg style={{
+                                          width: '16px',
+                                          height: '16px',
+                                          color: COLORS.success[500],
+                                          marginRight: '8px'
+                                        }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                       </svg>
-                                      <p className="font-medium text-gray-900">{point.name}</p>
+                                        <p style={{
+                                          fontWeight: '600',
+                                          color: COLORS.gray[900],
+                                          fontSize: '15px',
+                                          margin: 0
+                                        }}>
+                                          {point.name}
+                                        </p>
                                     </div>
-                                    <p className="text-sm text-gray-600 mt-1">{point.address}</p>
-                                    <div className="flex items-center mt-2 space-x-4 flex-wrap">
-                                      <span className="text-sm text-gray-500">Distance: {point.distance}</span>
-                                      <span className="text-sm text-gray-500">Timings: {point.timings}</span>
+                                      <p style={{
+                                        fontSize: '14px',
+                                        color: COLORS.gray[600],
+                                        marginTop: '4px',
+                                        marginBottom: '8px'
+                                      }}>
+                                        {point.address}
+                                      </p>
+                                      <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        marginTop: '8px',
+                                        gap: '16px',
+                                        flexWrap: 'wrap'
+                                      }}>
+                                        <span style={{ fontSize: '13px', color: COLORS.gray[500] }}>Distance: {point.distance}</span>
+                                        <span style={{ fontSize: '13px', color: COLORS.gray[500] }}>Timings: {point.timings}</span>
                                       {point.contactNumber && (
-                                        <span className="text-sm text-gray-500">Contact: {point.contactNumber}</span>
+                                          <span style={{ fontSize: '13px', color: COLORS.gray[500] }}>Contact: {point.contactNumber}</span>
                                       )}
                                       {point.minOrderAmount && (
-                                        <span className="text-sm text-gray-500">Min Order: ₹{point.minOrderAmount}</span>
+                                          <span style={{ fontSize: '13px', color: COLORS.gray[500] }}>Min Order: ₹{point.minOrderAmount}</span>
                                       )}
                                     </div>
                                     {point.storeMessage && (
-                                      <p className="text-xs text-blue-600 mt-1 italic">{point.storeMessage}</p>
+                                        <p style={{
+                                          fontSize: '12px',
+                                          color: COLORS.primary[600],
+                                          marginTop: '8px',
+                                          fontStyle: 'italic',
+                                          margin: '8px 0 0 0'
+                                        }}>
+                                          {point.storeMessage}
+                                        </p>
                                     )}
                                   </div>
                                   {!point.isAvailable && (
-                                    <span className="text-xs text-red-600 font-medium">Unavailable</span>
+                                      <span style={{
+                                        fontSize: '12px',
+                                        color: COLORS.error[600],
+                                        fontWeight: '600',
+                                        flexShrink: 0
+                                      }}>
+                                        Unavailable
+                                      </span>
                                   )}
                                 </div>
                               </div>
@@ -1040,7 +1453,7 @@ const CheckoutPage = () => {
                       <Button
                         onClick={handleConfirmLocation}
                         disabled={!checkoutData.selectedPickupPoint}
-                        className="w-full"
+                          style={{ width: '100%' }}
                       >
                         Confirm Location
                       </Button>
@@ -1049,67 +1462,191 @@ const CheckoutPage = () => {
 
                   {/* Home Delivery - Address Selection */}
                   {checkoutData.deliveryMode === 'home' && (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-gray-900">Saved addresses</h3>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap',
+                          gap: '12px'
+                        }}>
+                          <h3 style={{
+                            fontSize: '20px',
+                            fontWeight: '700',
+                            color: COLORS.gray[900],
+                            margin: 0
+                          }}>
+                            Saved addresses
+                          </h3>
                         <button
                           onClick={() => navigate('/address')}
-                          className="text-sm font-medium transition-colors"
-                          style={{ color: COLORS.primary[600] }}
-                          onMouseEnter={(e) => e.target.style.color = COLORS.primary[700]}
-                          onMouseLeave={(e) => e.target.style.color = COLORS.primary[600]}
+                            style={{
+                              fontSize: '14px',
+                              fontWeight: '600',
+                              color: COLORS.primary[600],
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              padding: '8px 12px',
+                              borderRadius: '8px',
+                              transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.color = COLORS.primary[700];
+                              e.target.style.backgroundColor = COLORS.primary[50];
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.color = COLORS.primary[600];
+                              e.target.style.backgroundColor = 'transparent';
+                            }}
                         >
                           + Add New Address
                         </button>
                       </div>
 
                       {isLoadingAddresses ? (
-                        <div className="flex items-center justify-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: COLORS.primary[500] }}></div>
-                          <span className="ml-2" style={{ color: COLORS.gray[600] }}>Loading addresses...</span>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '48px 0'
+                          }}>
+                            <div style={{
+                              width: '32px',
+                              height: '32px',
+                              border: `3px solid ${COLORS.gray[200]}`,
+                              borderTopColor: COLORS.primary[500],
+                              borderRadius: '50%',
+                              animation: 'spin 1s linear infinite',
+                              marginRight: '12px'
+                            }}></div>
+                            <span style={{ color: COLORS.gray[600], fontSize: '14px' }}>Loading addresses...</span>
                         </div>
                       ) : addressesError ? (
-                        <div className="px-4 py-3 rounded-lg" style={{ backgroundColor: COLORS.error[50], borderColor: COLORS.error[200], borderWidth: '1px', borderStyle: 'solid', color: COLORS.error[800] }}>
-                          <p className="text-sm">{addressesError}</p>
+                          <div style={{
+                            padding: '16px 20px',
+                            borderRadius: '12px',
+                            backgroundColor: COLORS.error[50],
+                            border: `1px solid ${COLORS.error[200]}`,
+                            color: COLORS.error[800]
+                          }}>
+                            <p style={{ fontSize: '14px', margin: '0 0 12px 0' }}>{addressesError}</p>
                           <button
                             onClick={() => window.location.reload()}
-                            className="mt-2 text-sm underline transition-colors"
-                            style={{ color: COLORS.error[800] }}
-                            onMouseEnter={(e) => e.target.style.color = COLORS.error[900]}
-                            onMouseLeave={(e) => e.target.style.color = COLORS.error[800]}
+                              style={{
+                                marginTop: '8px',
+                                fontSize: '14px',
+                                textDecoration: 'underline',
+                                color: COLORS.error[800],
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.color = COLORS.error[900];
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.color = COLORS.error[800];
+                              }}
                           >
                             Try again
                           </button>
                         </div>
                       ) : savedAddresses.length === 0 ? (
-                        <div className="text-center py-8">
-                          <div className="w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: COLORS.gray[100] }}>
-                            <svg className="w-6 h-6" style={{ color: COLORS.gray[400] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div style={{
+                            textAlign: 'center',
+                            padding: '48px 0'
+                          }}>
+                            <div style={{
+                              width: '48px',
+                              height: '48px',
+                              margin: '0 auto 16px',
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              backgroundColor: COLORS.gray[100]
+                            }}>
+                              <svg style={{ width: '24px', height: '24px', color: COLORS.gray[400] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                           </div>
-                          <p className="font-medium mb-2" style={{ color: COLORS.gray[700] }}>No saved addresses</p>
-                          <p className="text-sm mb-4" style={{ color: COLORS.gray[500] }}>Add an address to continue with home delivery</p>
+                            <p style={{
+                              fontWeight: '600',
+                              marginBottom: '8px',
+                              color: COLORS.gray[700],
+                              fontSize: '15px'
+                            }}>
+                              No saved addresses
+                            </p>
+                            <p style={{
+                              fontSize: '14px',
+                              marginBottom: '16px',
+                              color: COLORS.gray[500]
+                            }}>
+                              Add an address to continue with home delivery
+                            </p>
                           <button
                             onClick={() => navigate('/address')}
-                            className="text-sm font-medium transition-colors"
-                            style={{ color: COLORS.primary[600] }}
-                            onMouseEnter={(e) => e.target.style.color = COLORS.primary[700]}
-                            onMouseLeave={(e) => e.target.style.color = COLORS.primary[600]}
+                              style={{
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                color: COLORS.primary[600],
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                transition: 'all 0.2s ease'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.color = COLORS.primary[700];
+                                e.target.style.backgroundColor = COLORS.primary[50];
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.color = COLORS.primary[600];
+                                e.target.style.backgroundColor = 'transparent';
+                              }}
                           >
                             + Add New Address
                           </button>
                         </div>
                       ) : (
-                        <div className="space-y-3">
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                           {savedAddresses.map((address) => (
                             <label
                               key={address.id || address.mongoId}
-                              className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-colors ${checkoutData.selectedAddress?.id === address.id
-                                ? 'border-green-500 bg-green-50'
-                                : 'border-gray-200 hover:border-gray-300'
-                                }`}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'flex-start',
+                                  padding: '20px',
+                                  border: `2px solid ${checkoutData.selectedAddress?.id === address.id
+                                    ? COLORS.success[500]
+                                    : COLORS.gray[200]}`,
+                                  borderRadius: '12px',
+                                  cursor: 'pointer',
+                                  backgroundColor: checkoutData.selectedAddress?.id === address.id
+                                    ? COLORS.success[50]
+                                    : COLORS.white,
+                                  transition: 'all 0.2s ease',
+                                  boxShadow: checkoutData.selectedAddress?.id === address.id
+                                    ? '0 4px 12px rgba(20, 159, 109, 0.15)'
+                                    : '0 2px 4px rgba(0, 0, 0, 0.04)'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (checkoutData.selectedAddress?.id !== address.id) {
+                                    e.currentTarget.style.borderColor = COLORS.gray[300];
+                                    e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.08)';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (checkoutData.selectedAddress?.id !== address.id) {
+                                    e.currentTarget.style.borderColor = COLORS.gray[200];
+                                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.04)';
+                                  }
+                                }}
                             >
                               <input
                                 type="radio"
@@ -1124,33 +1661,82 @@ const CheckoutPage = () => {
                                   city: address.city,
                                   pinCode: address.pinCode
                                 })}
-                                className="mt-1"
-                                style={{ accentColor: COLORS.primary[600] }}
-                              />
-                              <div className="ml-3 flex-1">
-                                <div className="flex items-start justify-between">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <svg className="w-4 h-4" style={{ color: COLORS.primary[500] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  style={{
+                                    accentColor: COLORS.primary[600],
+                                    marginTop: '4px',
+                                    marginRight: '12px',
+                                    flexShrink: 0
+                                  }}
+                                />
+                                <div style={{ marginLeft: '12px', flex: 1 }}>
+                                  <div style={{
+                                    display: 'flex',
+                                    alignItems: 'flex-start',
+                                    justifyContent: 'space-between',
+                                    gap: '12px'
+                                  }}>
+                                    <div style={{ flex: 1 }}>
+                                      <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        marginBottom: '8px'
+                                      }}>
+                                        <svg style={{
+                                          width: '16px',
+                                          height: '16px',
+                                          color: COLORS.primary[500]
+                                        }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                       </svg>
-                                      <p className="font-medium" style={{ color: COLORS.gray[900] }}>{address.name}</p>
+                                        <p style={{
+                                          fontWeight: '600',
+                                          color: COLORS.gray[900],
+                                          fontSize: '15px',
+                                          margin: 0
+                                        }}>
+                                          {address.name}
+                                        </p>
                                       {address.isDefault && (
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: COLORS.primary[100], color: COLORS.primary[800] }}>
+                                          <span style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            padding: '4px 10px',
+                                            borderRadius: '12px',
+                                            fontSize: '12px',
+                                            fontWeight: '600',
+                                            backgroundColor: COLORS.primary[100],
+                                            color: COLORS.primary[800]
+                                          }}>
                                           Default
                                         </span>
                                       )}
                                     </div>
-                                    <p className="text-sm" style={{ color: COLORS.gray[600] }}>
+                                      <p style={{
+                                        fontSize: '14px',
+                                        color: COLORS.gray[600],
+                                        margin: '0 0 4px 0'
+                                      }}>
                                       {address.addressLine1}
                                       {address.addressLine2 && <>, {address.addressLine2}</>}
                                     </p>
-                                    <p className="text-sm" style={{ color: COLORS.gray[600] }}>
+                                      <p style={{
+                                        fontSize: '14px',
+                                        color: COLORS.gray[600],
+                                        margin: '0 0 4px 0'
+                                      }}>
                                       {address.city} - {address.pinCode}
                                     </p>
                                     {address.email && (
-                                      <p className="text-sm mt-1" style={{ color: COLORS.gray[500] }}>Email: {address.email}</p>
+                                        <p style={{
+                                          fontSize: '14px',
+                                          marginTop: '4px',
+                                          color: COLORS.gray[500],
+                                          margin: '4px 0 0 0'
+                                        }}>
+                                          Email: {address.email}
+                                        </p>
                                     )}
                                   </div>
                                   <button
@@ -1158,12 +1744,30 @@ const CheckoutPage = () => {
                                       e.preventDefault();
                                       navigate('/address');
                                     }}
-                                    className="text-sm flex items-center ml-2 transition-colors"
-                                    style={{ color: COLORS.secondary[600] }}
-                                    onMouseEnter={(e) => e.target.style.color = COLORS.secondary[700]}
-                                    onMouseLeave={(e) => e.target.style.color = COLORS.secondary[600]}
-                                  >
-                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      style={{
+                                        fontSize: '14px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        marginLeft: '8px',
+                                        color: COLORS.secondary[600],
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        padding: '6px 10px',
+                                        borderRadius: '6px',
+                                        transition: 'all 0.2s ease',
+                                        flexShrink: 0
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.target.style.color = COLORS.secondary[700];
+                                        e.target.style.backgroundColor = COLORS.secondary[50];
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.target.style.color = COLORS.secondary[600];
+                                        e.target.style.backgroundColor = 'transparent';
+                                      }}
+                                    >
+                                      <svg style={{ width: '16px', height: '16px', marginRight: '6px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                     </svg>
                                     Edit
@@ -1178,7 +1782,7 @@ const CheckoutPage = () => {
                       <Button
                         onClick={handleConfirmLocation}
                         disabled={!checkoutData.selectedAddress || savedAddresses.length === 0}
-                        className="w-full"
+                          style={{ width: '100%' }}
                       >
                         CONFIRM ADDRESS
                       </Button>
@@ -1186,47 +1790,106 @@ const CheckoutPage = () => {
                   )}
 
                   {/* Step 2: Select a time slot (disabled until location is confirmed) */}
-                  <div className="space-y-4">
-                    <div className="flex items-center">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3 ${checkoutData.selectedPickupPoint || checkoutData.selectedAddress
-                        ? 'bg-green-500'
-                        : 'bg-gray-400'
-                        }`}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: COLORS.white,
+                          fontSize: '14px',
+                          fontWeight: '700',
+                          marginRight: '12px',
+                          backgroundColor: (checkoutData.selectedPickupPoint || checkoutData.selectedAddress)
+                            ? COLORS.success[500]
+                            : COLORS.gray[400],
+                          transition: 'background-color 0.3s ease'
+                        }}>
                         2
                       </div>
-                      <h3 className={`text-lg font-semibold ${checkoutData.selectedPickupPoint || checkoutData.selectedAddress
-                        ? 'text-gray-900'
-                        : 'text-gray-400'
-                        }`}>
+                        <h3 style={{
+                          fontSize: '20px',
+                          fontWeight: '700',
+                          color: (checkoutData.selectedPickupPoint || checkoutData.selectedAddress)
+                            ? COLORS.gray[900]
+                            : COLORS.gray[400],
+                          margin: 0,
+                          transition: 'color 0.3s ease'
+                        }}>
                         Select a time slot
                       </h3>
                     </div>
 
                     {checkoutData.selectedPickupPoint || checkoutData.selectedAddress ? (
-                      <div className="space-y-4">
-                        <div className="flex items-center" style={{ color: COLORS.primary[600] }}>
-                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '12px 16px',
+                            backgroundColor: COLORS.success[50],
+                            borderRadius: '10px',
+                            color: COLORS.primary[600]
+                          }}>
+                            <svg style={{ width: '20px', height: '20px', marginRight: '10px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
-                          <span className="text-sm">
+                            <span style={{ fontSize: '14px', fontWeight: '500' }}>
                             Your selected {checkoutData.deliveryMode === 'pickup' ? 'pickup point' : 'home delivery address'} is confirmed
                           </span>
                         </div>
 
-                        <div className="space-y-3">
-                          <div className="flex items-center p-4 border border-gray-200 rounded-lg">
-                            <div className="text-2xl mr-3">🚚</div>
-                            <div className="flex-1">
-                              <p className="font-medium text-gray-900">Shipment 1: {totalItems} items</p>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              padding: '20px',
+                              border: `1px solid ${COLORS.gray[200]}`,
+                              borderRadius: '12px',
+                              backgroundColor: COLORS.white
+                            }}>
+                              <div style={{ fontSize: '28px', marginRight: '12px' }}>🚚</div>
+                              <div style={{ flex: 1 }}>
+                                <p style={{
+                                  fontWeight: '600',
+                                  color: COLORS.gray[900],
+                                  fontSize: '15px',
+                                  margin: 0
+                                }}>
+                                  Shipment 1: {totalItems} items
+                                </p>
                             </div>
                             <button
                               onClick={() => {
                                 setSelectedShipment(1);
                                 setShowTimeSlotModal(true);
                               }}
-                              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center"
-                            >
-                              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                style={{
+                                  backgroundColor: COLORS.success[600],
+                                  color: COLORS.white,
+                                  padding: '10px 20px',
+                                  borderRadius: '10px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  fontSize: '14px',
+                                  fontWeight: '600',
+                                  transition: 'all 0.2s ease',
+                                  boxShadow: '0 2px 8px rgba(20, 159, 109, 0.3)'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.target.style.backgroundColor = COLORS.success[700];
+                                  e.target.style.boxShadow = '0 4px 12px rgba(20, 159, 109, 0.4)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.target.style.backgroundColor = COLORS.success[600];
+                                  e.target.style.boxShadow = '0 2px 8px rgba(20, 159, 109, 0.3)';
+                                }}
+                              >
+                                <svg style={{ width: '16px', height: '16px', marginRight: '8px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
                               </svg>
                               Tap to Select
@@ -1234,12 +1897,33 @@ const CheckoutPage = () => {
                           </div>
                         </div>
 
-                        <p className="text-sm text-gray-600">
-                          Why am I seeing multiple shipments? <span className="text-green-600 underline cursor-pointer">Know More</span>
+                          <p style={{
+                            fontSize: '14px',
+                            color: COLORS.gray[600],
+                            margin: 0
+                          }}>
+                            Why am I seeing multiple shipments?{' '}
+                            <span style={{
+                              color: COLORS.success[600],
+                              textDecoration: 'underline',
+                              cursor: 'pointer',
+                              fontWeight: '500'
+                            }}>
+                              Know More
+                            </span>
                         </p>
                       </div>
                     ) : (
-                      <p className="text-sm" style={{ color: COLORS.gray[500] }}>Please select a delivery mode and confirm location first</p>
+                        <p style={{
+                          fontSize: '14px',
+                          color: COLORS.gray[500],
+                          margin: 0,
+                          padding: '16px',
+                          backgroundColor: COLORS.gray[50],
+                          borderRadius: '10px'
+                        }}>
+                          Please select a delivery mode and confirm location first
+                        </p>
                     )}
                   </div>
                 </div>
@@ -1247,35 +1931,92 @@ const CheckoutPage = () => {
 
               {/* Step 2: Payment Information */}
               {currentStep === 2 && (
-                <div className="space-y-6">
-                  <h2 className="text-2xl font-semibold" style={{ color: COLORS.gray[900] }}>Payment Information</h2>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                    <h2 style={{
+                      fontSize: '28px',
+                      fontWeight: '700',
+                      color: COLORS.gray[900],
+                      margin: 0
+                    }}>
+                      Payment Information
+                    </h2>
 
                   {/* Payment Method Selection */}
-                  <div className="space-y-4">
-                    <label className="block text-sm font-medium mb-3" style={{ color: COLORS.gray[700] }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                      <label style={{
+                        display: 'block',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        marginBottom: '12px',
+                        color: COLORS.gray[700]
+                      }}>
                       Select Payment Method <span style={{ color: COLORS.error[500] }}>*</span>
                     </label>
 
                     {isLoadingPaymentModes ? (
-                      <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: COLORS.primary[500] }}></div>
-                        <span className="ml-2" style={{ color: COLORS.gray[600] }}>Loading payment methods...</span>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: '48px 0'
+                        }}>
+                          <div style={{
+                            width: '32px',
+                            height: '32px',
+                            border: `3px solid ${COLORS.gray[200]}`,
+                            borderTopColor: COLORS.primary[500],
+                            borderRadius: '50%',
+                            animation: 'spin 1s linear infinite',
+                            marginRight: '12px'
+                          }}></div>
+                          <span style={{ color: COLORS.gray[600], fontSize: '14px' }}>Loading payment methods...</span>
                       </div>
                     ) : enabledPaymentModes.length === 0 ? (
-                      <div className="px-4 py-3 rounded-lg" style={{ backgroundColor: COLORS.warning[50], borderColor: COLORS.warning[200], borderWidth: '1px', borderStyle: 'solid', color: COLORS.warning[800] }}>
-                        <p className="text-sm">No payment methods available. Please try again later.</p>
+                        <div style={{
+                          padding: '16px 20px',
+                          borderRadius: '12px',
+                          backgroundColor: COLORS.warning[50],
+                          border: `1px solid ${COLORS.warning[200]}`,
+                          color: COLORS.warning[800]
+                        }}>
+                          <p style={{ fontSize: '14px', margin: 0 }}>No payment methods available. Please try again later.</p>
                       </div>
                     ) : (
-                      <div className="space-y-3">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {enabledPaymentModes.map((mode) => {
                           const details = getPaymentMethodDetails(mode.name);
                           return (
                             <label
                               key={mode.id}
-                              className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === details.value
-                                ? 'border-primary-500 bg-primary-50'
-                                : 'border-gray-200 hover:border-gray-300'
-                                }`}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  padding: '20px',
+                                  border: `2px solid ${formData.paymentMethod === details.value
+                                    ? COLORS.primary[500]
+                                    : COLORS.gray[200]}`,
+                                  borderRadius: '12px',
+                                  cursor: 'pointer',
+                                  backgroundColor: formData.paymentMethod === details.value
+                                    ? COLORS.primary[50]
+                                    : COLORS.white,
+                                  transition: 'all 0.2s ease',
+                                  boxShadow: formData.paymentMethod === details.value
+                                    ? '0 4px 12px rgba(38, 185, 133, 0.15)'
+                                    : '0 2px 4px rgba(0, 0, 0, 0.04)'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (formData.paymentMethod !== details.value) {
+                                    e.currentTarget.style.borderColor = COLORS.gray[300];
+                                    e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.08)';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (formData.paymentMethod !== details.value) {
+                                    e.currentTarget.style.borderColor = COLORS.gray[200];
+                                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.04)';
+                                  }
+                                }}
                             >
                               <input
                                 type="radio"
@@ -1283,14 +2024,31 @@ const CheckoutPage = () => {
                                 value={details.value}
                                 checked={formData.paymentMethod === details.value}
                                 onChange={handleInputChange}
-                                style={{ accentColor: COLORS.primary[600] }}
-                              />
-                              <div className="ml-3 flex items-center">
-                                <span className="text-lg mr-2">{details.icon}</span>
+                                  style={{
+                                    accentColor: COLORS.primary[600],
+                                    marginRight: '12px',
+                                    flexShrink: 0
+                                  }}
+                                />
+                                <div style={{ marginLeft: '12px', display: 'flex', alignItems: 'center' }}>
+                                  <span style={{ fontSize: '20px', marginRight: '12px' }}>{details.icon}</span>
                                 <div>
-                                  <p className="font-medium" style={{ color: COLORS.gray[900] }}>{details.name}</p>
+                                    <p style={{
+                                      fontWeight: '600',
+                                      color: COLORS.gray[900],
+                                      fontSize: '15px',
+                                      margin: '0 0 4px 0'
+                                    }}>
+                                      {details.name}
+                                    </p>
                                   {details.description && (
-                                    <p className="text-sm" style={{ color: COLORS.gray[500] }}>{details.description}</p>
+                                      <p style={{
+                                        fontSize: '13px',
+                                        color: COLORS.gray[500],
+                                        margin: 0
+                                      }}>
+                                        {details.description}
+                                      </p>
                                   )}
                                 </div>
                               </div>
@@ -1303,26 +2061,76 @@ const CheckoutPage = () => {
 
                   {/* Conditional Payment Forms */}
                   {formData.paymentMethod === 'card' && (
-                    <div className="space-y-4 mt-6 p-4 rounded-lg" style={{ backgroundColor: COLORS.gray[50] }}>
-                      <h3 className="text-lg font-medium" style={{ color: COLORS.gray[900] }}>Online Payment</h3>
-                      <p className="text-sm" style={{ color: COLORS.gray[600] }}>
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '16px',
+                        marginTop: '24px',
+                        padding: '24px',
+                        borderRadius: '12px',
+                        backgroundColor: COLORS.gray[50]
+                      }}>
+                        <h3 style={{
+                          fontSize: '20px',
+                          fontWeight: '600',
+                          color: COLORS.gray[900],
+                          margin: 0
+                        }}>
+                          Online Payment
+                        </h3>
+                        <p style={{
+                          fontSize: '14px',
+                          color: COLORS.gray[600],
+                          margin: 0
+                        }}>
                         Pay securely using Razorpay - Credit/Debit Card, UPI, Net Banking, and more.
                       </p>
-                      <div className="flex items-center space-x-2 mt-4">
-                        <svg className="w-5 h-5" style={{ color: COLORS.success[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          marginTop: '16px'
+                        }}>
+                          <svg style={{ width: '20px', height: '20px', color: COLORS.success[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                         </svg>
-                        <span className="text-sm" style={{ color: COLORS.gray[700] }}>Secured by Razorpay</span>
+                          <span style={{
+                            fontSize: '14px',
+                            color: COLORS.gray[700],
+                            fontWeight: '500'
+                          }}>
+                            Secured by Razorpay
+                          </span>
                       </div>
-                      <p className="text-xs mt-2" style={{ color: COLORS.gray[500] }}>
+                        <p style={{
+                          fontSize: '12px',
+                          marginTop: '8px',
+                          color: COLORS.gray[500],
+                          margin: '8px 0 0 0'
+                        }}>
                         Payment gateway will open at final checkout. No card details are stored on our servers.
                       </p>
                     </div>
                   )}
 
                   {formData.paymentMethod === 'upi' && (
-                    <div className="space-y-4 mt-6 p-4 rounded-lg" style={{ backgroundColor: COLORS.gray[50] }}>
-                      <h3 className="text-lg font-medium" style={{ color: COLORS.gray[900] }}>UPI Details</h3>
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '16px',
+                        marginTop: '24px',
+                        padding: '24px',
+                        borderRadius: '12px',
+                        backgroundColor: COLORS.gray[50]
+                      }}>
+                        <h3 style={{
+                          fontSize: '20px',
+                          fontWeight: '600',
+                          color: COLORS.gray[900],
+                          margin: 0
+                        }}>
+                          UPI Details
+                        </h3>
                       <Input
                         label="UPI ID"
                         name="upiId"
@@ -1336,8 +2144,23 @@ const CheckoutPage = () => {
                   )}
 
                   {formData.paymentMethod === 'netbanking' && (
-                    <div className="space-y-4 mt-6 p-4 rounded-lg" style={{ backgroundColor: COLORS.gray[50] }}>
-                      <h3 className="text-lg font-medium" style={{ color: COLORS.gray[900] }}>Net Banking</h3>
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '16px',
+                        marginTop: '24px',
+                        padding: '24px',
+                        borderRadius: '12px',
+                        backgroundColor: COLORS.gray[50]
+                      }}>
+                        <h3 style={{
+                          fontSize: '20px',
+                          fontWeight: '600',
+                          color: COLORS.gray[900],
+                          margin: 0
+                        }}>
+                          Net Banking
+                        </h3>
                       <Input
                         label="Bank Name"
                         name="bankName"
@@ -1351,8 +2174,23 @@ const CheckoutPage = () => {
                   )}
 
                   {formData.paymentMethod === 'paytm' && (
-                    <div className="space-y-4 mt-6 p-4 rounded-lg" style={{ backgroundColor: COLORS.gray[50] }}>
-                      <h3 className="text-lg font-medium" style={{ color: COLORS.gray[900] }}>Paytm Details</h3>
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '16px',
+                        marginTop: '24px',
+                        padding: '24px',
+                        borderRadius: '12px',
+                        backgroundColor: COLORS.gray[50]
+                      }}>
+                        <h3 style={{
+                          fontSize: '20px',
+                          fontWeight: '600',
+                          color: COLORS.gray[900],
+                          margin: 0
+                        }}>
+                          Paytm Details
+                        </h3>
                       <Input
                         label="Paytm Number"
                         name="paytmNumber"
@@ -1370,60 +2208,158 @@ const CheckoutPage = () => {
 
               {/* Step 3: Review Order */}
               {currentStep === 3 && (
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: '16px'
+                    }}>
                     <div>
-                      <h2 className="text-2xl sm:text-3xl font-bold" style={{ color: COLORS.gray[900] }}>Review Your Order</h2>
-                      <p className="text-sm mt-1" style={{ color: COLORS.gray[600] }}>Please review all details before placing your order</p>
+                        <h2 style={{
+                          fontSize: isMobile ? '24px' : '32px',
+                          fontWeight: '700',
+                          color: COLORS.gray[900],
+                          margin: '0 0 8px 0'
+                        }}>
+                          Review Your Order
+                        </h2>
+                        <p style={{
+                          fontSize: '14px',
+                          marginTop: '4px',
+                          color: COLORS.gray[600],
+                          margin: 0
+                        }}>
+                          Please review all details before placing your order
+                        </p>
                     </div>
-                    <div className="hidden sm:flex items-center justify-center w-12 h-12 rounded-full" style={{ backgroundColor: COLORS.primary[100] }}>
-                      <svg className="w-6 h-6" style={{ color: COLORS.primary[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      {!isMobile && (
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '48px',
+                          height: '48px',
+                          borderRadius: '50%',
+                          backgroundColor: COLORS.primary[100]
+                        }}>
+                          <svg style={{ width: '24px', height: '24px', color: COLORS.primary[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
+                      )}
                   </div>
 
                   {/* Order Items Preview */}
-                  <div className="rounded-xl overflow-hidden" style={{ backgroundColor: COLORS.white, boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
-                    <div className="px-4 sm:px-6 py-4 border-b" style={{ borderColor: COLORS.gray[200], backgroundColor: COLORS.gray[50] }}>
-                      <h3 className="text-base font-semibold flex items-center" style={{ color: COLORS.gray[900] }}>
-                        <svg className="w-5 h-5 mr-2" style={{ color: COLORS.primary[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div style={{
+                      borderRadius: '16px',
+                      overflow: 'hidden',
+                      backgroundColor: COLORS.white,
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                      border: `1px solid ${COLORS.gray[200]}`
+                    }}>
+                      <div style={{
+                        padding: isMobile ? '16px' : '24px',
+                        borderBottom: `1px solid ${COLORS.gray[200]}`,
+                        backgroundColor: COLORS.gray[50]
+                      }}>
+                        <h3 style={{
+                          fontSize: '16px',
+                          fontWeight: '700',
+                          display: 'flex',
+                          alignItems: 'center',
+                          color: COLORS.gray[900],
+                          margin: 0
+                        }}>
+                          <svg style={{ width: '20px', height: '20px', marginRight: '10px', color: COLORS.primary[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                         </svg>
                         Order Items ({totalItems} {totalItems === 1 ? 'item' : 'items'})
                       </h3>
                     </div>
-                    <div className="p-4 sm:p-6">
-                      <div className="space-y-3">
+                      <div style={{ padding: isMobile ? '16px' : '24px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {items.slice(0, 3).map((item) => {
                           const itemPrice = Number(item.price) || 0;
                           const itemQuantity = Number(item.quantity) || 1;
                           return (
-                            <div key={item.id} className="flex items-center space-x-4 py-3 border-b last:border-b-0" style={{ borderColor: COLORS.gray[100] }}>
-                              <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden" style={{ backgroundColor: COLORS.gray[100] }}>
+                              <div key={item.id} style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '16px',
+                                padding: '12px 0',
+                                borderBottom: `1px solid ${COLORS.gray[100]}`,
+                                ...(items.indexOf(item) === Math.min(2, items.length - 1) && { borderBottom: 'none' })
+                              }}>
+                                <div style={{
+                                  flexShrink: 0,
+                                  width: '64px',
+                                  height: '64px',
+                                  borderRadius: '12px',
+                                  overflow: 'hidden',
+                                  backgroundColor: COLORS.gray[100]
+                                }}>
                                 {item.image ? (
-                                  <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center">
-                                    <svg className="w-8 h-8" style={{ color: COLORS.gray[400] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <img src={item.image} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                  ) : (
+                                    <div style={{
+                                      width: '100%',
+                                      height: '100%',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
+                                    }}>
+                                      <svg style={{ width: '32px', height: '32px', color: COLORS.gray[400] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                   </div>
                                 )}
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <h4 className="text-sm font-medium truncate" style={{ color: COLORS.gray[900] }}>{item.title}</h4>
-                                <p className="text-xs mt-1" style={{ color: COLORS.gray[500] }}>Qty: {itemQuantity}</p>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <h4 style={{
+                                    fontSize: '14px',
+                                    fontWeight: '600',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    color: COLORS.gray[900],
+                                    margin: '0 0 4px 0'
+                                  }}>
+                                    {item.title}
+                                  </h4>
+                                  <p style={{
+                                    fontSize: '12px',
+                                    marginTop: '4px',
+                                    color: COLORS.gray[500],
+                                    margin: 0
+                                  }}>
+                                    Qty: {itemQuantity}
+                                  </p>
                               </div>
-                              <div className="flex-shrink-0 text-right">
-                                <p className="text-sm font-semibold" style={{ color: COLORS.gray[900] }}>₹{(itemPrice * itemQuantity).toFixed(2)}</p>
+                                <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                                  <p style={{
+                                    fontSize: '14px',
+                                    fontWeight: '700',
+                                    color: COLORS.gray[900],
+                                    margin: 0
+                                  }}>
+                                    ₹{(itemPrice * itemQuantity).toFixed(2)}
+                                  </p>
                               </div>
                             </div>
                           );
                         })}
                         {items.length > 3 && (
-                          <div className="pt-2 text-center">
-                            <p className="text-sm font-medium" style={{ color: COLORS.primary[600] }}>+ {items.length - 3} more {items.length - 3 === 1 ? 'item' : 'items'}</p>
+                            <div style={{ paddingTop: '8px', textAlign: 'center' }}>
+                              <p style={{
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                color: COLORS.primary[600],
+                                margin: 0
+                              }}>
+                                + {items.length - 3} more {items.length - 3 === 1 ? 'item' : 'items'}
+                              </p>
                           </div>
                         )}
                       </div>
@@ -1431,49 +2367,129 @@ const CheckoutPage = () => {
                   </div>
 
                   {/* Delivery Information */}
-                  <div className="rounded-xl overflow-hidden" style={{ backgroundColor: COLORS.white, boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
-                    <div className="px-4 sm:px-6 py-4 border-b" style={{ borderColor: COLORS.gray[200], backgroundColor: COLORS.gray[50] }}>
-                      <h3 className="text-base font-semibold flex items-center" style={{ color: COLORS.gray[900] }}>
-                        <svg className="w-5 h-5 mr-2" style={{ color: COLORS.primary[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div style={{
+                      borderRadius: '16px',
+                      overflow: 'hidden',
+                      backgroundColor: COLORS.white,
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                      border: `1px solid ${COLORS.gray[200]}`
+                    }}>
+                      <div style={{
+                        padding: isMobile ? '16px' : '24px',
+                        borderBottom: `1px solid ${COLORS.gray[200]}`,
+                        backgroundColor: COLORS.gray[50]
+                      }}>
+                        <h3 style={{
+                          fontSize: '16px',
+                          fontWeight: '700',
+                          display: 'flex',
+                          alignItems: 'center',
+                          color: COLORS.gray[900],
+                          margin: 0
+                        }}>
+                          <svg style={{ width: '20px', height: '20px', marginRight: '10px', color: COLORS.primary[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                         Delivery Information
                       </h3>
                     </div>
-                    <div className="p-4 sm:p-6 space-y-4">
+                      <div style={{
+                        padding: isMobile ? '16px' : '24px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '20px'
+                      }}>
                       {/* Delivery Method & Address */}
-                      <div className="flex items-start space-x-4">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: COLORS.primary[100] }}>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '16px'
+                        }}>
+                          <div style={{
+                            flexShrink: 0,
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: COLORS.primary[100]
+                          }}>
                           {checkoutData.deliveryMode === 'pickup' ? (
-                            <svg className="w-5 h-5" style={{ color: COLORS.primary[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg style={{ width: '20px', height: '20px', color: COLORS.primary[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                           ) : (
-                            <svg className="w-5 h-5" style={{ color: COLORS.primary[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg style={{ width: '20px', height: '20px', color: COLORS.primary[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                             </svg>
                           )}
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-1">
-                            <h4 className="text-sm font-semibold" style={{ color: COLORS.gray[900] }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              marginBottom: '4px'
+                            }}>
+                              <h4 style={{
+                                fontSize: '14px',
+                                fontWeight: '700',
+                                color: COLORS.gray[900],
+                                margin: 0
+                              }}>
                               {checkoutData.deliveryMode === 'pickup' ? 'Pick Up Point' : 'Home Delivery'}
                             </h4>
-                            <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: COLORS.success[100], color: COLORS.success[800] }}>
+                              <span style={{
+                                fontSize: '12px',
+                                padding: '4px 10px',
+                                borderRadius: '12px',
+                                backgroundColor: COLORS.success[100],
+                                color: COLORS.success[800],
+                                fontWeight: '600'
+                              }}>
                               Confirmed
                             </span>
                           </div>
                           {checkoutData.deliveryMode === 'pickup' && checkoutData.selectedPickupPoint && (
-                            <div className="mt-2">
-                              <p className="text-sm font-medium" style={{ color: COLORS.gray[700] }}>{checkoutData.selectedPickupPoint.name}</p>
-                              <p className="text-sm mt-1" style={{ color: COLORS.gray[600] }}>{checkoutData.selectedPickupPoint.address}</p>
+                              <div style={{ marginTop: '8px' }}>
+                                <p style={{
+                                  fontSize: '14px',
+                                  fontWeight: '600',
+                                  color: COLORS.gray[700],
+                                  margin: '0 0 4px 0'
+                                }}>
+                                  {checkoutData.selectedPickupPoint.name}
+                                </p>
+                                <p style={{
+                                  fontSize: '14px',
+                                  marginTop: '4px',
+                                  color: COLORS.gray[600],
+                                  margin: 0
+                                }}>
+                                  {checkoutData.selectedPickupPoint.address}
+                                </p>
                             </div>
                           )}
                           {checkoutData.deliveryMode === 'home' && checkoutData.selectedAddress && (
-                            <div className="mt-2">
-                              <p className="text-sm font-medium" style={{ color: COLORS.gray[700] }}>{checkoutData.selectedAddress.name}</p>
-                              <p className="text-sm mt-1" style={{ color: COLORS.gray[600] }}>{checkoutData.selectedAddress.address}</p>
+                              <div style={{ marginTop: '8px' }}>
+                                <p style={{
+                                  fontSize: '14px',
+                                  fontWeight: '600',
+                                  color: COLORS.gray[700],
+                                  margin: '0 0 4px 0'
+                                }}>
+                                  {checkoutData.selectedAddress.name}
+                                </p>
+                                <p style={{
+                                  fontSize: '14px',
+                                  marginTop: '4px',
+                                  color: COLORS.gray[600],
+                                  margin: 0
+                                }}>
+                                  {checkoutData.selectedAddress.address}
+                                </p>
                             </div>
                           )}
                         </div>
@@ -1481,23 +2497,70 @@ const CheckoutPage = () => {
 
                       {/* Time Slot */}
                       {checkoutData.selectedTimeSlot && (
-                        <div className="flex items-start space-x-4 pt-4 border-t" style={{ borderColor: COLORS.gray[200] }}>
-                          <div className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: COLORS.success[100] }}>
-                            <svg className="w-5 h-5" style={{ color: COLORS.success[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '16px',
+                            paddingTop: '20px',
+                            borderTop: `1px solid ${COLORS.gray[200]}`
+                          }}>
+                            <div style={{
+                              flexShrink: 0,
+                              width: '40px',
+                              height: '40px',
+                              borderRadius: '12px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              backgroundColor: COLORS.success[100]
+                            }}>
+                              <svg style={{ width: '20px', height: '20px', color: COLORS.success[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                           </div>
-                          <div className="flex-1">
-                            <h4 className="text-sm font-semibold mb-1" style={{ color: COLORS.gray[900] }}>Delivery Time Slot</h4>
-                            <div className="flex flex-wrap items-center gap-2 mt-2">
-                              <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium" style={{ backgroundColor: COLORS.primary[50], color: COLORS.primary[700] }}>
-                                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div style={{ flex: 1 }}>
+                              <h4 style={{
+                                fontSize: '14px',
+                                fontWeight: '700',
+                                marginBottom: '8px',
+                                color: COLORS.gray[900],
+                                margin: '0 0 8px 0'
+                              }}>
+                                Delivery Time Slot
+                              </h4>
+                              <div style={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                alignItems: 'center',
+                                gap: '8px',
+                                marginTop: '8px'
+                              }}>
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '8px 12px',
+                                  borderRadius: '10px',
+                                  fontSize: '13px',
+                                  fontWeight: '600',
+                                  backgroundColor: COLORS.primary[50],
+                                  color: COLORS.primary[700]
+                                }}>
+                                  <svg style={{ width: '16px', height: '16px', marginRight: '6px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
                                 {checkoutData.selectedDate}
                               </span>
-                              <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium" style={{ backgroundColor: COLORS.success[50], color: COLORS.success[700] }}>
-                                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '8px 12px',
+                                  borderRadius: '10px',
+                                  fontSize: '13px',
+                                  fontWeight: '600',
+                                  backgroundColor: COLORS.success[50],
+                                  color: COLORS.success[700]
+                                }}>
+                                  <svg style={{ width: '16px', height: '16px', marginRight: '6px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                                 {checkoutData.selectedTimeSlot.time}
@@ -1510,76 +2573,127 @@ const CheckoutPage = () => {
                   </div>
 
                   {/* Payment Information */}
-                  <div className="rounded-xl overflow-hidden" style={{ backgroundColor: COLORS.white, boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
-                    <div className="px-4 sm:px-6 py-4 border-b" style={{ borderColor: COLORS.gray[200], backgroundColor: COLORS.gray[50] }}>
-                      <h3 className="text-base font-semibold flex items-center" style={{ color: COLORS.gray[900] }}>
-                        <svg className="w-5 h-5 mr-2" style={{ color: COLORS.primary[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div style={{
+                      borderRadius: '16px',
+                      overflow: 'hidden',
+                      backgroundColor: COLORS.white,
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                      border: `1px solid ${COLORS.gray[200]}`
+                    }}>
+                      <div style={{
+                        padding: isMobile ? '16px' : '24px',
+                        borderBottom: `1px solid ${COLORS.gray[200]}`,
+                        backgroundColor: COLORS.gray[50]
+                      }}>
+                        <h3 style={{
+                          fontSize: '16px',
+                          fontWeight: '700',
+                          display: 'flex',
+                          alignItems: 'center',
+                          color: COLORS.gray[900],
+                          margin: 0
+                        }}>
+                          <svg style={{ width: '20px', height: '20px', marginRight: '10px', color: COLORS.primary[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                         </svg>
                         Payment Information
                       </h3>
                     </div>
-                    <div className="p-4 sm:p-6">
-                      <div className="flex items-start space-x-4">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: COLORS.secondary[100] }}>
+                      <div style={{ padding: isMobile ? '16px' : '24px' }}>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '16px'
+                        }}>
+                          <div style={{
+                            flexShrink: 0,
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: COLORS.secondary[100]
+                          }}>
                           {formData.paymentMethod === 'cod' ? (
-                            <svg className="w-5 h-5" style={{ color: COLORS.secondary[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg style={{ width: '20px', height: '20px', color: COLORS.secondary[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
                           ) : formData.paymentMethod === 'card' ? (
-                            <svg className="w-5 h-5" style={{ color: COLORS.secondary[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg style={{ width: '20px', height: '20px', color: COLORS.secondary[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                             </svg>
                           ) : (
-                            <svg className="w-5 h-5" style={{ color: COLORS.secondary[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg style={{ width: '20px', height: '20px', color: COLORS.secondary[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                             </svg>
                           )}
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-1">
-                            <h4 className="text-sm font-semibold" style={{ color: COLORS.gray[900] }}>Payment Method</h4>
-                            <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: COLORS.success[100], color: COLORS.success[800] }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              marginBottom: '4px'
+                            }}>
+                              <h4 style={{
+                                fontSize: '14px',
+                                fontWeight: '700',
+                                color: COLORS.gray[900],
+                                margin: 0
+                              }}>
+                                Payment Method
+                              </h4>
+                              <span style={{
+                                fontSize: '12px',
+                                padding: '4px 10px',
+                                borderRadius: '12px',
+                                backgroundColor: COLORS.success[100],
+                                color: COLORS.success[800],
+                                fontWeight: '600'
+                              }}>
                               Ready
                             </span>
                           </div>
-                          <p className="text-sm mt-2" style={{ color: COLORS.gray[700] }}>
+                            <p style={{
+                              fontSize: '14px',
+                              marginTop: '8px',
+                              color: COLORS.gray[700],
+                              margin: '8px 0 0 0'
+                            }}>
                             {formData.paymentMethod === 'card' && formData.cardNumber && (
-                              <span className="flex items-center">
-                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <span style={{ display: 'flex', alignItems: 'center' }}>
+                                  <svg style={{ width: '16px', height: '16px', marginRight: '8px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                                 </svg>
                                 Card ending in {formData.cardNumber.slice(-4)}
                               </span>
                             )}
                             {formData.paymentMethod === 'upi' && formData.upiId && (
-                              <span className="flex items-center">
-                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <span style={{ display: 'flex', alignItems: 'center' }}>
+                                  <svg style={{ width: '16px', height: '16px', marginRight: '8px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                 </svg>
                                 UPI ID: {formData.upiId}
                               </span>
                             )}
                             {formData.paymentMethod === 'netbanking' && formData.bankName && (
-                              <span className="flex items-center">
-                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <span style={{ display: 'flex', alignItems: 'center' }}>
+                                  <svg style={{ width: '16px', height: '16px', marginRight: '8px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                 </svg>
                                 Bank: {formData.bankName}
                               </span>
                             )}
-                          </p>
-                        </div>
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-900">Payment Method</h3>
-                        <p className="text-sm text-gray-600">
-                          {formData.paymentMethod === 'card' && formData.cardNumber && `Card ending in ${formData.cardNumber.slice(-4)}`}
-                          {formData.paymentMethod === 'upi' && formData.upiId && `UPI ID: ${formData.upiId}`}
-                          {formData.paymentMethod === 'netbanking' && formData.bankName && `Net Banking: ${formData.bankName}`}
+                              {!formData.cardNumber && !formData.upiId && !formData.bankName && (
+                                <span>
                           {formData.paymentMethod === 'paytm' && formData.paytmNumber && `Paytm: ****${formData.paytmNumber.slice(-4)}`}
                           {formData.paymentMethod === 'cod' && 'Cash on Delivery'}
+                                  {formData.paymentMethod === 'card' && 'Online Payment'}
+                                </span>
+                              )}
                         </p>
+                          </div>
                       </div>
                     </div>
                   </div>
@@ -1587,9 +2701,21 @@ const CheckoutPage = () => {
               )}
 
               {/* Navigation Buttons */}
-              <div className={`flex ${isMobile ? 'flex-col space-y-3' : 'justify-between'} mt-8 pt-6 border-t`}>
+                <div style={{
+                  display: 'flex',
+                  flexDirection: isMobile ? 'column' : 'row',
+                  justifyContent: isMobile ? 'stretch' : 'space-between',
+                  gap: isMobile ? '12px' : '16px',
+                  marginTop: '32px',
+                  paddingTop: '24px',
+                  borderTop: `1px solid ${COLORS.gray[200]}`
+                }}>
                 {currentStep > 1 ? (
-                  <Button variant="outline" onClick={handleBack} className={isMobile ? 'w-full' : ''}>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleBack} 
+                      style={{ width: isMobile ? '100%' : 'auto', minWidth: '120px' }}
+                    >
                     Back
                   </Button>
                 ) : (
@@ -1597,7 +2723,10 @@ const CheckoutPage = () => {
                 )}
 
                 {currentStep < 3 ? (
-                  <Button onClick={handleNext} className={isMobile ? 'w-full' : ''}>
+                    <Button 
+                      onClick={handleNext} 
+                      style={{ width: isMobile ? '100%' : 'auto', minWidth: '120px' }}
+                    >
                     Next
                   </Button>
                 ) : (
@@ -1608,30 +2737,61 @@ const CheckoutPage = () => {
                       handleSubmit();
                     }}
                     disabled={loading}
-                    className={isMobile ? 'w-full' : ''}
+                      style={{ width: isMobile ? '100%' : 'auto', minWidth: '160px' }}
                   >
                     {loading ? 'Processing...' : 'Place Order'}
                   </Button>
                 )}
               </div>
-            </Card>
+              </div>
           </div>
 
           {/* Order Summary */}
-          <div className={`${isMobile ? 'order-1' : currentStep === 3 ? 'lg:col-span-3' : 'lg:col-span-2'}`}>
-            <Card className="sticky top-4">
+            <div style={{
+              width: '100%',
+              order: isMobile ? 1 : 2
+            }}>
+              <div style={{
+                backgroundColor: COLORS.white,
+                borderRadius: '16px',
+                padding: isMobile ? '24px' : '28px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                border: `1px solid ${COLORS.gray[200]}`
+              }}>
               {/* Header */}
-              <div className="pb-3 border-b mb-4" style={{ borderColor: COLORS.gray[200] }}>
-                <div className="flex items-center justify-between mb-1.5">
-                  <h3 className="text-lg font-bold flex items-center" style={{ color: COLORS.gray[900] }}>
-                    <svg className="w-5 h-5 mr-1.5" style={{ color: COLORS.primary[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div style={{
+                  paddingBottom: '16px',
+                  borderBottom: `1px solid ${COLORS.gray[200]}`,
+                  marginBottom: '20px'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '8px'
+                  }}>
+                    <h3 style={{
+                      fontSize: '20px',
+                      fontWeight: '700',
+                      display: 'flex',
+                      alignItems: 'center',
+                      color: COLORS.gray[900],
+                      margin: 0
+                    }}>
+                      <svg style={{ width: '20px', height: '20px', marginRight: '8px', color: COLORS.primary[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     Bill Summary
                   </h3>
                 </div>
-                <p className="text-xs flex items-center" style={{ color: COLORS.gray[600] }}>
-                  <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <p style={{
+                    fontSize: '13px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    color: COLORS.gray[600],
+                    margin: 0
+                  }}>
+                    <svg style={{ width: '14px', height: '14px', marginRight: '6px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                   </svg>
                   {totalItems} {totalItems === 1 ? 'item' : 'items'}
@@ -1639,29 +2799,80 @@ const CheckoutPage = () => {
               </div>
 
               {/* Order Items List */}
-              <div className="space-y-2 mb-4 max-h-32 overflow-y-auto">
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                  marginBottom: '20px',
+                  maxHeight: '160px',
+                  overflowY: 'auto',
+                  paddingRight: '4px'
+                }}>
                 {items.map(item => {
                   const itemPrice = Number(item.price) || 0;
                   const itemQuantity = Number(item.quantity) || 1;
                   return (
-                    <div key={item.id} className="flex items-center space-x-2 py-1.5 border-b last:border-b-0" style={{ borderColor: COLORS.gray[100] }}>
-                      <div className="flex-shrink-0 w-10 h-10 rounded overflow-hidden" style={{ backgroundColor: COLORS.gray[100] }}>
+                      <div key={item.id} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '8px 0',
+                        borderBottom: `1px solid ${COLORS.gray[100]}`,
+                        paddingBottom: '12px'
+                      }}>
+                        <div style={{
+                          flexShrink: 0,
+                          width: '48px',
+                          height: '48px',
+                          borderRadius: '8px',
+                          overflow: 'hidden',
+                          backgroundColor: COLORS.gray[100]
+                        }}>
                         {item.image ? (
-                          <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <svg className="w-5 h-5" style={{ color: COLORS.gray[400] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <img src={item.image} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <div style={{
+                              width: '100%',
+                              height: '100%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}>
+                              <svg style={{ width: '20px', height: '20px', color: COLORS.gray[400] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                           </div>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium truncate" style={{ color: COLORS.gray[900] }}>{item.title}</p>
-                        <p className="text-xs" style={{ color: COLORS.gray[500] }}>Qty: {itemQuantity}</p>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            color: COLORS.gray[900],
+                            margin: '0 0 4px 0',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {item.title}
+                          </p>
+                          <p style={{
+                            fontSize: '12px',
+                            color: COLORS.gray[500],
+                            margin: 0
+                          }}>
+                            Qty: {itemQuantity}
+                          </p>
                       </div>
-                      <div className="flex-shrink-0 text-right">
-                        <p className="text-xs font-semibold" style={{ color: COLORS.gray[900] }}>₹{(itemPrice * itemQuantity).toFixed(2)}</p>
+                        <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                          <p style={{
+                            fontSize: '13px',
+                            fontWeight: '700',
+                            color: COLORS.gray[900],
+                            margin: 0
+                          }}>
+                            ₹{(itemPrice * itemQuantity).toFixed(2)}
+                          </p>
                       </div>
                     </div>
                   );
@@ -1669,161 +2880,422 @@ const CheckoutPage = () => {
               </div>
 
               {/* Price Breakdown */}
-              <div className="space-y-2 mb-3">
-                <div className="flex items-center justify-between py-1">
-                  <div className="flex items-center">
-                    <svg className="w-3.5 h-3.5 mr-1.5" style={{ color: COLORS.gray[500] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                  marginBottom: '20px'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '6px 0'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <svg style={{ width: '14px', height: '14px', marginRight: '8px', color: COLORS.gray[500] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
-                    <span className="text-xs" style={{ color: COLORS.gray[700] }}>MRP</span>
+                      <span style={{ fontSize: '13px', color: COLORS.gray[700] }}>MRP</span>
                   </div>
-                  <span className="text-xs font-medium" style={{ color: COLORS.gray[700] }}>₹{mrpTotal.toFixed(2)}</span>
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: COLORS.gray[700] }}>₹{mrpTotal.toFixed(2)}</span>
                 </div>
 
-                <div className="flex items-center justify-between py-1">
-                  <div className="flex items-center">
-                    <svg className="w-3.5 h-3.5 mr-1.5" style={{ color: COLORS.gray[500] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '6px 0'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <svg style={{ width: '14px', height: '14px', marginRight: '8px', color: COLORS.gray[500] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                     </svg>
-                    <span className="text-xs" style={{ color: COLORS.gray[700] }}>Delivery</span>
+                      <span style={{ fontSize: '13px', color: COLORS.gray[700] }}>Delivery</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ backgroundColor: COLORS.warning[100], color: COLORS.warning[800] }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{
+                        fontSize: '12px',
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        fontWeight: '600',
+                        backgroundColor: COLORS.warning[100],
+                        color: COLORS.warning[800]
+                      }}>
                       Free
                     </span>
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs line-through" style={{ color: COLORS.gray[400] }}>₹49</span>
-                      <span className="text-xs font-semibold" style={{ color: COLORS.success[600] }}>₹0</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ fontSize: '12px', textDecoration: 'line-through', color: COLORS.gray[400] }}>₹49</span>
+                        <span style={{ fontSize: '12px', fontWeight: '700', color: COLORS.success[600] }}>₹0</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Savings Highlight */}
-              <div className="rounded-lg p-3 mb-3" style={{ backgroundColor: COLORS.success[50], borderWidth: '1px', borderStyle: 'solid', borderColor: COLORS.success[200] }}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center mr-1.5" style={{ backgroundColor: COLORS.success[100] }}>
-                      <svg className="w-4 h-4" style={{ color: COLORS.success[700] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div style={{
+                  borderRadius: '12px',
+                  padding: '16px',
+                  marginBottom: '20px',
+                  backgroundColor: COLORS.success[50],
+                  border: `1px solid ${COLORS.success[200]}`
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <div style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: '12px',
+                        backgroundColor: COLORS.success[100]
+                      }}>
+                        <svg style={{ width: '18px', height: '18px', color: COLORS.success[700] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <div>
-                      <p className="text-xs font-medium" style={{ color: COLORS.success[800] }}>You're saving</p>
-                      <p className="text-base font-bold" style={{ color: COLORS.success[700] }}>₹{totalSavings.toFixed(2)}</p>
+                        <p style={{
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          color: COLORS.success[800],
+                          margin: '0 0 4px 0'
+                        }}>
+                          You're saving
+                        </p>
+                        <p style={{
+                          fontSize: '20px',
+                          fontWeight: '700',
+                          color: COLORS.success[700],
+                          margin: 0
+                        }}>
+                          ₹{totalSavings.toFixed(2)}
+                        </p>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Total Amount Section */}
-              <div className="rounded-lg p-4 mb-3" style={{ backgroundColor: COLORS.primary[50], borderWidth: '2px', borderStyle: 'solid', borderColor: COLORS.primary[200] }}>
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center">
-                    <svg className="w-4 h-4 mr-1.5" style={{ color: COLORS.primary[700] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div style={{
+                  borderRadius: '12px',
+                  padding: '20px',
+                  marginBottom: '20px',
+                  backgroundColor: COLORS.primary[50],
+                  border: `2px solid ${COLORS.primary[200]}`
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '12px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <svg style={{ width: '18px', height: '18px', marginRight: '8px', color: COLORS.primary[700] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    <span className="text-sm font-semibold" style={{ color: COLORS.gray[900] }}>Total Amount</span>
+                      <span style={{
+                        fontSize: '15px',
+                        fontWeight: '700',
+                        color: COLORS.gray[900]
+                      }}>
+                        Total Amount
+                      </span>
                   </div>
-                  <span className="text-xl font-bold" style={{ color: COLORS.primary[700] }}>₹{finalTotal.toFixed(2)}</span>
+                    <span style={{
+                      fontSize: '24px',
+                      fontWeight: '700',
+                      color: COLORS.primary[700]
+                    }}>
+                      ₹{finalTotal.toFixed(2)}
+                    </span>
                 </div>
-                <div className="flex items-center mt-1.5 pt-1.5 border-t" style={{ borderColor: COLORS.primary[200] }}>
-                  <svg className="w-3.5 h-3.5 mr-1" style={{ color: COLORS.gray[500] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    marginTop: '12px',
+                    paddingTop: '12px',
+                    borderTop: `1px solid ${COLORS.primary[200]}`
+                  }}>
+                    <svg style={{ width: '14px', height: '14px', marginRight: '6px', color: COLORS.gray[500] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <p className="text-xs" style={{ color: COLORS.gray[600] }}>
+                    <p style={{
+                      fontSize: '12px',
+                      color: COLORS.gray[600],
+                      margin: 0
+                    }}>
                     Tax ₹{taxAmount.toFixed(2)} incl.
                   </p>
                 </div>
               </div>
 
               {/* Security Badge */}
-              <div className="flex items-center justify-center pt-3 border-t" style={{ borderColor: COLORS.gray[200] }}>
-                <svg className="w-3.5 h-3.5 mr-1.5" style={{ color: COLORS.success[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingTop: '16px',
+                  borderTop: `1px solid ${COLORS.gray[200]}`
+                }}>
+                  <svg style={{ width: '14px', height: '14px', marginRight: '8px', color: COLORS.success[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
-                <p className="text-xs" style={{ color: COLORS.gray[600] }}>Secure payment</p>
+                  <p style={{
+                    fontSize: '12px',
+                    color: COLORS.gray[600],
+                    margin: 0
+                  }}>
+                    Secure payment
+                  </p>
               </div>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Time Slot Selection Modal */}
       {showTimeSlotModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1050,
+          padding: '16px'
+        }}>
+          <div style={{
+            backgroundColor: COLORS.white,
+            borderRadius: '16px',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.2)',
+            maxWidth: '700px',
+            width: '100%',
+            maxHeight: '80vh',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '24px',
+              borderBottom: `1px solid ${COLORS.gray[200]}`
+            }}>
               <div>
-                <h3 className="text-xl font-bold text-gray-900">Select a time Slot</h3>
-                <p className="text-sm text-gray-600 mt-1">Shipment 1: {totalItems} items</p>
+                <h3 style={{
+                  fontSize: '24px',
+                  fontWeight: '700',
+                  color: COLORS.gray[900],
+                  margin: '0 0 4px 0'
+                }}>
+                  Select a time Slot
+                </h3>
+                <p style={{
+                  fontSize: '14px',
+                  color: COLORS.gray[600],
+                  margin: 0
+                }}>
+                  Shipment 1: {totalItems} items
+                </p>
               </div>
               <button
                 onClick={handleTimeSlotModalClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                style={{
+                  color: COLORS.gray[400],
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '8px',
+                  borderRadius: '8px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.color = COLORS.gray[600];
+                  e.target.style.backgroundColor = COLORS.gray[100];
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.color = COLORS.gray[400];
+                  e.target.style.backgroundColor = 'transparent';
+                }}
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style={{ width: '24px', height: '24px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
             {/* Modal Content */}
-            <div className="p-6 overflow-y-auto max-h-[60vh]">
+            <div style={{
+              padding: '24px',
+              overflowY: 'auto',
+              maxHeight: '60vh',
+              flex: 1
+            }}>
               {isLoadingSlots ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mr-3"></div>
-                  <span className="text-gray-600">Loading delivery slots...</span>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '48px 0'
+                }}>
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    border: `3px solid ${COLORS.gray[200]}`,
+                    borderTopColor: COLORS.primary[500],
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                    marginRight: '12px'
+                  }}></div>
+                  <span style={{ color: COLORS.gray[600], fontSize: '14px' }}>Loading delivery slots...</span>
                 </div>
               ) : slotsErrorMessage ? (
-                <div className="py-12">
-                  <div className="flex flex-col items-center justify-center text-center">
-                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                      <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div style={{ padding: '48px 0' }}>
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{
+                      width: '64px',
+                      height: '64px',
+                      backgroundColor: COLORS.error[100],
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: '16px'
+                    }}>
+                      <svg style={{ width: '32px', height: '32px', color: COLORS.error[600] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Delivery Slots Unavailable</h4>
-                    <p className="text-sm text-gray-700 max-w-md">{slotsErrorMessage}</p>
+                    <h4 style={{
+                      fontSize: '18px',
+                      fontWeight: '700',
+                      color: COLORS.gray[900],
+                      margin: '0 0 8px 0'
+                    }}>
+                      Delivery Slots Unavailable
+                    </h4>
+                    <p style={{
+                      fontSize: '14px',
+                      color: COLORS.gray[700],
+                      maxWidth: '400px',
+                      margin: 0
+                    }}>
+                      {slotsErrorMessage}
+                    </p>
                   </div>
                 </div>
               ) : timeSlots.length > 0 ? (
-                <div className="space-y-6">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
                   {timeSlots.map((dateSlot, dateIndex) => (
-                    <div key={dateIndex} className="space-y-4">
+                    <div key={dateIndex} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                       {/* Date Header */}
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-lg font-semibold text-gray-900">{dateSlot.date}</h4>
-                        <div className="flex items-center space-x-2">
-                          <div className="flex space-x-1">
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}>
+                        <h4 style={{
+                          fontSize: '18px',
+                          fontWeight: '700',
+                          color: COLORS.gray[900],
+                          margin: 0
+                        }}>
+                          {dateSlot.date}
+                        </h4>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}>
+                          <div style={{ display: 'flex', gap: '4px' }}>
                             {[...Array(6)].map((_, i) => (
-                              <div key={i} className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <div key={i} style={{
+                                width: '8px',
+                                height: '8px',
+                                backgroundColor: COLORS.success[500],
+                                borderRadius: '50%'
+                              }}></div>
                             ))}
                           </div>
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg style={{ width: '16px', height: '16px', color: COLORS.gray[400] }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                           </svg>
                         </div>
                       </div>
 
                       {/* Time Slots Grid */}
-                      <div className="grid grid-cols-2 gap-3">
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(2, 1fr)',
+                        gap: '12px'
+                      }}>
                         {dateSlot.slots.map((slot) => (
                           <button
                             key={slot.id}
                             onClick={() => handleTimeSlotSelect(dateSlot.date, slot)}
                             disabled={!slot.available}
-                            className={`p-3 text-left border rounded-lg transition-colors ${slot.available
-                              ? 'border-gray-200 hover:border-green-500 hover:bg-green-50'
-                              : 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-50'
-                              } ${checkoutData.selectedTimeSlot?.id === slot.id
-                                ? 'border-green-500 bg-green-50'
-                                : ''
-                              }`}
+                            style={{
+                              padding: '12px',
+                              textAlign: 'left',
+                              border: `2px solid ${checkoutData.selectedTimeSlot?.id === slot.id 
+                                ? COLORS.success[500] 
+                                : slot.available 
+                                  ? COLORS.gray[200] 
+                                  : COLORS.gray[100]}`,
+                              borderRadius: '10px',
+                              backgroundColor: checkoutData.selectedTimeSlot?.id === slot.id
+                                ? COLORS.success[50]
+                                : slot.available
+                                  ? COLORS.white
+                                  : COLORS.gray[50],
+                              cursor: slot.available ? 'pointer' : 'not-allowed',
+                              opacity: slot.available ? 1 : 0.5,
+                              transition: 'all 0.2s ease',
+                              ...(slot.available && {
+                                ':hover': {
+                                  borderColor: COLORS.success[500],
+                                  backgroundColor: COLORS.success[50]
+                                }
+                              })
+                            }}
+                            onMouseEnter={(e) => {
+                              if (slot.available && checkoutData.selectedTimeSlot?.id !== slot.id) {
+                                e.target.style.borderColor = COLORS.success[500];
+                                e.target.style.backgroundColor = COLORS.success[50];
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (slot.available && checkoutData.selectedTimeSlot?.id !== slot.id) {
+                                e.target.style.borderColor = COLORS.gray[200];
+                                e.target.style.backgroundColor = COLORS.white;
+                              }
+                            }}
                           >
-                            <span className={`text-sm font-medium ${slot.available ? 'text-gray-900' : 'text-gray-400'
-                              }`}>
+                            <span style={{
+                              fontSize: '14px',
+                              fontWeight: '600',
+                              color: slot.available ? COLORS.gray[900] : COLORS.gray[400]
+                            }}>
                               {slot.time}
                             </span>
                           </button>
@@ -1833,17 +3305,46 @@ const CheckoutPage = () => {
                   ))}
                 </div>
               ) : (
-                <div className="py-12 text-center text-gray-500">
+                <div style={{
+                  padding: '48px 0',
+                  textAlign: 'center',
+                  color: COLORS.gray[500],
+                  fontSize: '14px'
+                }}>
                   No delivery slots available
                 </div>
               )}
             </div>
 
             {/* Modal Footer */}
-            <div className="flex items-center justify-between p-6 border-t border-gray-200">
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '24px',
+              borderTop: `1px solid ${COLORS.gray[200]}`
+            }}>
               <button
                 onClick={handleTimeSlotModalClose}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                style={{
+                  padding: '10px 20px',
+                  color: COLORS.gray[600],
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.color = COLORS.gray[800];
+                  e.target.style.backgroundColor = COLORS.gray[100];
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.color = COLORS.gray[600];
+                  e.target.style.backgroundColor = 'transparent';
+                }}
               >
                 {slotsErrorMessage ? 'Close' : 'Cancel'}
               </button>
@@ -1851,7 +3352,10 @@ const CheckoutPage = () => {
                 <Button
                   onClick={handleConfirmTimeSlot}
                   disabled={!checkoutData.selectedTimeSlot}
-                  className="bg-green-600 hover:bg-green-700"
+                  style={{
+                    backgroundColor: COLORS.success[600],
+                    minWidth: '160px'
+                  }}
                 >
                   Confirm Time Slot
                 </Button>
@@ -1869,6 +3373,7 @@ const CheckoutPage = () => {
       />
 
     </div>
+    </>
   );
 };
 

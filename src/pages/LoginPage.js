@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 import { COLORS } from '../constants/theme';
 
 // Helper function to convert hex color to rgba with opacity
@@ -96,110 +96,53 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
-      {/* Left side - Illustration (hidden on mobile) */}
+      {/* Left side - Basket Image (hidden on mobile) */}
       <div 
         className="hidden lg:flex lg:w-1/2 relative overflow-hidden"
         style={{
-          background: `linear-gradient(to bottom right, ${COLORS.primary[50]}, ${COLORS.success[50]}, ${COLORS.primary[100]})`
+          backgroundColor: COLORS.primary[50] // Light green background
         }}
       >
-        <div 
-          className="absolute inset-0"
-          style={{
-            background: `radial-gradient(circle at 30% 20%, ${hexToRgba(COLORS.primary[500], 0.1)} 0%, transparent 50%)`
-          }}
-        ></div>
-        <div 
-          className="absolute inset-0"
-          style={{
-            background: `radial-gradient(circle at 70% 80%, ${hexToRgba(COLORS.success[400], 0.1)} 0%, transparent 50%)`
-          }}
-        ></div>
-        
-        <div className="flex items-center justify-center w-full p-12 relative z-10">
-          <div className="max-w-md text-center">
-            {/* Logo */}
-            <div className="mb-8">
-              <div 
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl shadow-lg"
-                style={{ backgroundColor: COLORS.white }}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold" style={{ color: COLORS.primary[600] }}>Pagariya Mart</span>
-                </div>
-              </div>
-            </div>
+        <div className="flex flex-col items-center justify-center w-full h-full p-12 relative z-10">
+          <div className="max-w-md w-full flex flex-col items-center">
+            {/* Pagariya Mart Logo */}
+            
 
-            {/* Illustration SVG */}
-            <div className="relative">
-              <svg viewBox="0 0 400 500" className="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
-                {/* Table/Stool */}
-                <rect x="50" y="420" width="80" height="15" rx="3" fill="#14b8a6" opacity="0.9"/>
-                <rect x="60" y="435" width="60" height="8" rx="2" fill="#0d9488"/>
-                
-                {/* Items on table */}
-                <rect x="65" y="405" width="20" height="15" rx="2" fill="#f59e0b"/>
-                <rect x="65" y="400" width="20" height="5" rx="1" fill="#fbbf24"/>
-                
-                {/* Lamp hanging from ceiling */}
-                <line x1="320" y1="20" x2="320" y2="80" stroke="#14b8a6" strokeWidth="2"/>
-                <ellipse cx="320" cy="90" rx="40" ry="20" fill="#10b981" opacity="0.8"/>
-                
-                {/* Person - Body */}
-                <ellipse cx="220" cy="380" rx="50" ry="70" fill="#fbbf24"/>
-                
-                {/* Person - Legs */}
-                <rect x="190" y="440" width="25" height="60" rx="5" fill="#0ea5e9"/>
-                <rect x="225" y="440" width="25" height="60" rx="5" fill="#0ea5e9"/>
-                
-                {/* Person - Shoes */}
-                <ellipse cx="202" cy="498" rx="18" ry="8" fill="#dc2626"/>
-                <ellipse cx="237" cy="498" rx="18" ry="8" fill="#dc2626"/>
-                <circle cx="208" cy="498" r="3" fill="#fee2e2"/>
-                <circle cx="243" cy="498" r="3" fill="#fee2e2"/>
-                
-                {/* Person - Head */}
-                <circle cx="220" cy="280" r="40" fill="#fcd34d"/>
-                
-                {/* Person - Hair */}
-                <path d="M 180 280 Q 180 240 220 240 Q 260 240 260 280 Q 260 270 220 265 Q 180 270 180 280" fill="#1f2937"/>
-                
-                {/* Person - Face */}
-                <circle cx="205" cy="275" r="5" fill="#1f2937"/>
-                <circle cx="235" cy="275" r="5" fill="#1f2937"/>
-                
-                {/* Glasses */}
-                <circle cx="205" cy="275" r="12" fill="none" stroke="#1f2937" strokeWidth="3"/>
-                <circle cx="235" cy="275" r="12" fill="none" stroke="#1f2937" strokeWidth="3"/>
-                <line x1="217" y1="275" x2="223" y2="275" stroke="#1f2937" strokeWidth="3"/>
-                
-                {/* Smile */}
-                <path d="M 205 290 Q 220 298 235 290" fill="none" stroke="#1f2937" strokeWidth="2.5" strokeLinecap="round"/>
-                
-                {/* Arm with pointer */}
-                <path d="M 170 340 L 100 250 L 105 245" fill="none" stroke="#fbbf24" strokeWidth="20" strokeLinecap="round"/>
-                <path d="M 98 238 L 105 245 L 112 238" fill="none" stroke="#fcd34d" strokeWidth="8" strokeLinecap="round"/>
-                
-                {/* Shopping Bag */}
-                <path d="M 250 370 Q 250 360 265 360 L 315 360 Q 330 360 330 370 L 335 450 Q 335 460 320 460 L 260 460 Q 245 460 245 450 Z" fill="#ffffff" stroke="#14b8a6" strokeWidth="3"/>
-                
-                {/* Bag Handle */}
-                <path d="M 270 360 Q 270 345 292.5 345 Q 315 345 315 360" fill="none" stroke="#14b8a6" strokeWidth="3"/>
-                
-                {/* Pagariya Logo on Bag */}
-                <text x="250" y="400" fontFamily="Arial, sans-serif" fontSize="18" fontWeight="bold" fill="#10b981">Pagariya</text>
-                
-                {/* Vegetables in bag */}
-                <ellipse cx="280" cy="425" rx="10" ry="12" fill="#f97316"/>
-                <ellipse cx="300" cy="430" rx="8" ry="10" fill="#84cc16"/>
-                <rect x="308" y="420" width="12" height="25" rx="2" fill="#ef4444"/>
-              </svg>
+            {/* Basket Image */}
+            <div className="w-full flex items-center justify-center mb-6">
+              <img
+                src={`${process.env.PUBLIC_URL}/images/download.png`}
+                alt="Fresh fruits and vegetables in basket"
+                className="w-full h-auto object-contain"
+                style={{
+                  maxHeight: '35vh',
+                  maxWidth: '400px'
+                }}
+              />
             </div>
 
             {/* Text below illustration */}
-            <p className="mt-8 text-lg font-medium" style={{ color: COLORS.gray[600] }}>
-              Fresh groceries delivered to your doorstep
-            </p>
+            <div className="w-full text-center space-y-6">
+              {/* Main Headline */}
+              <h2 className="text-3xl sm:text-4xl font-bold leading-tight" style={{ fontFamily: 'serif' }}>
+                <span style={{ color: COLORS.gray[900] }}>Fresh Groceries,</span>{' '}
+                <span style={{ color: COLORS.primary[600] }}>Delivered Fast</span>
+              </h2>
+
+              {/* Descriptive Paragraph */}
+              <p className="text-base sm:text-lg leading-relaxed" style={{ color: COLORS.gray[600], fontFamily: 'sans-serif' }}>
+              Get premium wheat, pulses, dry fruits, juices, soaps & more delivered to your doorstep.
+              </p>
+
+              {/* Feature Highlights */}
+              <div className="flex items-center justify-center gap-8 sm:gap-12 pt-4">
+                {/* Left Feature - 100% Fresh */}
+                
+
+                {/* Right Feature - 5000+ Products */}
+               
+              </div>
+            </div>
           </div>
         </div>
       </div>

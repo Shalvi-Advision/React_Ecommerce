@@ -160,7 +160,7 @@ const CheckoutPageNew = () => {
     // Validate delivery mode based on store settings
     useEffect(() => {
         if (confirmedLocation?.store) {
-            const { homeDelivery, selfPickup } = confirmedLocation.store;
+            const { homeDelivery, selfPickup } = getDeliveryOptions(confirmedLocation.store);
             if (checkoutData.deliveryMode === 'home' && !homeDelivery && selfPickup) {
                 setCheckoutData(prev => ({ ...prev, deliveryMode: 'pickup' }));
             } else if (checkoutData.deliveryMode === 'pickup' && !selfPickup && homeDelivery) {
@@ -190,6 +190,49 @@ const CheckoutPageNew = () => {
     const totalSavings = items.reduce((total, item) => {
         return total + (Math.round((Number(item.price) || 0) * 0.2) * (Number(item.quantity) || 1));
     }, 0);
+
+    // Helper function to get delivery options from store (handles both formatted and raw API formats)
+    const getDeliveryOptions = (store) => {
+        if (!store) return { homeDelivery: false, selfPickup: false };
+        
+        // Debug logging to inspect store structure
+        if (process.env.NODE_ENV === 'development') {
+            console.log('🔍 Store data structure:', {
+                store,
+                hasHomeDelivery: 'homeDelivery' in store,
+                hasSelfPickup: 'selfPickup' in store,
+                hasDeliveryOptions: 'delivery_options' in store,
+                deliveryOptions: store.delivery_options
+            });
+        }
+        
+        // Check for formatted properties first (camelCase)
+        let homeDelivery = store.homeDelivery;
+        let selfPickup = store.selfPickup;
+        
+        // If not found, check raw API format (snake_case in delivery_options)
+        if (homeDelivery === undefined && store.delivery_options) {
+            const hd = store.delivery_options.home_delivery;
+            homeDelivery = typeof hd === 'boolean' ? hd : hd === 'yes' || hd === true;
+        }
+        
+        if (selfPickup === undefined && store.delivery_options) {
+            const sp = store.delivery_options.self_pickup;
+            selfPickup = typeof sp === 'boolean' ? sp : sp === 'yes' || sp === true;
+        }
+        
+        // Default to false if still undefined
+        const result = {
+            homeDelivery: homeDelivery === true || homeDelivery === 'yes',
+            selfPickup: selfPickup === true || selfPickup === 'yes'
+        };
+        
+        if (process.env.NODE_ENV === 'development') {
+            console.log('✅ Parsed delivery options:', result);
+        }
+        
+        return result;
+    };
 
     const getPaymentMethodDetails = (mode) => {
         const map = {
@@ -347,50 +390,54 @@ const CheckoutPageNew = () => {
             {/* Content */}
             <div className="checkout-content">
                 {/* Step 1: Delivery Method */}
-                {currentStep === 1 && (
-                    <>
-                        {confirmedLocation?.store?.homeDelivery && !confirmedLocation?.store?.selfPickup && (
-                            <div className="info-banner">
-                                <div className="icon">ℹ</div>
-                                <div className="text">
-                                    <h4>Home Delivery Only</h4>
-                                    <p>Only Home Delivery is available</p>
+                {currentStep === 1 && (() => {
+                    const { homeDelivery, selfPickup } = getDeliveryOptions(confirmedLocation?.store);
+                    
+                    return (
+                        <>
+                            {homeDelivery && !selfPickup && (
+                                <div className="info-banner">
+                                    <div className="icon">ℹ</div>
+                                    <div className="text">
+                                        <h4>Home Delivery Only</h4>
+                                        <p>Only Home Delivery is available</p>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        <h2 className="section-title">Choose Delivery Method</h2>
-                        <p className="section-subtitle">How do you want to receive your order?</p>
+                            <h2 className="section-title">Choose Delivery Method</h2>
+                            <p className="section-subtitle">How do you want to receive your order?</p>
 
-                        {confirmedLocation?.store?.homeDelivery && (
-                            <div
-                                className={`delivery-mode-card ${checkoutData.deliveryMode === 'home' ? 'selected' : ''}`}
-                                onClick={() => setCheckoutData(prev => ({ ...prev, deliveryMode: 'home' }))}
-                            >
-                                <div className="icon">🏠</div>
-                                <div className="content">
-                                    <h4>Home Delivery</h4>
-                                    <p>Delivered to your doorstep</p>
+                            {homeDelivery && (
+                                <div
+                                    className={`delivery-mode-card ${checkoutData.deliveryMode === 'home' ? 'selected' : ''}`}
+                                    onClick={() => setCheckoutData(prev => ({ ...prev, deliveryMode: 'home' }))}
+                                >
+                                    <div className="icon">🏠</div>
+                                    <div className="content">
+                                        <h4>Home Delivery</h4>
+                                        <p>Delivered to your doorstep</p>
+                                    </div>
+                                    <div className="radio" />
                                 </div>
-                                <div className="radio" />
-                            </div>
-                        )}
+                            )}
 
-                        {confirmedLocation?.store?.selfPickup && (
-                            <div
-                                className={`delivery-mode-card ${checkoutData.deliveryMode === 'pickup' ? 'selected' : ''}`}
-                                onClick={() => setCheckoutData(prev => ({ ...prev, deliveryMode: 'pickup' }))}
-                            >
-                                <div className="icon">🏪</div>
-                                <div className="content">
-                                    <h4>Store Pickup</h4>
-                                    <p>Pick up from store</p>
+                            {selfPickup && (
+                                <div
+                                    className={`delivery-mode-card ${checkoutData.deliveryMode === 'pickup' ? 'selected' : ''}`}
+                                    onClick={() => setCheckoutData(prev => ({ ...prev, deliveryMode: 'pickup' }))}
+                                >
+                                    <div className="icon">🏪</div>
+                                    <div className="content">
+                                        <h4>Store Pickup</h4>
+                                        <p>Pick up from store</p>
+                                    </div>
+                                    <div className="radio" />
                                 </div>
-                                <div className="radio" />
-                            </div>
-                        )}
-                    </>
-                )}
+                            )}
+                        </>
+                    );
+                })()}
 
                 {/* Step 2: Address Selection */}
                 {currentStep === 2 && (

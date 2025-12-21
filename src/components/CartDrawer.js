@@ -123,9 +123,15 @@ const CartDrawer = ({ isOpen, onClose }) => {
                       <div className="flex items-center gap-1 sm:gap-2">
                         <div className="flex items-center border border-gray-300 rounded-lg">
                           <button
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            onClick={() => {
+                              if (item.quantity <= 1) {
+                                removeItem(item.id);
+                              } else {
+                                updateQuantity(item.id, item.quantity - 1);
+                              }
+                            }}
                             className="p-1 hover:bg-gray-100 rounded-l-lg transition-colors"
-                            disabled={item.quantity <= 1}
+                            disabled={item.quantity <= 0}
                           >
                             <MinusIcon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" />
                           </button>

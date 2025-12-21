@@ -27,7 +27,7 @@ const CategoryPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isMobile, isTablet, isDesktop } = useResponsive();
-  const { addItem, updateQuantity, items: cartItems } = useCart();
+  const { addItem, updateQuantity, removeItem, items: cartItems } = useCart();
   const { showError } = useToast();
   const { isFavorite, toggleFavorite } = useFavorite();
   
@@ -666,17 +666,71 @@ const CategoryPage = () => {
     const productId = product.p_code || product._id;
     const maxQuantity = product.max_quantity_allowed || 10;
     
-    if (newQuantity >= 1 && newQuantity <= maxQuantity) {
-      setQuantities(prev => ({ ...prev, [productId]: newQuantity }));
+    // Clamp quantity to valid range
+    const clampedQuantity = Math.max(0, Math.min(newQuantity, maxQuantity));
+    
+    if (clampedQuantity === 0) {
+      // Remove item from cart when quantity is 0
+      setQuantities(prev => ({ ...prev, [productId]: 0 }));
+      setShowQuantitySelector(prev => ({ ...prev, [productId]: false }));
+      
+      try {
+        removeItem(productId);
+      } catch (error) {
+        console.error('Error removing item from cart:', error);
+        showError('Failed to remove item from cart');
+      }
+    } else if (clampedQuantity >= 1 && clampedQuantity <= maxQuantity) {
+      setQuantities(prev => ({ ...prev, [productId]: clampedQuantity }));
       
       try {
         // Update cart with exact quantity (not adding to existing)
-        updateQuantity(productId, newQuantity);
+        updateQuantity(productId, clampedQuantity);
       } catch (error) {
         console.error('Error updating cart quantity:', error);
         showError('Failed to update quantity');
       }
     }
+  };
+
+  // Handle manual quantity input change
+  const handleQuantityInputChange = (product, inputValue) => {
+    const productId = product.p_code || product._id;
+    
+    // Always update state with the raw input value to allow free typing
+    // We'll validate and clamp on blur
+    setQuantities(prev => ({ ...prev, [productId]: inputValue }));
+  };
+
+  // Handle quantity input blur or Enter key
+  const handleQuantityInputBlur = async (product) => {
+    const productId = product.p_code || product._id;
+    const maxQuantity = product.max_quantity_allowed || 10;
+    let currentQuantity = quantities[productId];
+    
+    // Handle empty string or invalid values
+    if (currentQuantity === '' || currentQuantity === null || currentQuantity === undefined) {
+      // Default to 1 if empty
+      currentQuantity = 1;
+    } else {
+      // Parse and validate (handle both string and number)
+      const numericValue = typeof currentQuantity === 'string' 
+        ? parseInt(currentQuantity, 10) 
+        : parseInt(currentQuantity, 10);
+      
+      if (isNaN(numericValue) || numericValue < 0) {
+        currentQuantity = 1;
+      } else {
+        // Clamp to valid range
+        currentQuantity = Math.max(0, Math.min(numericValue, maxQuantity));
+      }
+    }
+    
+    // Update state with validated value
+    setQuantities(prev => ({ ...prev, [productId]: currentQuantity }));
+    
+    // Use handleQuantityChange to sync with cart
+    await handleQuantityChange(product, currentQuantity);
   };
 
   // Modern Loading state
@@ -1043,7 +1097,16 @@ const CategoryPage = () => {
               </h1>
               
               {/* Filter Icons */}
-              <div className="flex items-center gap-2 flex-shrink-0" style={{ position: 'relative', zIndex: 10000 }}>
+              <div 
+                className="flex items-center gap-2 flex-shrink-0"
+                style={{ 
+                  position: isMobile ? 'sticky' : 'relative', 
+                  zIndex: isMobile ? 40 : 10000,
+                  top: isMobile ? '56px' : 'auto',
+                  backgroundColor: isMobile ? COLORS.white : 'transparent',
+                  alignSelf: isMobile ? 'flex-start' : 'auto'
+                }}
+              >
                 {/* Brand Filter Icon */}
                 <div className="relative brand-filter-container" style={{ zIndex: 10001 }}>
                   <button
@@ -1415,26 +1478,27 @@ const CategoryPage = () => {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleQuantityChange(product, (quantities[product.p_code || product._id] || 1) - 1);
+                                  const currentQty = parseInt(quantities[product.p_code || product._id] || 1, 10) || 1;
+                                  handleQuantityChange(product, currentQty - 1);
                                 }}
-                                disabled={(quantities[product.p_code || product._id] || 1) <= 1}
+                                disabled={(parseInt(quantities[product.p_code || product._id] || 1, 10) || 1) <= 0}
                                 className="flex items-center justify-center px-2 sm:px-3 py-1.5 sm:py-2 transition-all duration-200"
                                 style={{
-                                  backgroundColor: (quantities[product.p_code || product._id] || 1) <= 1
+                                  backgroundColor: (parseInt(quantities[product.p_code || product._id] || 1, 10) || 1) <= 0
                                     ? COLORS.gray[200]
                                     : `linear-gradient(to bottom right, ${COLORS.primary[600]}, ${COLORS.success[600]})`,
-                                  color: (quantities[product.p_code || product._id] || 1) <= 1
+                                  color: (parseInt(quantities[product.p_code || product._id] || 1, 10) || 1) <= 0
                                     ? COLORS.gray[400]
                                     : COLORS.white,
-                                  cursor: (quantities[product.p_code || product._id] || 1) <= 1 ? 'not-allowed' : 'pointer'
+                                  cursor: (parseInt(quantities[product.p_code || product._id] || 1, 10) || 1) <= 0 ? 'not-allowed' : 'pointer'
                                 }}
                                 onMouseEnter={(e) => {
-                                  if ((quantities[product.p_code || product._id] || 1) > 1) {
+                                  if ((parseInt(quantities[product.p_code || product._id] || 1, 10) || 1) > 0) {
                                     e.currentTarget.style.background = `linear-gradient(to bottom right, ${COLORS.primary[700]}, ${COLORS.success[700]})`;
                                   }
                                 }}
                                 onMouseLeave={(e) => {
-                                  if ((quantities[product.p_code || product._id] || 1) > 1) {
+                                  if ((parseInt(quantities[product.p_code || product._id] || 1, 10) || 1) > 0) {
                                     e.currentTarget.style.background = `linear-gradient(to bottom right, ${COLORS.primary[600]}, ${COLORS.success[600]})`;
                                   }
                                 }}
@@ -1442,42 +1506,69 @@ const CategoryPage = () => {
                                 <MinusIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 font-bold" strokeWidth={3} style={{ color: 'black' }} />
                               </button>
 
-                              {/* Quantity Display */}
+                              {/* Quantity Input */}
                               <div 
                                 className="bg-white px-2 sm:px-4 py-1.5 sm:py-2 flex-1 flex items-center justify-center border-x-2"
                                 style={{
                                   borderColor: COLORS.primary[200]
                                 }}
                               >
-                                <span className="text-sm sm:text-base font-bold" style={{ color: COLORS.primary[700] }}>
-                                  {quantities[product.p_code || product._id] || 1}
-                                </span>
+                                <input
+                                  type="text"
+                                  inputMode="numeric"
+                                  pattern="[0-9]*"
+                                  value={quantities[product.p_code || product._id] !== undefined && quantities[product.p_code || product._id] !== '' 
+                                    ? String(quantities[product.p_code || product._id]) 
+                                    : (cartItems.find(item => (item.p_code || item.id) === (product.p_code || product._id))?.quantity || 1)}
+                                  onChange={(e) => {
+                                    e.stopPropagation();
+                                    // Only allow numeric input
+                                    const value = e.target.value.replace(/[^0-9]/g, '');
+                                    handleQuantityInputChange(product, value);
+                                  }}
+                                  onBlur={(e) => {
+                                    e.stopPropagation();
+                                    handleQuantityInputBlur(product);
+                                  }}
+                                  onKeyPress={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.stopPropagation();
+                                      e.target.blur();
+                                    }
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="quantity-input w-full text-center text-sm sm:text-base font-bold outline-none border-none bg-transparent"
+                                  style={{ 
+                                    color: COLORS.primary[700]
+                                  }}
+                                />
                               </div>
 
                               {/* Plus Button */}
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleQuantityChange(product, (quantities[product.p_code || product._id] || 1) + 1);
+                                  const currentQty = parseInt(quantities[product.p_code || product._id] || 1, 10) || 1;
+                                  handleQuantityChange(product, currentQty + 1);
                                 }}
-                                disabled={(quantities[product.p_code || product._id] || 1) >= (product.max_quantity_allowed || 10)}
+                                disabled={(parseInt(quantities[product.p_code || product._id] || 1, 10) || 1) >= (product.max_quantity_allowed || 10)}
                                 className="flex items-center justify-center px-2 sm:px-3 py-1.5 sm:py-2 transition-all duration-200"
                                 style={{
-                                  backgroundColor: (quantities[product.p_code || product._id] || 1) >= (product.max_quantity_allowed || 10)
+                                  backgroundColor: (parseInt(quantities[product.p_code || product._id] || 1, 10) || 1) >= (product.max_quantity_allowed || 10)
                                     ? COLORS.gray[200]
                                     : `linear-gradient(to bottom right, ${COLORS.primary[600]}, ${COLORS.success[600]})`,
-                                  color: (quantities[product.p_code || product._id] || 1) >= (product.max_quantity_allowed || 10)
+                                  color: (parseInt(quantities[product.p_code || product._id] || 1, 10) || 1) >= (product.max_quantity_allowed || 10)
                                     ? COLORS.gray[400]
                                     : COLORS.white,
-                                  cursor: (quantities[product.p_code || product._id] || 1) >= (product.max_quantity_allowed || 10) ? 'not-allowed' : 'pointer'
+                                  cursor: (parseInt(quantities[product.p_code || product._id] || 1, 10) || 1) >= (product.max_quantity_allowed || 10) ? 'not-allowed' : 'pointer'
                                 }}
                                 onMouseEnter={(e) => {
-                                  if ((quantities[product.p_code || product._id] || 1) < (product.max_quantity_allowed || 10)) {
+                                  if ((parseInt(quantities[product.p_code || product._id] || 1, 10) || 1) < (product.max_quantity_allowed || 10)) {
                                     e.currentTarget.style.background = `linear-gradient(to bottom right, ${COLORS.primary[700]}, ${COLORS.success[700]})`;
                                   }
                                 }}
                                 onMouseLeave={(e) => {
-                                  if ((quantities[product.p_code || product._id] || 1) < (product.max_quantity_allowed || 10)) {
+                                  if ((parseInt(quantities[product.p_code || product._id] || 1, 10) || 1) < (product.max_quantity_allowed || 10)) {
                                     e.currentTarget.style.background = `linear-gradient(to bottom right, ${COLORS.primary[600]}, ${COLORS.success[600]})`;
                                   }
                                 }}
@@ -1653,6 +1744,14 @@ const CategoryPage = () => {
         }
         .hover\:scale-102:hover {
           transform: scale(1.02);
+        }
+        .quantity-input::-webkit-inner-spin-button,
+        .quantity-input::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        .quantity-input {
+          -moz-appearance: textfield;
         }
       `}</style>
     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { usePincode } from '../context/PincodeContext';
@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import cartService from '../services/cartService';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
+import Loading from '../components/Loading';
 import { COLORS } from '../constants/theme';
 import {
   TrashIcon,
@@ -35,6 +36,7 @@ const CartPage = () => {
     validationResult,
     validateCart,
     syncCart,
+    fetchCart,
     isAuthenticated,
     userMobile,
     applyValidationFixes
@@ -52,6 +54,8 @@ const CartPage = () => {
   const [processingCheckout, setProcessingCheckout] = useState(false);
   const [showStockErrorModal, setShowStockErrorModal] = useState(false);
   const [stockErrorMessage, setStockErrorMessage] = useState('');
+  const [isUpdatingCart, setIsUpdatingCart] = useState(false);
+  const isUpdatingCartRef = useRef(false);
 
   // Calculate savings (assuming 20% discount for demo purposes)
   const calculateSavings = (price) => {
@@ -65,8 +69,13 @@ const CartPage = () => {
   }, 0);
 
   const handleQuantityChange = (itemId, newQuantity) => {
-    if (newQuantity < 1) return;
-    updateQuantity(itemId, newQuantity);
+    if (newQuantity < 0) return;
+    if (newQuantity === 0) {
+      removeItem(itemId);
+      showSuccess('Item removed from cart');
+    } else {
+      updateQuantity(itemId, newQuantity);
+    }
   };
 
   const handleRemoveItem = (itemId) => {
@@ -138,16 +147,38 @@ const CartPage = () => {
 
       // Check if Backend Auto-Fixed logic triggered
       if (validation && validation.fixed) {
+        isUpdatingCartRef.current = true;
+        setIsUpdatingCart(true);
         setCartUpdates(validation.changes || []);
         setIsBackendFixed(true);
+        
+        // Fetch updated cart from backend
+        try {
+          if (isAuthenticated && fetchCart) {
+            await fetchCart();
+          }
+        } catch (error) {
+          console.error('Error fetching updated cart:', error);
+        }
+        
+        // Small delay to allow backend changes to reflect in cart state
+        setTimeout(() => {
+          isUpdatingCartRef.current = false;
+          setIsUpdatingCart(false);
         setShowUpdateModal(true);
         setProcessingCheckout(false);
+        }, 500);
         return;
       }
 
       // Check if actual validation passed (validation.valid)
       if (validation && validation.valid === false) {
 
+        // Set updating state to show loader during cart updates (use ref for immediate availability)
+        isUpdatingCartRef.current = true;
+        setIsUpdatingCart(true);
+        
+        try {
         // Auto-update cart based on validation items
         const result = await applyValidationFixes(validation.invalidItems);
 
@@ -157,6 +188,13 @@ const CartPage = () => {
           // showInfo("Cart updated based on current stock and prices. Please review and proceed.");
           setProcessingCheckout(false);
           return;
+          }
+        } finally {
+          // Small delay to ensure cart state has updated before hiding loader
+          setTimeout(() => {
+            isUpdatingCartRef.current = false;
+            setIsUpdatingCart(false);
+          }, 300);
         }
 
         // Build error message if auto-fix didn't handle everything or user needs to see it
@@ -184,6 +222,8 @@ const CartPage = () => {
     } catch (error) {
       console.error('Error processing checkout:', error);
       showError(error.message || 'Failed to process checkout');
+      isUpdatingCartRef.current = false;
+      setIsUpdatingCart(false); // Ensure loader is hidden on error
     } finally {
       setProcessingCheckout(false);
     }
@@ -202,7 +242,108 @@ const CartPage = () => {
     return date.toLocaleDateString();
   };
 
-  if (items.length === 0) {
+  // Render checkout section (reusable for mobile fixed and desktop sticky)
+  const renderCheckoutSection = (isMobile = false) => {
+    const store = confirmedLocation?.store;
+    const minAmountRaw = store?.minOrderAmount || store?.min_order_amount;
+    const minOrderAmount = parseFloat(minAmountRaw || 0);
+    const currentTotal = parseFloat(totalPrice || 0);
+    const isBelowMinOrder = minOrderAmount > 0 && currentTotal < minOrderAmount;
+
+    return (
+      <div className={isMobile ? "p-4" : "p-4 sm:p-6"}>
+          <h2 className={`${isMobile ? "text-sm mb-3" : "text-base sm:text-lg mb-4 sm:mb-6"} font-bold text-gray-900`}>Price Summary</h2>
+
+          <div className={isMobile ? "space-y-3" : "space-y-3 sm:space-y-4"}>
+            {/* Cart Total */}
+            <div className={`flex justify-between items-center ${isMobile ? "py-1" : "py-2"} border-b`} style={{ borderColor: COLORS.gray[200] }}>
+              <span className={`font-bold ${isMobile ? "text-xs" : "text-sm sm:text-base"}`} style={{ color: COLORS.gray[900] }}>Cart Total</span>
+              <span className={`font-bold ${isMobile ? "text-xs" : "text-sm sm:text-base"}`} style={{ color: COLORS.gray[900] }}>₹{totalPrice}</span>
+            </div>
+
+            {/* Delivery Charge */}
+            <div className={`flex justify-between items-center ${isMobile ? "py-1" : "py-2"} border-b`} style={{ borderColor: COLORS.gray[200] }}>
+              <div className="flex items-center gap-1">
+                <span className={`${isMobile ? "text-xs" : "text-sm sm:text-base"}`} style={{ color: COLORS.gray[700] }}>Delivery Charge</span>
+                {!isMobile && <InformationCircleIcon className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: COLORS.gray[400] }} />}
+              </div>
+              <span className={`${isMobile ? "text-xs" : "text-xs sm:text-sm"}`} style={{ color: COLORS.error[500] }}>+ Extra</span>
+            </div>
+
+            {/* Savings */}
+            <div className={`flex justify-between items-center ${isMobile ? "py-1" : "py-2"}`}>
+              <span className={`${isMobile ? "text-xs" : "text-sm sm:text-base"}`} style={{ color: COLORS.gray[700] }}>Savings</span>
+              <span className={`font-semibold ${isMobile ? "text-xs" : "text-sm sm:text-base"}`} style={{ color: COLORS.success[600] }}>₹{totalSavings}</span>
+            </div>
+          </div>
+
+          {/* Minimum Order Warning */}
+          {isBelowMinOrder && (
+            <div className={`${isMobile ? "mt-3 p-3" : "mt-4 p-3"} bg-orange-50 border border-orange-200 rounded-lg ${isMobile ? "text-sm" : "text-sm"} text-orange-800`}>
+              <p className={`font-medium flex items-center ${isMobile ? "gap-2" : "gap-2"}`}>
+                <InformationCircleIcon className={`${isMobile ? "w-5 h-5" : "w-5 h-5"} flex-shrink-0`} />
+                Minimum order amount is ₹{minOrderAmount}
+              </p>
+              <p className={`${isMobile ? "mt-1.5 text-xs" : "mt-1 text-xs"} text-orange-700 ${isMobile ? "pl-7" : "pl-7"}`}>
+                Add items worth ₹{minOrderAmount - currentTotal} more to proceed
+              </p>
+            </div>
+          )}
+
+          {/* Checkout Button */}
+          <button
+            onClick={handleProceedToCheckout}
+            disabled={processingCheckout || isBelowMinOrder}
+            className={`w-full ${isMobile ? "mt-2 py-2" : "mt-4 sm:mt-6 py-2.5 sm:py-3"} px-3 sm:px-4 text-white font-bold rounded-lg transition-colors ${isMobile ? "text-sm" : "text-sm sm:text-base"} flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-70`}
+            style={{
+              backgroundColor: (processingCheckout || isBelowMinOrder)
+                ? COLORS.gray[400]
+                : COLORS.primary[600]
+            }}
+            onMouseEnter={(e) => {
+              if (!processingCheckout && !isBelowMinOrder) {
+                e.target.style.backgroundColor = COLORS.primary[700];
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!processingCheckout && !isBelowMinOrder) {
+                e.target.style.backgroundColor = COLORS.primary[600];
+              }
+            }}
+          >
+            {processingCheckout ? (
+              <>
+                <ArrowPathIcon className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                <span>Processing...</span>
+              </>
+            ) : (
+              <>
+                <span className="hidden sm:inline">PROCEED TO CHECKOUT</span>
+                <span className="sm:hidden">CHECKOUT</span>
+              </>
+            )}
+          </button>
+      </div>
+    );
+  };
+
+  // Show loader if cart is being updated (even if items appear empty temporarily)
+  // Check both state and ref to catch updates immediately
+  // Also show loader if update modal is open (cart might be updating)
+  // Also show loader if cart context is loading (fetching from backend)
+  const shouldShowLoader = isUpdatingCart || isUpdatingCartRef.current || loading || (processingCheckout && items.length === 0) || (validating && items.length === 0) || (showUpdateModal && items.length === 0);
+  
+  if (shouldShowLoader) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.gray[50] }}>
+        <Loading size="large" text="Updating your cart..." />
+      </div>
+    );
+  }
+
+  // Show empty cart message only when not updating, not processing checkout, not validating, update modal is not open, and cart is not loading
+  // Also check ref to ensure we don't show empty cart during updates
+  if (items.length === 0 && !processingCheckout && !isUpdatingCart && !isUpdatingCartRef.current && !validating && !showUpdateModal && !loading) {
     return (
       <div className="container mx-auto px-4 py-16" style={{ backgroundColor: COLORS.gray[50] }}>
         <div className="max-w-md mx-auto text-center">
@@ -227,7 +368,9 @@ const CartPage = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: COLORS.gray[50] }}>
-      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 pb-24 lg:pb-8" style={{ 
+        paddingBottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))'
+      }}>
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
 
@@ -263,8 +406,14 @@ const CartPage = () => {
                   <div className="col-span-1"></div>
                 </div>
 
-                {/* Cart Items */}
-                <div className="divide-y" style={{ borderColor: COLORS.gray[200] }}>
+                {/* Cart Items - Scrollable on mobile */}
+                <div 
+                  className="divide-y lg:divide-y max-h-[calc(100vh-280px)] lg:max-h-none overflow-y-auto lg:overflow-visible" 
+                  style={{ 
+                    borderColor: COLORS.gray[200],
+                    WebkitOverflowScrolling: 'touch'
+                  }}
+                >
                   {items.map((item, index) => {
                     const itemPrice = Number(item.price) || 0;
                     const itemSavings = calculateSavings(itemPrice);
@@ -333,19 +482,19 @@ const CartPage = () => {
                                 onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
                                 className="w-8 h-8 text-white rounded-l-lg flex items-center justify-center transition-colors"
                                 style={{
-                                  backgroundColor: item.quantity <= 1 ? COLORS.gray[400] : COLORS.primary[600]
+                                  backgroundColor: item.quantity <= 0 ? COLORS.gray[400] : COLORS.primary[600]
                                 }}
                                 onMouseEnter={(e) => {
-                                  if (item.quantity > 1) {
+                                  if (item.quantity > 0) {
                                     e.target.style.backgroundColor = COLORS.primary[700];
                                   }
                                 }}
                                 onMouseLeave={(e) => {
-                                  if (item.quantity > 1) {
+                                  if (item.quantity > 0) {
                                     e.target.style.backgroundColor = COLORS.primary[600];
                                   }
                                 }}
-                                disabled={item.quantity <= 1}
+                                disabled={item.quantity <= 0}
                               >
                                 <MinusIcon className="w-4 h-4" />
                               </button>
@@ -409,19 +558,19 @@ const CartPage = () => {
                                 onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
                                 className="w-6 h-6 lg:w-8 lg:h-8 text-white rounded-l-lg flex items-center justify-center transition-colors"
                                 style={{
-                                  backgroundColor: item.quantity <= 1 ? COLORS.gray[400] : COLORS.primary[600]
+                                  backgroundColor: item.quantity <= 0 ? COLORS.gray[400] : COLORS.primary[600]
                                 }}
                                 onMouseEnter={(e) => {
-                                  if (item.quantity > 1) {
+                                  if (item.quantity > 0) {
                                     e.target.style.backgroundColor = COLORS.primary[700];
                                   }
                                 }}
                                 onMouseLeave={(e) => {
-                                  if (item.quantity > 1) {
+                                  if (item.quantity > 0) {
                                     e.target.style.backgroundColor = COLORS.primary[600];
                                   }
                                 }}
-                                disabled={item.quantity <= 1}
+                                disabled={item.quantity <= 0}
                               >
                                 <MinusIcon className="w-3 h-3 lg:w-4 lg:h-4" />
                               </button>
@@ -478,104 +627,26 @@ const CartPage = () => {
               </div>
             </div>
 
-            {/* Right Section - Price Summary */}
-            <div className="lg:col-span-1">
+            {/* Right Section - Price Summary (Desktop Only) */}
+            <div className="hidden lg:block lg:col-span-1">
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 sticky top-4 sm:top-8">
-                <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-4 sm:mb-6">Price Summary</h2>
-
-                <div className="space-y-3 sm:space-y-4">
-                  {/* Cart Total */}
-                  <div className="flex justify-between items-center py-2 border-b" style={{ borderColor: COLORS.gray[200] }}>
-                    <span className="font-bold text-sm sm:text-base" style={{ color: COLORS.gray[900] }}>Cart Total</span>
-                    <span className="font-bold text-sm sm:text-base" style={{ color: COLORS.gray[900] }}>₹{totalPrice}</span>
-                  </div>
-
-                  {/* Delivery Charge */}
-                  <div className="flex justify-between items-center py-2 border-b" style={{ borderColor: COLORS.gray[200] }}>
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm sm:text-base" style={{ color: COLORS.gray[700] }}>Delivery Charge</span>
-                      <InformationCircleIcon className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: COLORS.gray[400] }} />
-                    </div>
-                    <span className="text-xs sm:text-sm" style={{ color: COLORS.error[500] }}>+ Extra</span>
-                  </div>
-
-                  {/* Savings */}
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-sm sm:text-base" style={{ color: COLORS.gray[700] }}>Savings</span>
-                    <span className="font-semibold text-sm sm:text-base" style={{ color: COLORS.success[600] }}>₹{totalSavings}</span>
-                  </div>
-                </div>
-
-                {/* Minimum Order Warning */}
-                {(() => {
-                  const store = confirmedLocation?.store;
-                  const minAmountRaw = store?.minOrderAmount || store?.min_order_amount;
-                  const minOrderAmount = parseFloat(minAmountRaw || 0);
-                  const currentTotal = parseFloat(totalPrice || 0);
-                  const isBelowMinOrder = minOrderAmount > 0 && currentTotal < minOrderAmount;
-
-                  if (isBelowMinOrder) {
-                    return (
-                      <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg text-sm text-orange-800">
-                        <p className="font-medium flex items-center gap-2">
-                          <InformationCircleIcon className="w-5 h-5 flex-shrink-0" />
-                          Minimum order amount is ₹{minOrderAmount}
-                        </p>
-                        <p className="mt-1 text-xs text-orange-700 pl-7">
-                          Add items worth ₹{minOrderAmount - currentTotal} more to proceed
-                        </p>
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
-
-                {/* Checkout Button */}
-                {(() => {
-                  const store = confirmedLocation?.store;
-                  const minAmountRaw = store?.minOrderAmount || store?.min_order_amount;
-                  const minOrderAmount = parseFloat(minAmountRaw || 0);
-                  const currentTotal = parseFloat(totalPrice || 0);
-                  const isBelowMinOrder = minOrderAmount > 0 && currentTotal < minOrderAmount;
-
-                  return (<button
-                    onClick={handleProceedToCheckout}
-                    disabled={processingCheckout || isBelowMinOrder}
-                    className="w-full mt-4 sm:mt-6 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg transition-colors text-sm sm:text-base flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-70"
-                    style={{
-                      backgroundColor: (processingCheckout || isBelowMinOrder)
-                        ? COLORS.gray[400]
-                        : COLORS.primary[600]
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!processingCheckout && !isBelowMinOrder) {
-                        e.target.style.backgroundColor = COLORS.primary[700];
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!processingCheckout && !isBelowMinOrder) {
-                        e.target.style.backgroundColor = COLORS.primary[600];
-                      }
-                    }}
-                  >
-                    {processingCheckout ? (
-                      <>
-                        <ArrowPathIcon className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                        <span>Processing...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="hidden sm:inline">PROCEED TO CHECKOUT</span>
-                        <span className="sm:hidden">CHECKOUT</span>
-                      </>
-                    )}
-                  </button>
-                  );
-                })()}
+                {renderCheckoutSection(false)}
               </div>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Fixed Checkout Section (Mobile Only) */}
+      <div 
+        className="fixed bottom-0 left-0 right-0 lg:hidden z-40 bg-white border-t border-gray-200 shadow-lg" 
+        style={{ 
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          WebkitBackfaceVisibility: 'hidden',
+          backfaceVisibility: 'hidden'
+        }}
+      >
+        {renderCheckoutSection(true)}
       </div>
 
       {/* Clear Cart Confirmation Modal */}
@@ -662,10 +733,39 @@ const CartPage = () => {
               ))}
             </div>
             <button
-              onClick={() => {
+              onClick={async () => {
                 setShowUpdateModal(false);
                 if (isBackendFixed) {
                   window.location.reload();
+                } else {
+                  // Fetch updated cart to ensure we have latest state
+                  // This prevents empty cart message from showing if cart was updated
+                  setIsUpdatingCart(true);
+                  isUpdatingCartRef.current = true;
+                  
+                  try {
+                    if (isAuthenticated && fetchCart) {
+                      await fetchCart();
+                      // Wait for React to re-render with updated cart items
+                      // The loading state from cart context will keep loader visible until cart is loaded
+                      await new Promise(resolve => setTimeout(resolve, 400));
+                    } else {
+                      // For guest users, just wait a bit for state to settle
+                      await new Promise(resolve => setTimeout(resolve, 300));
+                    }
+                  } catch (error) {
+                    console.error('Error fetching cart after update:', error);
+                    // Even on error, wait a bit to prevent flash of empty cart
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                  } finally {
+                    // Clear updating state after a delay
+                    // The render logic checks both isUpdatingCart and loading state
+                    // So loader will stay visible if cart context is still loading
+                    setTimeout(() => {
+                      isUpdatingCartRef.current = false;
+                      setIsUpdatingCart(false);
+                    }, 300);
+                  }
                 }
               }}
               className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg"

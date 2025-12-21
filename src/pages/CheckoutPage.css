@@ -1,9 +1,11 @@
 /* Checkout Page Redesign - Matching Mobile App Style */
 
 .checkout-container {
-  min-height: 100vh;
+  height: 100vh;
   background: linear-gradient(180deg, #26b985 0%, #139f6d 100%);
-  padding-bottom: 120px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* Header Section */
@@ -13,9 +15,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  position: fixed;
+  top: 120px;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  flex-shrink: 0;
 }
 
 .checkout-header h1 {
@@ -51,6 +56,12 @@
   justify-content: center;
   padding: 20px;
   background: linear-gradient(180deg, #139f6d 0%, #0e8059 100%);
+  flex-shrink: 0;
+  position: fixed;
+  top: 180px;
+  left: 0;
+  right: 0;
+  z-index: 40;
 }
 
 .step-item {
@@ -104,9 +115,16 @@
 .checkout-content {
   background: #f8fafc;
   border-radius: 24px 24px 0 0;
-  min-height: calc(100vh - 150px);
   padding: 20px;
-  margin-top: -10px;
+  margin-top: 0;
+  padding-top: 260px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 100px;
+  position: relative;
+  z-index: 1;
+  min-height: 0;
 }
 
 /* Info Banner */
@@ -712,8 +730,22 @@
 }
 
 @media (min-width: 1024px) {
+  .checkout-header {
+    top: 100px;
+  }
+
+  .step-progress {
+    top: 160px;
+  }
+
+  .checkout-content {
+    padding-top: 240px;
+  }
+}
+
+@media (min-width: 1024px) {
   .checkout-container {
-    padding-bottom: 40px;
+    padding-bottom: 0;
   }
 
   .checkout-layout {

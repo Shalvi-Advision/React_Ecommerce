@@ -38,6 +38,7 @@ import AdvertisementProductsPage from './pages/AdvertisementProductsPage';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
+import PersistentCartWidget from './components/PersistentCartWidget';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import PWAStatus from './components/PWAStatus';
 import SuccessToast from './components/SuccessToast';
@@ -156,6 +157,9 @@ function AppContent() {
           </ApiErrorBoundary>
         </main>
         <Footer />
+
+        {/* Persistent Cart Widget - Mobile Only */}
+        <PersistentCartWidget />
 
         {/* Cart Drawer - Global */}
         <CartDrawer
