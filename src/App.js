@@ -259,10 +259,15 @@ function App() {
         // Get FCM token
         const token = await getFcmToken();
         if (token) {
-          // TODO: Send token to your backend
-          // You can call your API here to save the token for this user
-          // Example: await saveTokenToBackend(token);
-          console.log('FCM: Token obtained successfully');
+          // Save token to backend
+          try {
+            const { saveFcmToken } = await import('./api/fcmApi');
+            await saveFcmToken(token);
+            console.log('FCM: Token saved to backend successfully');
+          } catch (saveError) {
+            console.error('FCM: Failed to save token to backend', saveError);
+            // Don't throw - token is still usable for this session
+          }
         }
 
         // Subscribe to foreground messages
