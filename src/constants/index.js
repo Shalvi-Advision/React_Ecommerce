@@ -122,8 +122,6 @@ export const FIREBASE_CONFIG = {
   appId: "1:1096736732418:web:5e0042db39062cad79fe1b",
   measurementId: "G-ZJ0VDCCHQE"
 };
-
-// Firebase Cloud Messaging VAPID key (Web Push certificate)
 export const FIREBASE_VAPID_KEY = "BKUdXFtph_LHKjzTI3SQAHRmWwQpxNlkI-bVPp8IOdkaFEqQfqLojTxw5gkqKJkMl-qM4IyHey2hEMmXuMcBu5k";
 
 // Export commonly used API constants for convenience
