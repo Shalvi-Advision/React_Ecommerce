@@ -4,11 +4,13 @@ import { API_BASE_URL } from '../constants';
 /**
  * Save FCM token to backend
  * @param {string} fcmToken - Firebase Cloud Messaging token
+ * @param {string} authToken - Optional authentication token (if not provided, reads from storage)
  * @returns {Promise<Object>} Response from server
  */
-export const saveFcmToken = async (fcmToken) => {
+export const saveFcmToken = async (fcmToken, authToken = null) => {
     try {
-        const token = localStorage.getItem('auth_token');
+        // Use provided token or fall back to localStorage
+        const token = authToken || localStorage.getItem('auth_token');
 
         if (!token) {
             throw new Error('User not authenticated');

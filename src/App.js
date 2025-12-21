@@ -65,7 +65,7 @@ const ToastContainerWrapper = () => {
 };
 
 function AppContent() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, token: authToken } = useAuth();
   const fcmTokenRef = useRef(null);
   const fcmTokenSavedRef = useRef(false);
   const { successMessage, clearSuccessMessage, user } = useAuth();
@@ -151,7 +151,8 @@ function AppContent() {
           // Try to save token to backend (will fail if not authenticated)
           try {
             const { saveFcmToken } = await import('./api/fcmApi');
-            await saveFcmToken(token);
+            // Pass authToken explicitly to avoid race condition with localStorage
+            await saveFcmToken(token, authToken);
             fcmTokenSavedRef.current = true;
             console.log('✅ FCM: Token saved to backend successfully');
           } catch (saveError) {
@@ -197,7 +198,8 @@ function AppContent() {
         try {
           console.log('🔄 Retrying FCM token save after successful login...');
           const { saveFcmToken } = await import('./api/fcmApi');
-          await saveFcmToken(fcmTokenRef.current);
+          // Pass authToken explicitly to avoid race condition
+          await saveFcmToken(fcmTokenRef.current, authToken);
           fcmTokenSavedRef.current = true;
           console.log('✅ FCM: Token saved to backend after login!');
         } catch (error) {
@@ -207,6 +209,15 @@ function AppContent() {
     };
 
     saveFcmTokenOnLogin();
+  }, [isAuthenticated, authToken]);
+
+  // Reset FCM state when user logs out
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // Reset the saved flag so next user can save their token
+      fcmTokenSavedRef.current = false;
+      console.log('🔄 FCM: Reset token saved flag (user logged out)');
+    }
   }, [isAuthenticated]);
 
   // Custom fallback UI for API errors

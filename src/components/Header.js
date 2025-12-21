@@ -74,19 +74,20 @@ const Header = () => {
   // Notification state
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Fetch unread notifications count
+  // Fetch unread notifications count with optimized polling
   const fetchUnreadCount = useCallback(async () => {
     // Only fetch if authenticated
     if (isAuthenticated) {
       try {
         // Fetch first page to count unread
-        // In a real app, we might want a dedicated endpoint for count
+        // TODO: Replace with dedicated /api/notifications/unread-count endpoint for better performance
         const response = await getUserNotifications(1, 100);
         if (response && response.data) {
           const count = response.data.filter(n => !n.isRead).length;
           setUnreadCount(count);
         }
       } catch (error) {
+        // Fail silently - notification count is not critical
         console.error('Error fetching notifications:', error);
       }
     } else {
@@ -95,10 +96,13 @@ const Header = () => {
   }, [isAuthenticated]);
 
   useEffect(() => {
+    // Initial fetch on mount
     fetchUnreadCount();
 
-    // Poll for notifications every minute
-    const interval = setInterval(fetchUnreadCount, 60000);
+    // Optimized polling: 5 minutes instead of 1 minute to reduce server load
+    // Users can manually refresh by clicking the bell icon
+    const interval = setInterval(fetchUnreadCount, 5 * 60 * 1000); // 5 minutes
+
     return () => clearInterval(interval);
   }, [fetchUnreadCount]);
 
