@@ -65,7 +65,6 @@ const ToastContainerWrapper = () => {
 };
 
 function AppContent() {
-  const { showToast } = useToast();
   const { isAuthenticated } = useAuth();
   const fcmTokenRef = useRef(null);
   const fcmTokenSavedRef = useRef(false);

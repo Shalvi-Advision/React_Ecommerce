@@ -42,7 +42,7 @@ const NotificationItem = ({ notification, onRead }) => {
 
 const NotificationsPage = () => {
     const navigate = useNavigate();
-    const { showToast } = useToast();
+    const { showSuccess, showError } = useToast();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
@@ -65,7 +65,7 @@ const NotificationsPage = () => {
             setRefreshing(false);
         } catch (error) {
             console.error('Error fetching notifications:', error);
-            showToast('Failed to load notifications', 'error');
+            showError('Failed to load notifications');
             setLoading(false);
             setRefreshing(false);
         }
@@ -79,9 +79,9 @@ const NotificationsPage = () => {
         try {
             await markAllNotificationsRead();
             setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-            showToast('All notifications marked as read', 'success');
+            showSuccess('All notifications marked as read');
         } catch (error) {
-            showToast('Failed to mark all as read', 'error');
+            showError('Failed to mark all as read');
         }
     };
 
