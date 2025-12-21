@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ApiErrorBoundary from './components/ApiErrorBoundary';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -64,6 +64,10 @@ const ToastContainerWrapper = () => {
 };
 
 function AppContent() {
+  const { showToast } = useToast();
+  const { isAuthenticated } = useAuth();
+  const fcmTokenRef = useRef(null);
+  const fcmTokenSavedRef = useRef(false);
   const { successMessage, clearSuccessMessage, user } = useAuth();
   const [showLoginSuccess, setShowLoginSuccess] = useState(false);
 
@@ -228,15 +232,33 @@ function App() {
 
     registerPWA();
 
-    // Initialize Firebase Cloud Messaging
-    const initializeFCM = async () => {
-      // Check if browser supports notifications and service workers
-      if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-        console.warn('FCM: Browser does not support notifications or service workers');
-        return;
-      }
+    // Clean up any expired cache on app load
+    const { clearExpiredCache } = require('./utils/apiOptimizer');
+    clearExpiredCache();
 
+    // Check for updates periodically
+    const updateInterval = setInterval(() => {
+      pwaUtils.checkForUpdates();
+
+      // Also periodically clean expired cache
+      clearExpiredCache();
+    }, 60000); // Check every minute
+
+    return () => {
+      clearInterval(updateInterval);
+    };
+  }, []);
+
+  // Initialize FCM on app load and retry saving token after login
+  useEffect(() => {
+    const initializeFCM = async () => {
       try {
+        // Check if browser supports service workers and notifications
+        if (!('serviceWorker' in navigator) || !('Notification' in window)) {
+          console.warn('FCM: Service workers or notifications not supported');
+          return;
+        }
+
         // Import FCM helpers
         const {
           requestNotificationPermission,
@@ -259,6 +281,9 @@ function App() {
         // Get FCM token
         const token = await getFcmToken();
 
+        // Store token in ref for later use
+        fcmTokenRef.current = token;
+
         // Debug: Print token prominently
         console.log('='.repeat(80));
         console.log('🔔 FCM TOKEN DEBUG');
@@ -269,14 +294,16 @@ function App() {
           console.log('📏 Token Length:', token.length);
           console.log('='.repeat(80));
 
-          // Save token to backend
+          // Try to save token to backend (will fail if not authenticated)
           try {
             const { saveFcmToken } = await import('./api/fcmApi');
             await saveFcmToken(token);
+            fcmTokenSavedRef.current = true;
             console.log('✅ FCM: Token saved to backend successfully');
           } catch (saveError) {
-            console.error('❌ FCM: Failed to save token to backend', saveError);
-            // Don't throw - token is still usable for this session
+            console.log('ℹ️ FCM: Could not save token yet (user not logged in). Will retry after login.');
+            fcmTokenSavedRef.current = false;
+            // Don't throw - token is still usable and will be saved after login
           }
         } else {
           console.log('❌ FCM Token NOT Generated');
@@ -320,6 +347,29 @@ function App() {
       clearInterval(updateInterval);
     };
   }, []);
+
+  // Watch for authentication changes and retry sending FCM token
+  useEffect(() => {
+    const saveFcmTokenOnLogin = async () => {
+      // Only try if:
+      // 1. User just logged in (isAuthenticated = true)
+      // 2. We have a token (fcmTokenRef.current)
+      // 3. Token hasn't been saved yet (fcmTokenSavedRef.current = false)
+      if (isAuthenticated && fcmTokenRef.current && !fcmTokenSavedRef.current) {
+        try {
+          console.log('🔄 Retrying FCM token save after successful login...');
+          const { saveFcmToken } = await import('./api/fcmApi');
+          await saveFcmToken(fcmTokenRef.current);
+          fcmTokenSavedRef.current = true;
+          console.log('✅ FCM: Token saved to backend after login!');
+        } catch (error) {
+          console.error('❌ FCM: Failed to save token after login:', error);
+        }
+      }
+    };
+
+    saveFcmTokenOnLogin();
+  }, [isAuthenticated]);
 
 
   return (
