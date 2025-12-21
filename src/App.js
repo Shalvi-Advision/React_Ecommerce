@@ -103,6 +103,112 @@ function AppContent() {
     closeStoreDetailsModal
   } = usePincode();
 
+  // Initialize FCM on app load and retry saving token after login
+  useEffect(() => {
+    const initializeFCM = async () => {
+      try {
+        // Check if browser supports service workers and notifications
+        if (!('serviceWorker' in navigator) || !('Notification' in window)) {
+          console.warn('FCM: Service workers or notifications not supported');
+          return;
+        }
+
+        // Import FCM helpers
+        const {
+          requestNotificationPermission,
+          getFcmToken,
+          subscribeForegroundMessages,
+        } = await import('./firebase-messaging-init');
+
+        // Register FCM service worker
+        const fcmRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+          scope: '/',
+        });
+        console.log('FCM: Service worker registered successfully');
+
+        // Wait for service worker to be ready
+        await navigator.serviceWorker.ready;
+
+        // Request notification permission
+        await requestNotificationPermission();
+
+        // Get FCM token
+        const token = await getFcmToken();
+
+        // Store token in ref for later use
+        fcmTokenRef.current = token;
+
+        // Debug: Print token prominently
+        console.log('='.repeat(80));
+        console.log('🔔 FCM TOKEN DEBUG');
+        console.log('='.repeat(80));
+        if (token) {
+          console.log('✅ FCM Token Generated Successfully!');
+          console.log('📱 Token:', token);
+          console.log('📏 Token Length:', token.length);
+          console.log('='.repeat(80));
+
+          // Try to save token to backend (will fail if not authenticated)
+          try {
+            const { saveFcmToken } = await import('./api/fcmApi');
+            await saveFcmToken(token);
+            fcmTokenSavedRef.current = true;
+            console.log('✅ FCM: Token saved to backend successfully');
+          } catch (saveError) {
+            console.log('ℹ️ FCM: Could not save token yet (user not logged in). Will retry after login.');
+            fcmTokenSavedRef.current = false;
+            // Don't throw - token is still usable and will be saved after login
+          }
+        } else {
+          console.log('❌ FCM Token NOT Generated');
+          console.log('⚠️  Check errors above for the reason');
+          console.log('='.repeat(80));
+        }
+
+        // Subscribe to foreground messages
+        subscribeForegroundMessages((payload) => {
+          console.log('FCM: Foreground message received:', payload);
+
+          // Show custom in-app notification (you can customize this)
+          if (payload.notification) {
+            // You can trigger a toast notification here
+            console.log('Notification:', payload.notification.title, payload.notification.body);
+          }
+        });
+
+        console.log('FCM: Initialization complete');
+      } catch (error) {
+        console.error('FCM: Initialization failed', error);
+        // Don't throw - FCM is not critical for app functionality
+      }
+    };
+
+    initializeFCM();
+  }, []);
+
+  // Watch for authentication changes and retry sending FCM token
+  useEffect(() => {
+    const saveFcmTokenOnLogin = async () => {
+      // Only try if:
+      // 1. User just logged in (isAuthenticated = true)
+      // 2. We have a token (fcmTokenRef.current)
+      // 3. Token hasn't been saved yet (fcmTokenSavedRef.current = false)
+      if (isAuthenticated && fcmTokenRef.current && !fcmTokenSavedRef.current) {
+        try {
+          console.log('🔄 Retrying FCM token save after successful login...');
+          const { saveFcmToken } = await import('./api/fcmApi');
+          await saveFcmToken(fcmTokenRef.current);
+          fcmTokenSavedRef.current = true;
+          console.log('✅ FCM: Token saved to backend after login!');
+        } catch (error) {
+          console.error('❌ FCM: Failed to save token after login:', error);
+        }
+      }
+    };
+
+    saveFcmTokenOnLogin();
+  }, [isAuthenticated]);
+
   // Custom fallback UI for API errors
   const apiErrorFallback = (error, reset) => (
     <div className="p-6 bg-orange-50 border border-orange-100 rounded-lg shadow-sm max-w-2xl mx-auto my-8">
@@ -249,127 +355,6 @@ function App() {
     };
   }, []);
 
-  // Initialize FCM on app load and retry saving token after login
-  useEffect(() => {
-    const initializeFCM = async () => {
-      try {
-        // Check if browser supports service workers and notifications
-        if (!('serviceWorker' in navigator) || !('Notification' in window)) {
-          console.warn('FCM: Service workers or notifications not supported');
-          return;
-        }
-
-        // Import FCM helpers
-        const {
-          requestNotificationPermission,
-          getFcmToken,
-          subscribeForegroundMessages,
-        } = await import('./firebase-messaging-init');
-
-        // Register FCM service worker
-        const fcmRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-          scope: '/',
-        });
-        console.log('FCM: Service worker registered successfully');
-
-        // Wait for service worker to be ready
-        await navigator.serviceWorker.ready;
-
-        // Request notification permission
-        await requestNotificationPermission();
-
-        // Get FCM token
-        const token = await getFcmToken();
-
-        // Store token in ref for later use
-        fcmTokenRef.current = token;
-
-        // Debug: Print token prominently
-        console.log('='.repeat(80));
-        console.log('🔔 FCM TOKEN DEBUG');
-        console.log('='.repeat(80));
-        if (token) {
-          console.log('✅ FCM Token Generated Successfully!');
-          console.log('📱 Token:', token);
-          console.log('📏 Token Length:', token.length);
-          console.log('='.repeat(80));
-
-          // Try to save token to backend (will fail if not authenticated)
-          try {
-            const { saveFcmToken } = await import('./api/fcmApi');
-            await saveFcmToken(token);
-            fcmTokenSavedRef.current = true;
-            console.log('✅ FCM: Token saved to backend successfully');
-          } catch (saveError) {
-            console.log('ℹ️ FCM: Could not save token yet (user not logged in). Will retry after login.');
-            fcmTokenSavedRef.current = false;
-            // Don't throw - token is still usable and will be saved after login
-          }
-        } else {
-          console.log('❌ FCM Token NOT Generated');
-          console.log('⚠️  Check errors above for the reason');
-          console.log('='.repeat(80));
-        }
-
-        // Subscribe to foreground messages
-        subscribeForegroundMessages((payload) => {
-          console.log('FCM: Foreground message received:', payload);
-
-          // Show custom in-app notification (you can customize this)
-          if (payload.notification) {
-            // You can trigger a toast notification here
-            console.log('Notification:', payload.notification.title, payload.notification.body);
-          }
-        });
-
-        console.log('FCM: Initialization complete');
-      } catch (error) {
-        console.error('FCM: Initialization failed', error);
-        // Don't throw - FCM is not critical for app functionality
-      }
-    };
-
-    initializeFCM();
-
-    // Clean up any expired cache on app load
-    const { clearExpiredCache } = require('./utils/apiOptimizer');
-    clearExpiredCache();
-
-    // Check for updates periodically
-    const updateInterval = setInterval(() => {
-      pwaUtils.checkForUpdates();
-
-      // Also periodically clean expired cache
-      clearExpiredCache();
-    }, 60000); // Check every minute
-
-    return () => {
-      clearInterval(updateInterval);
-    };
-  }, []);
-
-  // Watch for authentication changes and retry sending FCM token
-  useEffect(() => {
-    const saveFcmTokenOnLogin = async () => {
-      // Only try if:
-      // 1. User just logged in (isAuthenticated = true)
-      // 2. We have a token (fcmTokenRef.current)
-      // 3. Token hasn't been saved yet (fcmTokenSavedRef.current = false)
-      if (isAuthenticated && fcmTokenRef.current && !fcmTokenSavedRef.current) {
-        try {
-          console.log('🔄 Retrying FCM token save after successful login...');
-          const { saveFcmToken } = await import('./api/fcmApi');
-          await saveFcmToken(fcmTokenRef.current);
-          fcmTokenSavedRef.current = true;
-          console.log('✅ FCM: Token saved to backend after login!');
-        } catch (error) {
-          console.error('❌ FCM: Failed to save token after login:', error);
-        }
-      }
-    };
-
-    saveFcmTokenOnLogin();
-  }, [isAuthenticated]);
 
 
   return (
