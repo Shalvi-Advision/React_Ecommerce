@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ApiErrorBoundary from './components/ApiErrorBoundary';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -33,6 +33,7 @@ import AboutUsPage from './pages/AboutUsPage';
 import ContactUsPage from './pages/ContactUsPage';
 import BestsellerProductsPage from './pages/BestsellerProductsPage';
 import AdvertisementProductsPage from './pages/AdvertisementProductsPage';
+import NotificationsPage from './pages/NotificationsPage';
 
 // Import components
 import Header from './components/Header';
@@ -65,6 +66,9 @@ const ToastContainerWrapper = () => {
 };
 
 function AppContent() {
+  const { isAuthenticated, token: authToken } = useAuth();
+  const fcmTokenRef = useRef(null);
+  const fcmTokenSavedRef = useRef(false);
   const { successMessage, clearSuccessMessage, user } = useAuth();
   const [showLoginSuccess, setShowLoginSuccess] = useState(false);
 
@@ -99,6 +103,123 @@ function AppContent() {
     closeStoreModal,
     closeStoreDetailsModal
   } = usePincode();
+
+  // Initialize FCM on app load and retry saving token after login
+  useEffect(() => {
+    const initializeFCM = async () => {
+      try {
+        // Check if browser supports service workers and notifications
+        if (!('serviceWorker' in navigator) || !('Notification' in window)) {
+          console.warn('FCM: Service workers or notifications not supported');
+          return;
+        }
+
+        // Import FCM helpers
+        const {
+          requestNotificationPermission,
+          getFcmToken,
+          subscribeForegroundMessages,
+        } = await import('./firebase-messaging-init');
+
+        // Register FCM service worker
+        const fcmRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+          scope: '/',
+        });
+        console.log('FCM: Service worker registered successfully');
+
+        // Wait for service worker to be ready
+        await navigator.serviceWorker.ready;
+
+        // Request notification permission
+        await requestNotificationPermission();
+
+        // Get FCM token
+        const token = await getFcmToken();
+
+        // Store token in ref for later use
+        fcmTokenRef.current = token;
+
+        // Debug: Print token prominently
+        console.log('='.repeat(80));
+        console.log('🔔 FCM TOKEN DEBUG');
+        console.log('='.repeat(80));
+        if (token) {
+          console.log('✅ FCM Token Generated Successfully!');
+          console.log('📱 Token:', token);
+          console.log('📏 Token Length:', token.length);
+          console.log('='.repeat(80));
+
+          // Try to save token to backend (will fail if not authenticated)
+          try {
+            const { saveFcmToken } = await import('./api/fcmApi');
+            // Pass authToken explicitly to avoid race condition with localStorage
+            await saveFcmToken(token, authToken);
+            fcmTokenSavedRef.current = true;
+            console.log('✅ FCM: Token saved to backend successfully');
+          } catch (saveError) {
+            console.log('ℹ️ FCM: Could not save token yet (user not logged in). Will retry after login.');
+            fcmTokenSavedRef.current = false;
+            // Don't throw - token is still usable and will be saved after login
+          }
+        } else {
+          console.log('❌ FCM Token NOT Generated');
+          console.log('⚠️  Check errors above for the reason');
+          console.log('='.repeat(80));
+        }
+
+        // Subscribe to foreground messages
+        subscribeForegroundMessages((payload) => {
+          console.log('FCM: Foreground message received:', payload);
+
+          // Show custom in-app notification (you can customize this)
+          if (payload.notification) {
+            // You can trigger a toast notification here
+            console.log('Notification:', payload.notification.title, payload.notification.body);
+          }
+        });
+
+        console.log('FCM: Initialization complete');
+      } catch (error) {
+        console.error('FCM: Initialization failed', error);
+        // Don't throw - FCM is not critical for app functionality
+      }
+    };
+
+    initializeFCM();
+  }, []);
+
+  // Watch for authentication changes and retry sending FCM token
+  useEffect(() => {
+    const saveFcmTokenOnLogin = async () => {
+      // Only try if:
+      // 1. User just logged in (isAuthenticated = true)
+      // 2. We have a token (fcmTokenRef.current)
+      // 3. Token hasn't been saved yet (fcmTokenSavedRef.current = false)
+      if (isAuthenticated && fcmTokenRef.current && !fcmTokenSavedRef.current) {
+        try {
+          console.log('🔄 Retrying FCM token save after successful login...');
+          const { saveFcmToken } = await import('./api/fcmApi');
+          // Pass authToken explicitly to avoid race condition
+          await saveFcmToken(fcmTokenRef.current, authToken);
+          fcmTokenSavedRef.current = true;
+          console.log('✅ FCM: Token saved to backend after login!');
+        } catch (error) {
+          console.error('❌ FCM: Failed to save token after login:', error);
+        }
+      }
+    };
+
+    saveFcmTokenOnLogin();
+  }, [isAuthenticated, authToken]);
+
+  // Reset FCM state when user logs out
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // Reset the saved flag so next user can save their token
+      fcmTokenSavedRef.current = false;
+      console.log('🔄 FCM: Reset token saved flag (user logged out)');
+    }
+  }, [isAuthenticated]);
 
   // Custom fallback UI for API errors
   const apiErrorFallback = (error, reset) => (
@@ -151,6 +272,7 @@ function AppContent() {
                 <Route path="/advertisement/:adId" element={<AdvertisementProductsPage />} />
                 <Route path="/about" element={<AboutUsPage />} />
                 <Route path="/contact" element={<ContactUsPage />} />
+                <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </LocationGuard>
@@ -248,6 +370,8 @@ function App() {
       clearInterval(updateInterval);
     };
   }, []);
+
+
 
   return (
     <AuthProvider>

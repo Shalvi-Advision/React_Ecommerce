@@ -112,6 +112,18 @@ export const APP_CONSTANTS = {
   },
 };
 
+// Firebase Cloud Messaging configuration
+export const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDwp6-vtdtbLzgYpChpXcxrD6h9d6rkA6M",
+  authDomain: "shalviecomweb.firebaseapp.com",
+  projectId: "shalviecomweb",
+  storageBucket: "shalviecomweb.firebasestorage.app",
+  messagingSenderId: "1096736732418",
+  appId: "1:1096736732418:web:5e0042db39062cad79fe1b",
+  measurementId: "G-ZJ0VDCCHQE"
+};
+export const FIREBASE_VAPID_KEY = "BKUdXFtph_LHKjzTI3SQAHRmWwQpxNlkI-bVPp8IOdkaFEqQfqLojTxw5gkqKJkMl-qM4IyHey2hEMmXuMcBu5k";
+
 // Export commonly used API constants for convenience
 export const { API_BASE_URL, PROJECT_CODE, DEFAULT_STORE_CODE, IMAGE_BASE_URL } = APP_CONSTANTS;
 
