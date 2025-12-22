@@ -6,6 +6,15 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .checkout-container {
+    max-width: 480px;
+  }
 }
 
 /* Header Section */
@@ -125,6 +134,8 @@
   position: relative;
   z-index: 1;
   min-height: 0;
+  max-width: 100%;
+  width: 100%;
 }
 
 /* Info Banner */
@@ -185,11 +196,20 @@
   border-radius: 16px;
   padding: 16px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
   margin-bottom: 12px;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .delivery-mode-card {
+    flex-direction: row;
+    align-items: center;
+  }
 }
 
 .delivery-mode-card:hover {
@@ -376,10 +396,18 @@
 /* Time Slot Tabs */
 .time-slot-tabs {
   display: flex;
+  flex-direction: column;
   gap: 10px;
   margin-bottom: 20px;
-  overflow-x: auto;
+  overflow-x: visible;
   padding-bottom: 4px;
+}
+
+@media (min-width: 640px) {
+  .time-slot-tabs {
+    flex-direction: row;
+    overflow-x: auto;
+  }
 }
 
 .time-slot-tab {
@@ -414,6 +442,10 @@
   margin-bottom: 10px;
   cursor: pointer;
   transition: all 0.2s ease;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .time-slot-card:hover {
@@ -716,13 +748,13 @@
 /* Responsive adjustments */
 @media (min-width: 768px) {
   .checkout-content {
-    max-width: 600px;
+    max-width: 480px;
     margin: -10px auto 0;
     border-radius: 24px;
   }
 
   .bottom-action-bar {
-    max-width: 600px;
+    max-width: 480px;
     left: 50%;
     transform: translateX(-50%);
     border-radius: 20px 20px 0 0;
@@ -749,33 +781,33 @@
   }
 
   .checkout-layout {
-    display: grid;
-    grid-template-columns: 1fr 380px;
+    display: flex;
+    flex-direction: column;
     gap: 24px;
-    max-width: 1000px;
+    max-width: 480px;
     margin: 0 auto;
   }
 
   .checkout-content {
-    max-width: none;
-    margin: 0;
+    max-width: 480px;
+    margin: 0 auto;
   }
 
   .order-summary-sidebar {
-    position: sticky;
-    top: 100px;
+    position: static;
     height: fit-content;
   }
 
   .bottom-action-bar {
-    position: static;
-    max-width: none;
-    left: auto;
-    transform: none;
-    box-shadow: none;
-    background: transparent;
-    padding: 0;
-    margin-top: 20px;
+    position: fixed;
+    max-width: 480px;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+    background: white;
+    padding: 16px 20px;
+    border-radius: 20px 20px 0 0;
+    margin-top: 0;
   }
 }
 

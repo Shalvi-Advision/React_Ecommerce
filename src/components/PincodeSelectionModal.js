@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { XMarkIcon, MapPinIcon } from '@heroicons/react/24/outline';
+import { 
+  XMarkIcon, 
+  MapPinIcon,
+  TruckIcon,
+  ShoppingBagIcon,
+  TagIcon,
+  SparklesIcon
+} from '@heroicons/react/24/outline';
 import { usePincode } from '../context/PincodeContext';
 import { COLORS } from '../constants/theme';
 
@@ -310,49 +317,71 @@ const PincodeSelectionModal = ({ isOpen, onClose, onPincodeSelect, isRequired })
         </div>
 
         {/* Bottom Banner - Fixed at bottom */}
-        <div className="px-6 pb-6 flex-shrink-0">
+        <div className="px-3 pb-3 flex-shrink-0">
           <div
-            className="rounded-lg p-4 flex items-center gap-3"
+            className="rounded-lg p-2.5 relative overflow-hidden"
             style={{
-              backgroundColor: COLORS.primary[50]
+              background: `linear-gradient(135deg, ${COLORS.primary[500]} 0%, ${COLORS.primary[700]} 100%)`,
             }}
           >
-            <div className="flex-shrink-0">
-              <div className="flex items-center gap-2">
-                <div
-                  className="w-8 h-12 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: COLORS.warning[400] }}
-                >
-                  <div
-                    className="w-4 h-4 rounded"
-                    style={{ backgroundColor: COLORS.primary[500] }}
-                  ></div>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div
-                    className="w-6 h-4 rounded-t"
-                    style={{ backgroundColor: COLORS.primary[500] }}
-                  ></div>
-                  <div
-                    className="w-6 h-2 rounded-b"
-                    style={{ backgroundColor: COLORS.gray[300] }}
-                  ></div>
-                  <div className="text-xs font-medium" style={{ color: COLORS.gray[600] }}>Pagariya</div>
-                </div>
-                <div
-                  className="w-2 h-4 rounded-full"
-                  style={{ backgroundColor: COLORS.primary[600] }}
-                ></div>
-              </div>
-            </div>
+            {/* Decorative Pattern */}
+            <div
+              className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10"
+              style={{ backgroundColor: COLORS.white }}
+            ></div>
+            <div
+              className="absolute bottom-0 left-0 w-16 h-16 rounded-full opacity-10"
+              style={{ backgroundColor: COLORS.white }}
+            ></div>
 
-            <div className="flex-1">
-              <p className="text-sm font-medium" style={{ color: COLORS.gray[900] }}>
-                Your <span className="font-bold" style={{ color: COLORS.primary[600] }}>Shopping & Savings'</span> Partner
-              </p>
-              <p className="text-xs mt-1" style={{ color: COLORS.gray[600] }}>
-                One-stop shop for your family needs.
-              </p>
+            <div className="relative z-10">
+              {/* Brand Name */}
+              <div className="flex items-center gap-2 mb-2">
+                <ShoppingBagIcon
+                  className="w-5 h-5"
+                  style={{ color: COLORS.white }}
+                />
+                <p className="text-sm font-extrabold tracking-wide" style={{ color: COLORS.white }}>
+                  Pagariya Mart
+                </p>
+              </div>
+
+              {/* Features - Horizontal Inline Layout */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-1.5">
+                  <TruckIcon
+                    className="w-3.5 h-3.5"
+                    style={{ color: COLORS.white }}
+                  />
+                  <span className="text-xs font-medium" style={{ color: COLORS.white }}>
+                    Fast Delivery
+                  </span>
+                </div>
+                
+                <div className="w-1 h-1 rounded-full" style={{ backgroundColor: 'rgba(255, 255, 255, 0.5)' }}></div>
+                
+                <div className="flex items-center gap-1.5">
+                  <TagIcon
+                    className="w-3.5 h-3.5"
+                    style={{ color: COLORS.white }}
+                  />
+                  <span className="text-xs font-medium" style={{ color: COLORS.white }}>
+                    Best Prices
+                  </span>
+                </div>
+                
+                <div className="w-1 h-1 rounded-full" style={{ backgroundColor: 'rgba(255, 255, 255, 0.5)' }}></div>
+                
+                <div className="flex items-center gap-1.5">
+                  <SparklesIcon
+                    className="w-3.5 h-3.5"
+                    style={{ color: COLORS.white }}
+                  />
+                  <span className="text-xs font-medium" style={{ color: COLORS.white }}>
+                    Quality Assured
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

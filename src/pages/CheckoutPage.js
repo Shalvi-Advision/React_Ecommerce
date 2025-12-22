@@ -808,9 +808,6 @@ const CheckoutPage = () => {
   const currentPincode = getCurrentPincode();
   const hasPincode = !!currentPincode || !!checkoutData.selectedPincode;
 
-  // Fixed header height
-  const headerHeight = 80;
-
   return (
     <>
       <style>{`
@@ -822,57 +819,8 @@ const CheckoutPage = () => {
       <div style={{ 
       width: '100%', 
       minHeight: '100vh',
-      backgroundColor: COLORS.gray[50],
-      paddingTop: `${headerHeight}px`
+      backgroundColor: COLORS.gray[50]
     }}>
-      {/* Fixed Header */}
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: `${headerHeight}px`,
-        backgroundColor: COLORS.white,
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-        zIndex: 1000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderBottom: `1px solid ${COLORS.gray[200]}`
-      }}>
-        <div style={{
-          width: '100%',
-          maxWidth: isMobile ? '100%' : '700px',
-          margin: '0 auto',
-          padding: '0 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
-          <h1 style={{
-            fontSize: '20px',
-            fontWeight: '700',
-            color: COLORS.gray[900],
-            margin: 0
-          }}>
-            Checkout
-          </h1>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            <span style={{
-              fontSize: '14px',
-              color: COLORS.gray[600],
-              fontWeight: '500'
-            }}>
-              Step {currentStep} of {steps.length}
-            </span>
-          </div>
-        </div>
-      </div>
-
       {/* Main Content Container */}
       <div style={{
         width: '100%',
@@ -881,6 +829,42 @@ const CheckoutPage = () => {
         padding: isMobile ? '32px 16px' : '48px 24px',
         boxSizing: 'border-box'
       }}>
+      {/* Page Title Section */}
+      <div style={{
+        marginBottom: '24px',
+        padding: isMobile ? '16px' : '20px 24px',
+        backgroundColor: COLORS.white,
+        borderRadius: '12px',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '12px'
+      }}>
+        <h1 style={{
+          fontSize: isMobile ? '24px' : '28px',
+          fontWeight: '700',
+          color: COLORS.gray[900],
+          margin: 0
+        }}>
+          Checkout
+        </h1>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <span style={{
+            fontSize: '14px',
+            color: COLORS.gray[600],
+            fontWeight: '500'
+          }}>
+            Step {currentStep} of {steps.length}
+          </span>
+        </div>
+      </div>
+
       {/* Warning if no pincode is selected */}
       {!hasPincode && (
           <div style={{
