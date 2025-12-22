@@ -4,10 +4,10 @@ const STATIC_CACHE = 'shalvi-static-v1';
 const DYNAMIC_CACHE = 'shalvi-dynamic-v1';
 
 // Development mode detection
-const isDevelopment = self.location.hostname === 'localhost' || 
-                     self.location.hostname === '127.0.0.1' ||
-                     self.location.hostname.includes('dev') ||
-                     self.location.hostname.includes('staging');
+const isDevelopment = self.location.hostname === 'localhost' ||
+  self.location.hostname === '127.0.0.1' ||
+  self.location.hostname.includes('dev') ||
+  self.location.hostname.includes('staging');
 
 const urlsToCache = [
   '/',
@@ -68,8 +68,8 @@ self.addEventListener('fetch', (event) => {
   // Determine caching strategy based on request type
   const url = new URL(event.request.url);
   const isAPIRequest = url.pathname.startsWith('/api/');
-  const isStaticAsset = url.pathname.includes('/static/') || 
-                       url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|avif|bmp|woff|woff2|ttf|eot)$/);
+  const isStaticAsset = url.pathname.includes('/static/') ||
+    url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|avif|bmp|woff|woff2|ttf|eot)$/);
   const isHTMLRequest = event.request.destination === 'document';
 
   if (isDevelopment) {
@@ -95,35 +95,35 @@ async function developmentStrategy(request) {
   try {
     console.log('Service Worker: Development mode - Fetching from network', request.url);
     const networkResponse = await fetch(request);
-    
+
     // In development, only cache static assets
     const url = new URL(request.url);
-    const isStaticAsset = url.pathname.includes('/static/') || 
-                         url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/);
-    
+    const isStaticAsset = url.pathname.includes('/static/') ||
+      url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/);
+
     if (isStaticAsset && networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
       // Only cache static assets in development
       const responseToCache = networkResponse.clone();
       const cache = await caches.open(STATIC_CACHE);
       await cache.put(request, responseToCache);
     }
-    
+
     return networkResponse;
   } catch (error) {
     console.log('Service Worker: Development mode - Network failed, trying cache', request.url);
-    
+
     // Try to get from cache as fallback
     const cachedResponse = await caches.match(request);
     if (cachedResponse) {
       console.log('Service Worker: Development mode - Serving from cache', request.url);
       return cachedResponse;
     }
-    
+
     // If it's a document request and no cache, return offline page
     if (request.destination === 'document') {
       return caches.match('/');
     }
-    
+
     // Return offline response for other requests
     return new Response('Offline - Content not available', {
       status: 503,
@@ -140,35 +140,35 @@ async function networkFirstStrategy(request) {
   try {
     console.log('Service Worker: Fetching from network', request.url);
     const networkResponse = await fetch(request);
-    
+
     // Check if valid response
     if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
       // Clone the response for caching
       const responseToCache = networkResponse.clone();
-      
+
       // Cache the response for future use
       const cache = await caches.open(DYNAMIC_CACHE);
       await cache.put(request, responseToCache);
-      
+
       return networkResponse;
     }
-    
+
     throw new Error('Invalid network response');
   } catch (error) {
     console.log('Service Worker: Network failed, trying cache', request.url);
-    
+
     // Try to get from cache
     const cachedResponse = await caches.match(request);
     if (cachedResponse) {
       console.log('Service Worker: Serving from cache', request.url);
       return cachedResponse;
     }
-    
+
     // If it's a document request and no cache, return offline page
     if (request.destination === 'document') {
       return caches.match('/');
     }
-    
+
     // Return offline response for other requests
     return new Response('Offline - Content not available', {
       status: 503,
@@ -187,17 +187,17 @@ async function cacheFirstStrategy(request) {
     console.log('Service Worker: Serving from cache', request.url);
     return cachedResponse;
   }
-  
+
   try {
     console.log('Service Worker: Fetching from network', request.url);
     const networkResponse = await fetch(request);
-    
+
     if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
       // Cache the response for future use
       const cache = await caches.open(STATIC_CACHE);
       await cache.put(request, networkResponse.clone());
     }
-    
+
     return networkResponse;
   } catch (error) {
     console.error('Service Worker: Fetch failed', error);
@@ -214,7 +214,7 @@ async function cacheFirstStrategy(request) {
 // Background sync for offline actions
 self.addEventListener('sync', (event) => {
   console.log('Service Worker: Background sync', event.tag);
-  
+
   if (event.tag === 'background-sync') {
     event.waitUntil(
       // Handle background sync tasks here
@@ -227,15 +227,48 @@ self.addEventListener('sync', (event) => {
 // Push notification handling
 self.addEventListener('push', (event) => {
   console.log('Service Worker: Push event received');
-  
+
+  let notificationTitle = 'Shalvi E-Commerce';
+  let notificationBody = 'New update available!';
+  let notificationData = {};
+
+  // Parse the push payload
+  if (event.data) {
+    try {
+      const payload = event.data.json();
+      console.log('Service Worker: Push payload:', payload);
+
+      // Extract notification details from FCM payload
+      if (payload.notification) {
+        notificationTitle = payload.notification.title || notificationTitle;
+        notificationBody = payload.notification.body || notificationBody;
+      }
+
+      // Also check for data-only messages
+      if (payload.data) {
+        notificationData = payload.data;
+        // If notification fields are in data (some FCM configs)
+        if (!payload.notification && payload.data.title) {
+          notificationTitle = payload.data.title;
+          notificationBody = payload.data.body || notificationBody;
+        }
+      }
+    } catch (e) {
+      console.error('Service Worker: Error parsing push data:', e);
+      // Fallback to text if JSON parsing fails
+      notificationBody = event.data.text();
+    }
+  }
+
   const options = {
-    body: event.data ? event.data.text() : 'New update available!',
+    body: notificationBody,
     icon: '/logo192.svg',
     badge: '/favicon.svg',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
-      primaryKey: 1
+      primaryKey: 1,
+      ...notificationData
     },
     actions: [
       {
@@ -252,14 +285,14 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification('Shalvi E-Commerce', options)
+    self.registration.showNotification(notificationTitle, options)
   );
 });
 
 // Notification click handling
 self.addEventListener('notificationclick', (event) => {
   console.log('Service Worker: Notification click received');
-  
+
   event.notification.close();
 
   if (event.action === 'explore') {
@@ -282,10 +315,10 @@ async function syncOfflineData() {
   try {
     // Implement your offline data sync logic here
     console.log('Service Worker: Syncing offline data');
-    
+
     // Example: Sync cart data, user preferences, etc.
     // This would typically involve sending data to your backend
-    
+
     return Promise.resolve();
   } catch (error) {
     console.error('Service Worker: Error syncing offline data', error);
@@ -296,11 +329,11 @@ async function syncOfflineData() {
 // Message handling for communication with main thread
 self.addEventListener('message', (event) => {
   console.log('Service Worker: Message received', event.data);
-  
+
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
-  
+
   if (event.data && event.data.type === 'GET_VERSION') {
     event.ports[0].postMessage({ version: CACHE_NAME });
   }
