@@ -47,7 +47,7 @@ const PersistentCartWidget = () => {
     >
       <div
         onClick={handleClick}
-        className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl cursor-pointer transition-all duration-200 active:scale-98"
+        className="flex items-center justify-between px-2 py-2 rounded-xl cursor-pointer transition-all duration-200 active:scale-98"
         style={{
           backgroundColor: COLORS.primary[600],
           boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1)',
@@ -63,13 +63,13 @@ const PersistentCartWidget = () => {
         }}
       >
         {/* Left Side - Cart Icon and Info */}
-        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           {/* Cart Icon with Badge */}
           <div className="relative flex-shrink-0">
-            <ShoppingCartIcon className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: COLORS.white }} />
+            <ShoppingCartIcon className="w-6 h-6" style={{ color: COLORS.white }} />
             {totalItems > 0 && (
               <div
-                className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
                 style={{
                   backgroundColor: COLORS.warning[500],
                   color: COLORS.white
@@ -80,33 +80,19 @@ const PersistentCartWidget = () => {
             )}
           </div>
 
-          {/* Cart Info */}
+          {/* Cart Info - Two Lines */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-              <div className="flex flex-col">
-                <span className="text-xs sm:text-sm font-bold text-white leading-tight">
-                  ₹{totalPrice}
-                </span>
-                <span className="text-[10px] sm:text-xs text-white/90 leading-tight">
-                  Cart Total
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs sm:text-sm font-semibold text-white leading-tight">
-                  {totalItems} Item{totalItems !== 1 ? 's' : ''}
-                </span>
-                <span className="text-[10px] sm:text-xs text-white/90 leading-tight">
-                  {totalItems === 1 ? 'Item' : 'Items'}
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs sm:text-sm font-semibold text-white leading-tight">
-                  ₹{totalSavings} Saved
-                </span>
-                <span className="text-[10px] sm:text-xs text-white/90 leading-tight">
-                  Savings
-                </span>
-              </div>
+            {/* First Line - Total Cart Amount */}
+            <div className="mb-1">
+              <span className="text-base font-bold text-white">
+                ₹{totalPrice.toFixed(2)}
+              </span>
+            </div>
+            {/* Second Line - Items and Savings (smaller text) */}
+            <div className="flex items-center gap-3 text-xs text-white/90">
+              <span>{totalItems} {totalItems === 1 ? 'Item' : 'Items'}</span>
+              <span>•</span>
+              <span>₹{totalSavings.toFixed(2)} Saved</span>
             </div>
           </div>
         </div>
@@ -117,7 +103,7 @@ const PersistentCartWidget = () => {
             e.stopPropagation();
             handleClick();
           }}
-          className="flex-shrink-0 ml-2 sm:ml-3 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-bold text-xs sm:text-sm transition-all duration-200 active:scale-95"
+          className="flex-shrink-0 ml-5 px-8 py-2 rounded-lg font-bold text-sm transition-all duration-200 active:scale-95"
           style={{
             backgroundColor: COLORS.white,
             color: COLORS.primary[600],
@@ -134,7 +120,7 @@ const PersistentCartWidget = () => {
             e.currentTarget.style.transform = 'translateY(0)';
           }}
         >
-          CART &gt;
+          CART
         </button>
       </div>
     </div>
