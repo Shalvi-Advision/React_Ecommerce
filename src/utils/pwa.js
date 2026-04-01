@@ -227,7 +227,7 @@ class PWAUtils {
       try {
         const registration = await navigator.serviceWorker.ready;
         await registration.showNotification(title, {
-          body: options.body || 'New notification from Shalvi E-Commerce',
+          body: options.body || 'New notification from Grahak Peth',
           icon: '/logo192.svg',
           badge: '/favicon.svg',
           ...options

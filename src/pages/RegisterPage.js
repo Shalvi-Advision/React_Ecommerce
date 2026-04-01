@@ -117,7 +117,7 @@ const RegisterPage = () => {
 
             {/* Message */}
             <h3 className="text-2xl font-bold mb-4" style={{ color: COLORS.gray[800] }}>
-              Join Pagariya Mart!
+              Join Grahak Peth!
             </h3>
             <p className="text-lg mb-4" style={{ color: COLORS.gray[600] }}>
               Create your account in seconds and start shopping for fresh groceries
@@ -193,13 +193,13 @@ const RegisterPage = () => {
                 }}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold" style={{ color: COLORS.primary[600] }}>Pagariya Mart</span>
+                  <span className="text-2xl font-bold" style={{ color: COLORS.primary[600] }}>Grahak Peth</span>
                 </div>
               </div>
             ) : (
               <img
                 src={`${process.env.PUBLIC_URL}/images/Main_Logo.jpg?v=2`}
-                alt="Pagariya Mart"
+                alt="Grahak Peth"
                 className="h-12 w-auto object-contain"
                 style={{
                   maxHeight: '60px',

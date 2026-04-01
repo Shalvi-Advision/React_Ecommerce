@@ -30,7 +30,7 @@ const SavedCardsPage = () => {
               <h1 className={`font-bold text-gray-900 mb-12 text-left ${
                 isMobile ? 'text-2xl' : isTablet ? 'text-3xl' : 'text-4xl md:text-5xl'
               }`}>
-                Card(s) saved with E-Shop
+                Card(s) saved with Grahak Peth
               </h1>
               
               {/* Illustration - centered below heading */}

@@ -201,7 +201,7 @@ const OtpVerifyPage = () => {
             </h3>
             <p className="text-lg" style={{ color: COLORS.gray[600] }}>
               {isRegistration 
-                ? 'Just one more step to complete your Pagariya registration'
+                ? 'Just one more step to complete your Grahak Peth registration'
                 : 'Enter the verification code we sent to your mobile number'}
             </p>
           </div>
@@ -247,15 +247,15 @@ const OtpVerifyPage = () => {
                   background: `linear-gradient(to bottom right, ${COLORS.primary[50]}, ${COLORS.success[50]})`
                 }}
               >
-                <span className="text-2xl font-bold" style={{ color: COLORS.primary[600] }}>Pagariya</span>
+                <span className="text-2xl font-bold" style={{ color: COLORS.primary[600] }}>Grahak</span>
                 <div className="flex flex-col items-start">
-                  <span className="text-lg font-bold leading-none" style={{ color: COLORS.gray[800] }}>Mart</span>
+                  <span className="text-lg font-bold leading-none" style={{ color: COLORS.gray[800] }}>Peth</span>
                 </div>
               </div>
             ) : (
               <img
                 src={`${process.env.PUBLIC_URL}/images/Main_Logo.jpg?v=2`}
-                alt="Pagariya Mart"
+                alt="Grahak Peth"
                 className="h-12 w-auto object-contain"
                 style={{
                   maxHeight: '60px',

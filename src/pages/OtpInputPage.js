@@ -178,7 +178,7 @@ const OtpInputPage = () => {
 
             {/* Message */}
             <h3 className="text-2xl font-bold mb-4" style={{ color: COLORS.gray[800] }}>
-              {isRegistration ? 'Welcome to Pagariya!' : 'Secure Verification'}
+              {isRegistration ? 'Welcome to Grahak Peth!' : 'Secure Verification'}
             </h3>
             <p className="text-lg" style={{ color: COLORS.gray[600] }}>
               {isRegistration 
@@ -228,15 +228,15 @@ const OtpInputPage = () => {
                   background: `linear-gradient(to bottom right, ${COLORS.primary[50]}, ${COLORS.success[50]})`
                 }}
               >
-                <span className="text-2xl font-bold" style={{ color: COLORS.primary[600] }}>Pagariya</span>
+                <span className="text-2xl font-bold" style={{ color: COLORS.primary[600] }}>Grahak</span>
                 <div className="flex flex-col items-start">
-                  <span className="text-lg font-bold leading-none" style={{ color: COLORS.gray[800] }}>Mart</span>
+                  <span className="text-lg font-bold leading-none" style={{ color: COLORS.gray[800] }}>Peth</span>
                 </div>
               </div>
             ) : (
               <img
                 src={`${process.env.PUBLIC_URL}/images/Main_Logo.jpg?v=2`}
-                alt="Pagariya Mart"
+                alt="Grahak Peth"
                 className="h-12 w-auto object-contain"
                 style={{
                   maxHeight: '60px',

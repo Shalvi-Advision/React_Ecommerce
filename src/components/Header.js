@@ -380,7 +380,7 @@ const Header = () => {
               <Link to="/" className="flex items-center flex-shrink-0">
                 <img
                   src={`${process.env.PUBLIC_URL}/images/Main_Logo.jpg`}
-                  alt="Pagariya Mart"
+                  alt="Grahak Peth"
                   className="h-12 sm:h-14 w-auto object-contain"
                   style={{
                     maxHeight: '60px',
@@ -852,7 +852,7 @@ const Header = () => {
               <Link to="/" className="flex items-center">
                 <img
                   src={`${process.env.PUBLIC_URL}/images/Main_Logo.jpg`}
-                  alt="Pagariya Mart"
+                  alt="Grahak Peth"
                   className="h-10 sm:h-10 lg:h-14 w-auto object-contain"
                   style={{
                     maxHeight: '50px',

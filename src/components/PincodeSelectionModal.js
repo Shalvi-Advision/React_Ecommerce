@@ -342,7 +342,7 @@ const PincodeSelectionModal = ({ isOpen, onClose, onPincodeSelect, isRequired })
                   style={{ color: COLORS.white }}
                 />
                 <p className="text-sm font-extrabold tracking-wide" style={{ color: COLORS.white }}>
-                  Pagariya Mart
+                  Grahak Peth
                 </p>
               </div>
 

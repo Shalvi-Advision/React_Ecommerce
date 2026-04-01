@@ -49,7 +49,7 @@ export {
 // Common constant combinations for easy use
 export const APP_CONSTANTS = {
   // App-wide constants
-  APP_NAME: 'E-Shop',
+  APP_NAME: 'Grahak Peth',
   APP_VERSION: '1.0.0',
   DEFAULT_CURRENCY: 'USD',
   DEFAULT_LANGUAGE: 'en',

@@ -105,7 +105,7 @@ const LoginPage = () => {
       >
         <div className="flex flex-col items-center justify-center w-full h-full p-12 relative z-10">
           <div className="max-w-md w-full flex flex-col items-center">
-            {/* Pagariya Mart Logo */}
+            {/* Grahak Peth Logo */}
             
 
             {/* Basket Image */}
@@ -187,13 +187,13 @@ const LoginPage = () => {
                 }}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold" style={{ color: COLORS.primary[600] }}>Pagariya Mart</span>
+                  <span className="text-lg font-bold" style={{ color: COLORS.primary[600] }}>Grahak Peth</span>
                 </div>
               </div>
             ) : (
               <img
                 src={`${process.env.PUBLIC_URL}/images/Main_Logo.jpg?v=2`}
-                alt="Pagariya Mart"
+                alt="Grahak Peth"
                 className="h-12 w-auto object-contain"
                 style={{
                   maxHeight: '60px',

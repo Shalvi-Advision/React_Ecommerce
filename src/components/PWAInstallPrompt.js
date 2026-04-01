@@ -92,7 +92,7 @@ const PWAInstallPrompt = () => {
             </div>
             <div className="flex-1">
               <h3 className="text-sm font-medium text-gray-900">
-                Install Shalvi E-Commerce
+                Install Grahak Peth
               </h3>
               <p className="text-sm text-gray-500 mt-1">
                 Install our app for a better shopping experience with offline access.
