@@ -586,6 +586,14 @@ const CategoryPage = () => {
     // Products will load automatically via useEffect
   }, []);
 
+  // Auto-select first category when categories are loaded and no category is selected
+  useEffect(() => {
+    if (categories.length > 0 && !selectedCategory) {
+      console.log('✅ Auto-selecting first category:', categories[0].category_name);
+      handleCategorySelect(categories[0]);
+    }
+  }, [categories, selectedCategory, handleCategorySelect]);
+
   // Handle pagination
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
@@ -826,56 +834,312 @@ const CategoryPage = () => {
       {/* Modern Mobile Header */}
       {isMobile && (
         <div 
-          className="relative backdrop-blur-sm border-b px-4 py-3 shadow-sm"
+          className="relative backdrop-blur-sm border-b shadow-sm"
           style={{
             backgroundColor: hexToRgba(COLORS.white, 0.9),
             borderColor: hexToRgba(COLORS.gray[200], 0.5)
           }}
         >
-          <div className="flex items-center justify-between">
-            <button
-              onClick={toggleSidebar}
-              className="p-2 rounded-xl transition-all duration-300 hover:scale-110"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = COLORS.primary[50];
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
+          {/* Department Name with Filter Icons */}
+          <div className="px-4 py-3 flex items-center justify-between">
+            <h1 
+              className="text-lg font-bold bg-clip-text text-transparent flex-1"
+              style={{
+                background: `linear-gradient(to right, ${COLORS.primary[600]}, ${COLORS.success[600]})`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
               }}
             >
-              <Squares2X2Icon className="w-6 h-6" style={{ color: COLORS.gray[700] }} />
-            </button>
-            <div className="flex items-center gap-2">
-              {departmentImage && (
-                <div 
-                  className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden shadow-md"
+              {selectedDepartment || 'Categories'}
+            </h1>
+            
+            {/* Filter Icons - Mobile Only */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Brand Filter Icon */}
+              <div className="relative brand-filter-container" style={{ zIndex: 10001 }}>
+                <button
+                  onClick={() => {
+                    setShowBrandDropdown(!showBrandDropdown);
+                    setShowSortDropdown(false);
+                  }}
+                  className="p-2 rounded-lg border transition-colors"
                   style={{
-                    background: `linear-gradient(to bottom right, ${COLORS.primary[50]}, ${COLORS.success[50]})`
+                    borderColor: filters.brand ? COLORS.primary[500] : COLORS.gray[200],
+                    backgroundColor: filters.brand ? COLORS.primary[50] : COLORS.white,
+                    color: filters.brand ? COLORS.primary[600] : COLORS.gray[700]
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = COLORS.primary[300];
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!filters.brand) {
+                      e.currentTarget.style.borderColor = COLORS.gray[200];
+                    }
                   }}
                 >
-                  <img 
-                    src={departmentImage} 
-                    alt={selectedDepartment}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
+                  <TagIcon className="w-5 h-5" />
+                </button>
+                
+                {/* Brand Dropdown */}
+                {showBrandDropdown && (
+                  <div 
+                    className="absolute right-0 mt-2 w-56 rounded-lg shadow-xl border py-2"
+                    style={{
+                      backgroundColor: COLORS.white,
+                      borderColor: COLORS.primary[200],
+                      boxShadow: `0 10px 25px ${hexToRgba(COLORS.primary[900], 0.15)}`,
+                      zIndex: 9999,
+                      minWidth: '200px',
+                      maxWidth: '280px'
                     }}
-                  />
-                </div>
-              )}
-              <h1 
-                className="text-lg font-bold bg-clip-text text-transparent"
-                style={{
-                  background: `linear-gradient(to right, ${COLORS.primary[600]}, ${COLORS.success[600]})`,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
-                }}
-              >
-                {selectedDepartment || 'Categories'}
-              </h1>
+                  >
+                    <div className="px-3 py-2.5 border-b" style={{ borderColor: COLORS.primary[200] }}>
+                      <p className="text-sm font-semibold" style={{ color: COLORS.primary[700] }}>Filter by Brand</p>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto custom-scrollbar">
+                      <button
+                        onClick={() => {
+                          handleFilterChange('brand', '');
+                          setShowBrandDropdown(false);
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-opacity-80"
+                        style={{ 
+                          color: !filters.brand ? COLORS.primary[700] : COLORS.gray[700],
+                          backgroundColor: !filters.brand ? COLORS.primary[50] : 'transparent'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (filters.brand) {
+                            e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (filters.brand) {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                          }
+                        }}
+                      >
+                        All Brands
+                      </button>
+                      {availableBrands.map(brand => (
+                        <button
+                          key={brand}
+                          onClick={() => {
+                            handleFilterChange('brand', brand);
+                            setShowBrandDropdown(false);
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-opacity-80"
+                          style={{ 
+                            color: filters.brand === brand ? COLORS.primary[700] : COLORS.gray[700],
+                            backgroundColor: filters.brand === brand ? COLORS.primary[50] : 'transparent'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (filters.brand !== brand) {
+                              e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (filters.brand !== brand) {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }
+                          }}
+                        >
+                          {brand}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Sort By Icon */}
+              <div className="relative sort-filter-container" style={{ zIndex: 10001 }}>
+                <button
+                  onClick={() => {
+                    setShowSortDropdown(!showSortDropdown);
+                    setShowBrandDropdown(false);
+                  }}
+                  className="p-2 rounded-lg border transition-colors"
+                  style={{
+                    borderColor: sortBy !== 'relevance' ? COLORS.primary[500] : COLORS.gray[200],
+                    backgroundColor: sortBy !== 'relevance' ? COLORS.primary[50] : COLORS.white,
+                    color: sortBy !== 'relevance' ? COLORS.primary[600] : COLORS.gray[700]
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = COLORS.primary[300];
+                  }}
+                  onMouseLeave={(e) => {
+                    if (sortBy === 'relevance') {
+                      e.currentTarget.style.borderColor = COLORS.gray[200];
+                    }
+                  }}
+                >
+                  <ArrowsUpDownIcon className="w-5 h-5" />
+                </button>
+                
+                {/* Sort Dropdown */}
+                {showSortDropdown && (
+                  <div 
+                    className="absolute right-0 mt-2 w-64 rounded-lg shadow-xl border py-2"
+                    style={{
+                      backgroundColor: COLORS.white,
+                      borderColor: COLORS.primary[200],
+                      boxShadow: `0 10px 25px ${hexToRgba(COLORS.primary[900], 0.15)}`,
+                      zIndex: 9999,
+                      minWidth: '220px',
+                      maxWidth: '300px'
+                    }}
+                  >
+                    <div className="px-3 py-2.5 border-b" style={{ borderColor: COLORS.primary[200] }}>
+                      <p className="text-sm font-semibold" style={{ color: COLORS.primary[700] }}>Sort by</p>
+                    </div>
+                    {[
+                      { value: 'relevance', label: 'Relevance' },
+                      { value: 'price-low', label: 'Price: Low to High' },
+                      { value: 'price-high', label: 'Price: High to Low' },
+                      { value: 'discount', label: 'Discount' },
+                      { value: 'name', label: 'Name' }
+                    ].map(option => (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          setSortBy(option.value);
+                          setShowSortDropdown(false);
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-opacity-80"
+                        style={{ 
+                          color: sortBy === option.value ? COLORS.primary[700] : COLORS.gray[700],
+                          backgroundColor: sortBy === option.value ? COLORS.primary[50] : 'transparent'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (sortBy !== option.value) {
+                            e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (sortBy !== option.value) {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                          }
+                        }}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="w-10" /> {/* Spacer */}
           </div>
+          
+          {/* Sticky Categories Bar - Always Visible */}
+          {categories.length > 0 && (
+            <div 
+              className="sticky top-0 z-30 border-b px-4 py-2.5"
+              style={{
+                backgroundColor: hexToRgba(COLORS.white, 0.98),
+                borderColor: hexToRgba(COLORS.gray[200], 0.5),
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
+              }}
+            >
+              <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {categories
+                  .filter((category, index, self) => {
+                    // Remove duplicates based on category_id or category_name
+                    const identifier = category.idcategory_master || category.category_id || category.category_name;
+                    return index === self.findIndex(c =>
+                      (c.idcategory_master || c.category_id || c.category_name) === identifier
+                    );
+                  })
+                  .map((category) => {
+                    const isCatSelected = selectedCategory?.idcategory_master === category.idcategory_master;
+                    return (
+                      <button
+                        key={category.idcategory_master || category.category_id || category.category_name}
+                        onClick={() => handleCategorySelect(category)}
+                        className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 whitespace-nowrap"
+                        style={{
+                          backgroundColor: isCatSelected ? COLORS.primary[600] : COLORS.gray[100],
+                          color: isCatSelected ? COLORS.white : COLORS.gray[700],
+                          border: isCatSelected ? 'none' : `1px solid ${COLORS.gray[200]}`,
+                          boxShadow: isCatSelected ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isCatSelected) {
+                            e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                            e.currentTarget.style.color = COLORS.primary[700];
+                            e.currentTarget.style.borderColor = COLORS.primary[300];
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isCatSelected) {
+                            e.currentTarget.style.backgroundColor = COLORS.gray[100];
+                            e.currentTarget.style.color = COLORS.gray[700];
+                            e.currentTarget.style.borderColor = COLORS.gray[200];
+                          }
+                        }}
+                      >
+                        {category.category_name}
+                      </button>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+
+          {/* Subcategories List - Below Categories, Updates Based on Selection */}
+          {selectedCategory && subcategories.length > 0 && (
+            <div 
+              className="px-4 py-2.5 border-b"
+              style={{
+                backgroundColor: hexToRgba(COLORS.primary[50], 0.3),
+                borderColor: hexToRgba(COLORS.primary[200], 0.4),
+                borderTop: `2px solid ${hexToRgba(COLORS.primary[300], 0.5)}`
+              }}
+            >
+              {/* Subcategories Chips */}
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {subcategories.map((subcategory) => {
+                  const isSubSelected = selectedSubcategory?.idsub_category_master === subcategory.idsub_category_master;
+                  return (
+                    <button
+                      key={subcategory.idsub_category_master}
+                      onClick={() => handleSubcategorySelect(subcategory)}
+                      className="flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-medium transition-all duration-200 whitespace-nowrap"
+                      style={{
+                        backgroundColor: isSubSelected 
+                          ? COLORS.primary[600] 
+                          : hexToRgba(COLORS.white, 0.8),
+                        color: isSubSelected ? COLORS.white : COLORS.gray[700],
+                        border: isSubSelected 
+                          ? 'none' 
+                          : `1px solid ${hexToRgba(COLORS.primary[300], 0.5)}`,
+                        boxShadow: isSubSelected 
+                          ? '0 2px 6px rgba(0, 0, 0, 0.15)' 
+                          : '0 1px 2px rgba(0, 0, 0, 0.05)'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isSubSelected) {
+                          e.currentTarget.style.backgroundColor = hexToRgba(COLORS.primary[100], 0.8);
+                          e.currentTarget.style.color = COLORS.primary[700];
+                          e.currentTarget.style.borderColor = COLORS.primary[400];
+                          e.currentTarget.style.transform = 'scale(1.05)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isSubSelected) {
+                          e.currentTarget.style.backgroundColor = hexToRgba(COLORS.white, 0.8);
+                          e.currentTarget.style.color = COLORS.gray[700];
+                          e.currentTarget.style.borderColor = hexToRgba(COLORS.primary[300], 0.5);
+                          e.currentTarget.style.transform = 'scale(1)';
+                        }
+                      }}
+                    >
+                      {subcategory.sub_category_name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1082,6 +1346,7 @@ const CategoryPage = () => {
         {/* Main Content */}
         <div className="flex-1 min-w-0">
           {/* Title */}
+          {!isMobile && (
           <div 
             className="border-b px-3 sm:px-4 md:px-6 py-3 sm:py-4"
             style={{
@@ -1091,20 +1356,21 @@ const CategoryPage = () => {
               overflow: 'visible'
             }}
           >
-            <div className="flex items-center justify-between gap-3" style={{ position: 'relative', overflow: 'visible' }}>
-              <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate flex-1" style={{ color: COLORS.gray[900] }}>
-                {selectedSubcategory?.sub_category_name || selectedCategory?.category_name || selectedDepartment || 'All Products'}
-              </h1>
+            <div className={`flex items-center gap-3 ${isMobile ? 'justify-end' : 'justify-between'}`} style={{ position: 'relative', overflow: 'visible' }}>
+              {/* Title - Only show on desktop */}
+              {!isMobile && (
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate flex-1" style={{ color: COLORS.gray[900] }}>
+                  {selectedSubcategory?.sub_category_name || selectedCategory?.category_name || selectedDepartment || 'All Products'}
+                </h1>
+              )}
               
-              {/* Filter Icons */}
+              {/* Filter Icons - Desktop Only */}
+              {!isMobile && (
               <div 
                 className="flex items-center gap-2 flex-shrink-0"
                 style={{ 
-                  position: isMobile ? 'sticky' : 'relative', 
-                  zIndex: isMobile ? 40 : 10000,
-                  top: isMobile ? '56px' : 'auto',
-                  backgroundColor: isMobile ? COLORS.white : 'transparent',
-                  alignSelf: isMobile ? 'flex-start' : 'auto'
+                  position: 'relative', 
+                  zIndex: 10000
                 }}
               >
                 {/* Brand Filter Icon */}
@@ -1280,12 +1546,13 @@ const CategoryPage = () => {
                   )}
                 </div>
               </div>
+              )}
             </div>
           </div>
-
+          )}
 
           {/* Products Grid */}
-          <div className="p-2 sm:p-4 md:p-6 relative min-h-screen" style={{ backgroundColor: COLORS.gray[50] }}>
+          <div className={`relative min-h-screen ${isMobile ? 'p-2' : 'p-2 sm:p-4 md:p-6'}`} style={{ backgroundColor: COLORS.gray[50] }}>
             {/* Centered Loading State - Shows when loading or no subcategory selected yet */}
             {(productsLoading || !selectedSubcategory) ? (
               <div className="flex items-center justify-center min-h-[60vh]">
@@ -1741,6 +2008,13 @@ const CategoryPage = () => {
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: linear-gradient(to bottom, ${COLORS.primary[600]}, ${COLORS.success[600]});
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
         }
         .hover\:scale-102:hover {
           transform: scale(1.02);

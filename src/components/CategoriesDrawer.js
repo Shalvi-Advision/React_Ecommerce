@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { XMarkIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ChevronRightIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { getActiveDepartments, getActiveCategories, getActiveSubcategories } from '../services/groceryApi';
 import { APP_CONSTANTS } from '../constants';
 import { usePincode } from '../context/PincodeContext';
 import { COLORS } from '../constants/theme';
+import { useResponsive } from '../hooks/useResponsive';
 
 // Helper function to convert hex color to rgba with opacity
 const hexToRgba = (hex, opacity = 1) => {
@@ -19,6 +20,7 @@ const hexToRgba = (hex, opacity = 1) => {
 const CategoriesDrawer = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const { openPincodeModal } = usePincode();
+  const { isMobile } = useResponsive();
   const [departments, setDepartments] = useState([]);
   const [categories, setCategories] = useState({});
   const [expandedDepartment, setExpandedDepartment] = useState(null);
@@ -27,6 +29,8 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
   const [error, setError] = useState(null);
   const [requiresStoreSelection, setRequiresStoreSelection] = useState(false);
   const [requiresStoreChange, setRequiresStoreChange] = useState(false);
+  const [viewMode, setViewMode] = useState('departments'); // 'departments' | 'categories'
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
   
   const handleCategoryClick = (categoryName, departmentName, categoryData) => {
     // Navigate to department page (CategoryPage) with department slug
@@ -41,16 +45,24 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
     onClose();
   };
 
-  const handleDepartmentClick = (departmentId) => {
-    if (expandedDepartment === departmentId) {
-      setExpandedDepartment(null);
-    } else {
-      setExpandedDepartment(departmentId);
-      // Load categories for this department if not already loaded
-      if (!categories[departmentId]) {
-        loadCategoriesForDepartment(departmentId);
-      }
+  const handleDepartmentClick = async (department) => {
+    const departmentId = department.department_id;
+    // Load categories for this department if not already loaded
+    if (!categories[departmentId]) {
+      await loadCategoriesForDepartment(departmentId);
     }
+    // Set selected department
+    setSelectedDepartment(department);
+    // For mobile: keep in departments view (split screen)
+    // For desktop: switch to categories view
+    if (!isMobile) {
+      setViewMode('categories');
+    }
+  };
+
+  const handleBackToDepartments = () => {
+    setViewMode('departments');
+    setSelectedDepartment(null);
   };
 
   // Icon mapping for departments
@@ -123,11 +135,25 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
       setError(null);
       setRequiresStoreSelection(false);
       setRequiresStoreChange(false);
+      // Reset view when drawer opens
+      setViewMode('departments');
+      setSelectedDepartment(null);
 
       try {
         const response = await getActiveDepartments();
         if (response.success) {
-          setDepartments(response.data || []);
+          const departmentsList = response.data || [];
+          setDepartments(departmentsList);
+          
+          // On mobile, automatically select the first department and load its categories
+          if (isMobile && departmentsList.length > 0) {
+            const firstDepartment = departmentsList[0];
+            setSelectedDepartment(firstDepartment);
+            // Load categories for the first department
+            if (!categories[firstDepartment.department_id]) {
+              loadCategoriesForDepartment(firstDepartment.department_id);
+            }
+          }
         } else {
           // Check if store selection is required
           if (response.requiresStoreSelection) {
@@ -149,7 +175,7 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
     };
 
     loadDepartments();
-  }, [isOpen]);
+  }, [isOpen, isMobile]);
 
   if (!isOpen) return null;
 
@@ -190,8 +216,30 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
             }}
           >
             <div className="flex items-center gap-3">
+              {/* Back Button - Only show in categories view on desktop/tablet */}
+              {viewMode === 'categories' && !isMobile && (
+                <button
+                  onClick={handleBackToDepartments}
+                  className="p-2 rounded-xl transition-all duration-300 hover:scale-110 flex-shrink-0"
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                    const icon = e.currentTarget.querySelector('svg');
+                    if (icon) icon.style.color = COLORS.primary[600];
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    const icon = e.currentTarget.querySelector('svg');
+                    if (icon) icon.style.color = COLORS.gray[600];
+                  }}
+                >
+                  <ArrowLeftIcon 
+                    className="w-6 h-6 transition-colors" 
+                    style={{ color: COLORS.gray[600] }}
+                  />
+                </button>
+              )}
               <div 
-                className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg"
+                className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
                 style={{
                   background: `linear-gradient(to bottom right, ${COLORS.primary[500]}, ${COLORS.success[500]})`
                 }}
@@ -207,7 +255,7 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
                     WebkitTextFillColor: 'transparent'
                   }}
                 >
-                  All Categories
+                  Shop by Category
                 </h2>
                 <p className="text-xs hidden sm:block" style={{ color: COLORS.gray[500] }}>Explore our wide range of products</p>
               </div>
@@ -354,62 +402,81 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
                 )}
               </div>
             </div>
-          ) : (
-            <div 
-              className="p-4 sm:p-6"
-              style={{
-                background: `linear-gradient(to bottom right, ${COLORS.gray[50]}, ${COLORS.white})`
-              }}
-            >
-              {/* Redesigned Departments Layout with Better Bifurcation */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-                {departments.map((department, index) => {
-                  const departmentId = department.department_id;
-                  const departmentName = department.department_name;
-                  const departmentImage = department.image_link || getDefaultImage();
-                  const departmentCategories = categories[departmentId] || [];
-                  const isLoadingCategories = categoriesLoading[departmentId] || false;
+          ) : viewMode === 'departments' || (viewMode === 'departments' && isMobile) ? (
+            /* Mobile: Split Screen | Desktop: Departments View */
+            isMobile ? (
+              /* Mobile Split Screen Layout */
+              <div 
+                className="flex h-full"
+                style={{
+                  background: `linear-gradient(to bottom right, ${COLORS.gray[50]}, ${COLORS.white})`
+                }}
+              >
+                {/* Left Side - Departments List */}
+                <div 
+                  className="w-2/5 border-r overflow-y-auto custom-scrollbar"
+                  style={{
+                    borderColor: COLORS.gray[200],
+                    background: COLORS.white
+                  }}
+                >
+                  <div className="p-2 space-y-1">
+                    {departments.map((department, index) => {
+                      const departmentId = department.department_id;
+                      const departmentName = department.department_name;
+                      const departmentImage = department.image_link || getDefaultImage();
+                      const isSelected = selectedDepartment?.department_id === departmentId;
 
-                  // Load categories if not already loaded
-                  if (!categories[departmentId] && !categoriesLoading[departmentId]) {
-                    loadCategoriesForDepartment(departmentId);
-                  }
+                      // Load categories if not already loaded
+                      if (!categories[departmentId] && !categoriesLoading[departmentId]) {
+                        loadCategoriesForDepartment(departmentId);
+                      }
 
-                  return (
-                    <div 
-                      key={index} 
-                      className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border overflow-hidden"
-                      style={{
-                        borderColor: COLORS.gray[200]
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.boxShadow = '0 10px 15px rgba(0, 0, 0, 0.1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.08)';
-                      }}
-                    >
-                      {/* Department Header Section */}
-                      <div 
-                        className="px-4 py-4 border-b-2"
-                        style={{
-                          background: `linear-gradient(to right, ${COLORS.primary[50]}, ${COLORS.success[50]}, ${COLORS.primary[100]})`,
-                          borderColor: COLORS.primary[200]
-                        }}
-                      >
-                        <div className="flex items-center gap-3">
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => handleDepartmentClick(department)}
+                          className={`w-full rounded-lg transition-all duration-200 border p-2.5 flex flex-col items-center gap-1.5 group ${
+                            isSelected ? 'shadow-md' : 'shadow-sm'
+                          }`}
+                          style={{
+                            borderColor: isSelected ? COLORS.primary[300] : COLORS.gray[200],
+                            backgroundColor: isSelected ? COLORS.primary[50] : COLORS.white,
+                            minHeight: '70px'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.borderColor = COLORS.primary[300];
+                              e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.borderColor = COLORS.gray[200];
+                              e.currentTarget.style.backgroundColor = COLORS.white;
+                            }
+                          }}
+                        >
                           {/* Department Icon/Image */}
                           <div 
-                            className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 bg-white rounded-lg flex items-center justify-center shadow-sm border"
+                            className={`flex-shrink-0 bg-white rounded-lg flex items-center justify-center shadow-sm border transition-all duration-300 ease-in-out ${
+                              isSelected ? 'scale-110' : ''
+                            }`}
                             style={{
-                              borderColor: COLORS.gray[200]
+                              width: isSelected ? '72px' : '56px',
+                              height: isSelected ? '72px' : '56px',
+                              borderColor: isSelected ? COLORS.primary[300] : COLORS.gray[200],
+                              boxShadow: isSelected ? `0 4px 12px ${hexToRgba(COLORS.primary[300], 0.3)}` : '0 1px 3px rgba(0, 0, 0, 0.1)'
                             }}
                           >
                             {department.image_link ? (
                               <img
                                 src={departmentImage}
                                 alt={departmentName}
-                                className="w-full h-full object-contain p-1"
+                                className="w-full h-full object-contain p-1 transition-transform duration-300"
+                                style={{
+                                  transform: isSelected ? 'scale(1.1)' : 'scale(1)'
+                                }}
                                 onError={(e) => {
                                   e.target.style.display = 'none';
                                   const iconElement = e.target.parentElement.querySelector('.fallback-icon');
@@ -418,116 +485,320 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
                               />
                             ) : null}
                             <div
-                              className={`fallback-icon ${department.image_link ? 'hidden' : 'flex'} items-center justify-center`}
+                              className={`fallback-icon ${department.image_link ? 'hidden' : 'flex'} items-center justify-center transition-all duration-300`}
                             >
-                              <span className="text-3xl sm:text-4xl">
+                              <span className={`transition-all duration-300 ${isSelected ? 'text-3xl' : 'text-2xl'}`}>
                                 {getDepartmentIcon(departmentName)}
                               </span>
                             </div>
                           </div>
 
                           {/* Department Name */}
-                          <div className="flex-1 min-w-0">
+                          <div className="w-full text-center">
                             <h3 
-                              className="text-sm sm:text-base font-bold uppercase tracking-wide line-clamp-2"
-                              style={{ color: COLORS.gray[900] }}
+                              className="text-[10px] font-semibold text-gray-900 line-clamp-2 leading-tight"
                             >
                               {departmentName}
                             </h3>
-                            {departmentCategories.length > 0 && (
-                              <p className="text-xs mt-1" style={{ color: COLORS.gray[500] }}>
-                                {departmentCategories.length} {departmentCategories.length === 1 ? 'category' : 'categories'}
-                              </p>
-                            )}
                           </div>
-                        </div>
-                      </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-                      {/* Categories List Section */}
-                      <div className="p-4">
-                        {isLoadingCategories ? (
-                          <div className="flex items-center justify-center py-6">
+                {/* Right Side - Categories Grid (2 columns) */}
+                <div 
+                  className="flex-1 overflow-y-auto custom-scrollbar p-2"
+                  style={{
+                    background: `linear-gradient(to bottom right, ${COLORS.gray[50]}, ${COLORS.white})`
+                  }}
+                >
+                  {selectedDepartment ? (() => {
+                    const departmentId = selectedDepartment.department_id;
+                    const departmentName = selectedDepartment.department_name;
+                    const departmentCategories = categories[departmentId] || [];
+                    const isLoadingCategories = categoriesLoading[departmentId] || false;
+
+                    if (isLoadingCategories) {
+                      return (
+                        <div className="flex items-center justify-center py-12">
+                          <div className="text-center">
                             <div 
-                              className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"
+                              className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin mx-auto"
                               style={{
                                 borderColor: COLORS.primary[500]
                               }}
                             ></div>
+                            <p className="mt-4 text-xs" style={{ color: COLORS.gray[600] }}>Loading categories...</p>
                           </div>
-                        ) : departmentCategories.length > 0 ? (
-                          <div className="space-y-1.5">
-                            {/* Filter out duplicate categories */}
-                            {departmentCategories
-                              .filter((category, index, self) => {
-                                const identifier = category.idcategory_master || category.category_name;
-                                return index === self.findIndex(c =>
-                                  (c.idcategory_master || c.category_name) === identifier
-                                );
-                              })
-                              .map((category) => (
-                                <button
-                                  key={category.idcategory_master || category.category_name}
-                                  onClick={() => handleCategoryClick(category.category_name, departmentName, category)}
-                                  className="w-full text-left px-3 py-2 text-sm rounded-lg transition-all duration-200 flex items-center gap-2 group"
-                                  style={{ color: COLORS.gray[700] }}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.color = COLORS.primary[600];
-                                    e.currentTarget.style.backgroundColor = COLORS.primary[50];
-                                    const icon = e.currentTarget.querySelector('svg');
-                                    if (icon) icon.style.color = COLORS.primary[600];
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.color = COLORS.gray[700];
-                                    e.currentTarget.style.backgroundColor = 'transparent';
-                                    const icon = e.currentTarget.querySelector('svg');
-                                    if (icon) icon.style.color = COLORS.gray[400];
-                                  }}
-                                >
-                                  <ChevronRightIcon 
-                                    className="w-4 h-4 transition-colors flex-shrink-0" 
-                                    style={{ color: COLORS.gray[400] }}
-                                  />
-                                  <span className="flex-1 truncate">{category.category_name || 'Not Available'}</span>
-                                </button>
-                              ))
-                            }
+                        </div>
+                      );
+                    }
+
+                    if (departmentCategories.length === 0) {
+                      return (
+                        <div className="flex items-center justify-center py-12">
+                          <div className="text-center">
+                            <p className="text-xs" style={{ color: COLORS.gray[500] }}>No categories available</p>
                           </div>
-                        ) : (
-                          <div className="text-center py-6">
-                            <p className="text-xs" style={{ color: COLORS.gray[400] }}>No categories available</p>
+                        </div>
+                      );
+                    }
+
+                    // Filter out duplicate categories
+                    const uniqueCategories = departmentCategories.filter((category, index, self) => {
+                      const identifier = category.idcategory_master || category.category_name;
+                      return index === self.findIndex(c =>
+                        (c.idcategory_master || c.category_name) === identifier
+                      );
+                    });
+
+                    return (
+                      <div className="grid grid-cols-2 gap-2">
+                        {uniqueCategories.map((category) => (
+                          <button
+                            key={category.idcategory_master || category.category_name}
+                            onClick={() => handleCategoryClick(category.category_name, departmentName, category)}
+                            className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border p-2.5 flex flex-col items-center justify-center gap-1.5 text-center group"
+                            style={{
+                              borderColor: COLORS.gray[200],
+                              minHeight: '80px'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.borderColor = COLORS.primary[300];
+                              e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor = COLORS.gray[200];
+                              e.currentTarget.style.backgroundColor = COLORS.white;
+                            }}
+                          >
+                            <span className="text-xs font-medium text-gray-900 line-clamp-2 leading-tight">
+                              {category.category_name || 'Not Available'}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })() : (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <p className="text-xs" style={{ color: COLORS.gray[500] }}>Select a department to view categories</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* Desktop: Departments View - 2 Column Grid */
+              <div 
+                className="p-3 sm:p-4"
+                style={{
+                  background: `linear-gradient(to bottom right, ${COLORS.gray[50]}, ${COLORS.white})`
+                }}
+              >
+                <div className="grid grid-cols-2 sm:grid-cols-1 gap-2 sm:gap-3">
+                  {departments.map((department, index) => {
+                    const departmentId = department.department_id;
+                    const departmentName = department.department_name;
+                    const departmentImage = department.image_link || getDefaultImage();
+
+                    // Load categories if not already loaded (preload for better UX)
+                    if (!categories[departmentId] && !categoriesLoading[departmentId]) {
+                      loadCategoriesForDepartment(departmentId);
+                    }
+
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => handleDepartmentClick(department)}
+                        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border p-3 sm:p-4 flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-3 group"
+                        style={{
+                          borderColor: COLORS.gray[200],
+                          minHeight: '56px' // Touch-friendly minimum height
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = COLORS.primary[300];
+                          e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = COLORS.gray[200];
+                          e.currentTarget.style.backgroundColor = COLORS.white;
+                        }}
+                      >
+                        {/* Department Icon/Image */}
+                        <div 
+                          className="w-16 h-16 sm:w-16 sm:h-16 flex-shrink-0 bg-white rounded-lg flex items-center justify-center shadow-sm border mx-auto sm:mx-0 transition-all duration-300 ease-in-out group-hover:scale-110 group-hover:shadow-md"
+                          style={{
+                            borderColor: COLORS.gray[200],
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'scale(1.15)';
+                            e.currentTarget.style.boxShadow = `0 6px 16px ${hexToRgba(COLORS.primary[300], 0.4)}`;
+                            e.currentTarget.style.borderColor = COLORS.primary[300];
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'scale(1)';
+                            e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+                            e.currentTarget.style.borderColor = COLORS.gray[200];
+                          }}
+                        >
+                          {department.image_link ? (
+                            <img
+                              src={departmentImage}
+                              alt={departmentName}
+                              className="w-full h-full object-contain p-1 transition-transform duration-300"
+                              style={{
+                                transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                              }}
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                const iconElement = e.target.parentElement.querySelector('.fallback-icon');
+                                if (iconElement) iconElement.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div
+                            className={`fallback-icon ${department.image_link ? 'hidden' : 'flex'} items-center justify-center transition-all duration-300`}
+                          >
+                            <span className="text-3xl transition-all duration-300 group-hover:text-4xl">
+                              {getDepartmentIcon(departmentName)}
+                            </span>
                           </div>
-                        )}
+                        </div>
+
+                        {/* Department Name */}
+                        <div className="flex-1 min-w-0 text-center sm:text-left">
+                          <h3 
+                            className="text-xs sm:text-sm font-semibold text-gray-900 line-clamp-2 sm:truncate"
+                          >
+                            {departmentName}
+                          </h3>
+                        </div>
+
+                        {/* Chevron Icon - Hidden on mobile, shown on larger screens */}
+                        <ChevronRightIcon 
+                          className="hidden sm:block w-5 h-5 flex-shrink-0 transition-colors" 
+                          style={{ color: COLORS.gray[400] }}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Empty State if no departments */}
+                {departments.length === 0 && !loading && !error && (
+                  <div className="flex items-center justify-center py-12">
+                    <div 
+                      className="text-center backdrop-blur-lg rounded-3xl p-8 shadow-2xl border"
+                      style={{
+                        backgroundColor: hexToRgba(COLORS.white, 0.8),
+                        borderColor: hexToRgba(COLORS.white, 0.6)
+                      }}
+                    >
+                      <div 
+                        className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4"
+                        style={{
+                          background: `linear-gradient(to bottom right, ${COLORS.gray[100]}, ${COLORS.gray[200]})`
+                        }}
+                      >
+                        <span className="text-4xl">🛒</span>
+                      </div>
+                      <h3 className="text-lg font-bold mb-2" style={{ color: COLORS.gray[800] }}>No Categories Found</h3>
+                      <p className="text-sm" style={{ color: COLORS.gray[600] }}>Categories will appear here once they're available</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          ) : viewMode === 'categories' && selectedDepartment ? (
+            /* Categories View - Compact List */
+            <div 
+              className="p-3 sm:p-4"
+              style={{
+                background: `linear-gradient(to bottom right, ${COLORS.gray[50]}, ${COLORS.white})`
+              }}
+            >
+              {(() => {
+                const departmentId = selectedDepartment.department_id;
+                const departmentName = selectedDepartment.department_name;
+                const departmentCategories = categories[departmentId] || [];
+                const isLoadingCategories = categoriesLoading[departmentId] || false;
+
+                if (isLoadingCategories) {
+                  return (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="text-center">
+                        <div 
+                          className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin mx-auto"
+                          style={{
+                            borderColor: COLORS.primary[500]
+                          }}
+                        ></div>
+                        <p className="mt-4 text-sm" style={{ color: COLORS.gray[600] }}>Loading categories...</p>
                       </div>
                     </div>
                   );
-                })}
-              </div>
+                }
 
-              {/* Empty State if no categories */}
-              {departments.length === 0 && !loading && !error && (
-                <div className="flex items-center justify-center h-full">
-                  <div 
-                    className="text-center backdrop-blur-lg rounded-3xl p-8 shadow-2xl border"
-                    style={{
-                      backgroundColor: hexToRgba(COLORS.white, 0.8),
-                      borderColor: hexToRgba(COLORS.white, 0.6)
-                    }}
-                  >
-                    <div 
-                      className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4"
-                      style={{
-                        background: `linear-gradient(to bottom right, ${COLORS.gray[100]}, ${COLORS.gray[200]})`
-                      }}
-                    >
-                      <span className="text-4xl">🛒</span>
+                if (departmentCategories.length === 0) {
+                  return (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="text-center">
+                        <p className="text-sm" style={{ color: COLORS.gray[500] }}>No categories available for this department</p>
+                      </div>
                     </div>
-                    <h3 className="text-lg font-bold mb-2" style={{ color: COLORS.gray[800] }}>No Categories Found</h3>
-                    <p className="text-sm" style={{ color: COLORS.gray[600] }}>Categories will appear here once they're available</p>
+                  );
+                }
+
+                // Filter out duplicate categories
+                const uniqueCategories = departmentCategories.filter((category, index, self) => {
+                  const identifier = category.idcategory_master || category.category_name;
+                  return index === self.findIndex(c =>
+                    (c.idcategory_master || c.category_name) === identifier
+                  );
+                });
+
+                return (
+                  <div className="space-y-2">
+                    {uniqueCategories.map((category) => (
+                      <button
+                        key={category.idcategory_master || category.category_name}
+                        onClick={() => handleCategoryClick(category.category_name, departmentName, category)}
+                        className="w-full bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border p-3 sm:p-4 flex items-center gap-3 group text-left"
+                        style={{
+                          borderColor: COLORS.gray[200],
+                          minHeight: '56px' // Touch-friendly minimum height
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = COLORS.primary[300];
+                          e.currentTarget.style.backgroundColor = COLORS.primary[50];
+                          const icon = e.currentTarget.querySelector('svg');
+                          if (icon) icon.style.color = COLORS.primary[600];
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = COLORS.gray[200];
+                          e.currentTarget.style.backgroundColor = COLORS.white;
+                          const icon = e.currentTarget.querySelector('svg');
+                          if (icon) icon.style.color = COLORS.gray[400];
+                        }}
+                      >
+                        <ChevronRightIcon 
+                          className="w-5 h-5 transition-colors flex-shrink-0" 
+                          style={{ color: COLORS.gray[400] }}
+                        />
+                        <span className="flex-1 text-sm sm:text-base font-medium text-gray-900">
+                          {category.category_name || 'Not Available'}
+                        </span>
+                      </button>
+                    ))}
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
-          )}
+          ) : null}
         </div>
       </div>
       

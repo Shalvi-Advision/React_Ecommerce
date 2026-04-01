@@ -23,6 +23,7 @@ import {
   UserCircleIcon,
   HeartIcon,
   InformationCircleIcon,
+  QuestionMarkCircleIcon,
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { useFavorite } from '../context/FavoriteContext';
@@ -597,7 +598,7 @@ const Header = () => {
                                 e.currentTarget.style.color = COLORS.gray[700];
                               }}
                             >
-                              <InformationCircleIcon style={{ color: COLORS.primary[600] }} className="w-4 h-4" />
+                              <QuestionMarkCircleIcon style={{ color: COLORS.primary[600] }} className="w-4 h-4" />
                               About Us
                             </Link>
                           </div>
@@ -834,7 +835,7 @@ const Header = () => {
                 aria-label="About Us"
                 title="About Us"
               >
-                <InformationCircleIcon style={{ color: COLORS.primary[600] }} className="w-5 h-5" />
+                <QuestionMarkCircleIcon style={{ color: COLORS.primary[600] }} className="w-5 h-5" />
               </Link>
             </div>
           </div>
@@ -884,7 +885,7 @@ const Header = () => {
                 }}
                 aria-label="About Us"
               >
-                <InformationCircleIcon style={{ color: COLORS.primary[600] }} className="w-4 h-4" />
+                <QuestionMarkCircleIcon style={{ color: COLORS.primary[600] }} className="w-4 h-4" />
                 <span>About Us</span>
               </Link>
               {/* Desktop Location Button */}
@@ -1118,7 +1119,7 @@ const Header = () => {
                               e.currentTarget.style.color = COLORS.gray[700];
                             }}
                           >
-                            <InformationCircleIcon style={{ color: COLORS.primary[600] }} className="w-4 h-4" />
+                            <QuestionMarkCircleIcon style={{ color: COLORS.primary[600] }} className="w-4 h-4" />
                             About Us
                           </Link>
                         </div>
@@ -1295,65 +1296,67 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Category bar */}
-      <div
-        className="border-t"
-        style={{
-          borderColor: COLORS.gray[200],
-          backgroundColor: COLORS.white
-        }}
-      >
-        <div className="container mx-auto px-2 sm:px-4">
-          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 h-10 sm:h-12 overflow-x-auto scrollbar-hide">
-            {/* All Categories button - hidden on mobile, visible on desktop */}
-            <button
-              className="hidden lg:inline-flex items-center gap-1 sm:gap-2 font-medium whitespace-nowrap text-xs sm:text-sm flex-shrink-0 px-2 py-1 rounded-md transition-colors"
-              style={{ color: COLORS.gray[800] }}
-              onClick={handleAllCategoriesClick}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = COLORS.primary[700];
-                e.currentTarget.style.backgroundColor = COLORS.gray[50];
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = COLORS.gray[800];
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }}
-            >
-              <Bars3Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">All Categories</span>
-              <span className="sm:hidden">All</span>
-            </button>
-            {categories.slice(1).map((cat) => {
-              const isActive = (currentCategory === cat.toLowerCase().replace(/\s+/g, '-')) || (currentCategory === 'all' && cat === 'all');
-              return (
-                <button
-                  key={cat}
-                  onClick={() => goToCategory(cat)}
-                  className="text-xs sm:text-sm whitespace-nowrap pb-0.5 border-b-2 transition-colors font-medium flex-shrink-0 px-2 py-1 rounded-md"
-                  style={{
-                    borderColor: isActive ? COLORS.primary[600] : 'transparent',
-                    color: isActive ? COLORS.primary[700] : COLORS.gray[700]
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.color = COLORS.primary[700];
-                      e.currentTarget.style.backgroundColor = COLORS.gray[50];
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.color = COLORS.gray[700];
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }
-                  }}
-                >
-                  {cat === 'all' ? 'All' : cat.replace(/\s+/g, ' ')}
-                </button>
-              );
-            })}
+      {/* Category bar - Hidden on mobile, visible on desktop */}
+      {!isMobile && (
+        <div
+          className="border-t"
+          style={{
+            borderColor: COLORS.gray[200],
+            backgroundColor: COLORS.white
+          }}
+        >
+          <div className="container mx-auto px-2 sm:px-4">
+            <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 h-10 sm:h-12 overflow-x-auto scrollbar-hide">
+              {/* All Categories button - hidden on mobile, visible on desktop */}
+              <button
+                className="hidden lg:inline-flex items-center gap-1 sm:gap-2 font-medium whitespace-nowrap text-xs sm:text-sm flex-shrink-0 px-2 py-1 rounded-md transition-colors"
+                style={{ color: COLORS.gray[800] }}
+                onClick={handleAllCategoriesClick}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = COLORS.primary[700];
+                  e.currentTarget.style.backgroundColor = COLORS.gray[50];
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = COLORS.gray[800];
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                <Bars3Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">All Categories</span>
+                <span className="sm:hidden">All</span>
+              </button>
+              {categories.slice(1).map((cat) => {
+                const isActive = (currentCategory === cat.toLowerCase().replace(/\s+/g, '-')) || (currentCategory === 'all' && cat === 'all');
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => goToCategory(cat)}
+                    className="text-xs sm:text-sm whitespace-nowrap pb-0.5 border-b-2 transition-colors font-medium flex-shrink-0 px-2 py-1 rounded-md"
+                    style={{
+                      borderColor: isActive ? COLORS.primary[600] : 'transparent',
+                      color: isActive ? COLORS.primary[700] : COLORS.gray[700]
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.color = COLORS.primary[700];
+                        e.currentTarget.style.backgroundColor = COLORS.gray[50];
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.color = COLORS.gray[700];
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }
+                    }}
+                  >
+                    {cat === 'all' ? 'All' : cat.replace(/\s+/g, ' ')}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Categories Drawer */}
       <CategoriesDrawer
