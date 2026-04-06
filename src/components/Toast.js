@@ -46,7 +46,7 @@ const Toast = ({ toast, onRemove }) => {
 
   return (
     <div
-      className={`relative max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden border-l-4 ${getToastStyles()} animate-slide-in-right`}
+      className={`relative w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden border-l-4 sm:max-w-sm ${getToastStyles()} animate-slide-in-right`}
     >
       {/* Progress Bar */}
       {toast.duration > 0 && (
@@ -99,7 +99,7 @@ const ToastContainer = ({ toasts, onRemove }) => {
 
   return (
     <div
-      className="fixed top-4 right-4 z-50 space-y-2"
+      className="fixed top-4 left-4 right-4 sm:left-auto sm:right-4 z-50 space-y-2"
       aria-live="assertive"
       aria-atomic="true"
     >

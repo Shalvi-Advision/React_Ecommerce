@@ -208,7 +208,7 @@ const BestsellerProducts = () => {
               {/* Promotional Banner at the top - Seamlessly integrated */}
               <div className="relative w-full">
                 <div 
-                  className="relative w-full h-[200px] sm:h-[240px] lg:h-[280px] xl:h-[320px] overflow-hidden cursor-pointer group" 
+                  className="relative w-full h-[140px] sm:h-[240px] lg:h-[280px] xl:h-[320px] overflow-hidden cursor-pointer group"
                   style={{ borderRadius: '1rem 1rem 0 0' }}
                   onClick={() => {
                     const sectionId = section._id || section.id;
@@ -259,12 +259,12 @@ const BestsellerProducts = () => {
               >
                 {/* Section Title (optional) */}
                 {section.title && (
-                  <div className="px-4 sm:px-6 lg:px-8 pt-4 pb-1">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-white mb-1">
+                  <div className="px-3 sm:px-6 lg:px-8 pt-3 sm:pt-4 pb-1">
+                    <h2 className="text-lg sm:text-3xl font-bold text-white mb-0.5 sm:mb-1">
                       {section.title}
                     </h2>
                     {section.description && (
-                      <p className="text-white/90 text-sm sm:text-base mb-1">
+                      <p className="text-white/90 text-xs sm:text-base mb-0.5 sm:mb-1">
                         {section.description}
                       </p>
                     )}
@@ -272,10 +272,10 @@ const BestsellerProducts = () => {
                 )}
 
                 {/* Horizontal Scrollable Products with Enhanced Spacing */}
-                <div className="px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8 pt-1 sm:pt-2">
+                <div className="px-3 sm:px-6 lg:px-8 pb-3 sm:pb-6 lg:pb-8 pt-1 sm:pt-2">
                   <div className="relative">
                     <div className="overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                      <div className="flex gap-4 sm:gap-6 lg:gap-8" style={{ width: 'max-content' }}>
+                      <div className="flex gap-3 sm:gap-6 lg:gap-8" style={{ width: 'max-content' }}>
                         {section.productsList.map((product, index) => (
                           <div
                             key={product.id || product.p_code}

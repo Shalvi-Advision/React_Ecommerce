@@ -121,32 +121,25 @@ const PopularCategories = () => {
   }, []);
 
   return (
-    <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
+    <div className="relative overflow-hidden py-2 sm:py-6 lg:py-8">
       {/* Modern Gradient Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/50 via-blue-50/50 to-indigo-50/50"></div>
       <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-gradient-to-br from-primary-300/20 to-blue-400/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-      
-      <div className="relative container mx-auto px-4">
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 sm:p-8 lg:p-10 shadow-md border border-white/60 hover:shadow-lg transition-all duration-300">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-               
-                
-              </div>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
-                <span className="bg-gradient-to-r from-primary-500 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  Top Categories
-                </span>
-              </h2>
-              <p className="text-gray-600 text-sm sm:text-base"></p>
-            </div>
+
+      <div className="relative container mx-auto px-3 sm:px-4">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-3 sm:p-8 lg:p-10 shadow-md border border-white/60 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between mb-3 sm:mb-8">
+            <h2 className="text-lg sm:text-3xl lg:text-4xl font-bold">
+              <span className="bg-gradient-to-r from-primary-500 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Top Categories
+              </span>
+            </h2>
             <div className="hidden md:flex items-center gap-2 bg-gradient-to-r from-primary-500 to-primary-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow">
               <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
               <span>Fresh & Fast Delivery</span>
             </div>
           </div>
-          
+
           <div className="relative">
             {loading ? (
               <div className="flex justify-center items-center py-10">
@@ -156,22 +149,22 @@ const PopularCategories = () => {
                 </div>
               </div>
             ) : (
-              <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <div className="flex gap-3 sm:gap-6 overflow-x-auto scrollbar-hide pb-2 sm:pb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {categories.map((category, index) => {
                   const CategoryComponent = category.link ? Link : 'div';
                   const categoryProps = category.link ? { to: category.link } : {};
-                  
+
                   return (
                     <CategoryComponent
                       key={category.id || index}
                       {...categoryProps}
-                      className="flex-shrink-0 w-32 h-56 bg-gradient-to-br from-white to-gray-50 rounded-2xl border-2 border-gray-100/50 shadow hover:shadow-md hover:border-cyan-300 transition-all duration-300 cursor-pointer group overflow-hidden"
+                      className="flex-shrink-0 w-24 sm:w-32 bg-gradient-to-br from-white to-gray-50 rounded-xl sm:rounded-2xl border-2 border-gray-100/50 shadow hover:shadow-md hover:border-cyan-300 transition-all duration-300 cursor-pointer group overflow-hidden"
                     >
-                      <div className="flex flex-col items-center h-full pt-4 pb-2">
-                        <div className={`w-32 h-32 flex-shrink-0 ${category.color} flex items-center justify-center mb-3 transition-all duration-300 shadow-sm relative overflow-hidden rounded-xl`}>
+                      <div className="flex flex-col items-center pt-2 sm:pt-4 pb-2">
+                        <div className={`w-20 h-20 sm:w-32 sm:h-32 flex-shrink-0 ${category.color} flex items-center justify-center mb-2 sm:mb-3 transition-all duration-300 shadow-sm relative overflow-hidden rounded-lg sm:rounded-xl`}>
                           {category.image_link ? (
-                            <img 
-                              src={category.image_link} 
+                            <img
+                              src={category.image_link}
                               alt={category.name}
                               className="w-full h-full object-cover drop-shadow transition-transform duration-300"
                               onError={(e) => {
@@ -181,15 +174,15 @@ const PopularCategories = () => {
                               }}
                             />
                           ) : null}
-                          <div 
-                            className={`fallback-icon absolute inset-0 z-10 bg-gradient-to-br from-white to-gray-100 flex items-center justify-center transition-transform duration-300 rounded-xl ${category.image_link ? 'hidden' : 'flex'}`}
+                          <div
+                            className={`fallback-icon absolute inset-0 z-10 bg-gradient-to-br from-white to-gray-100 flex items-center justify-center transition-transform duration-300 rounded-lg sm:rounded-xl ${category.image_link ? 'hidden' : 'flex'}`}
                           >
-                            <span className={`text-5xl ${category.iconColor} w-full h-full flex items-center justify-center`}>
+                            <span className={`text-3xl sm:text-5xl ${category.iconColor} w-full h-full flex items-center justify-center`}>
                               {category.icon}
                             </span>
                           </div>
                         </div>
-                        <span className="text-xs font-semibold text-gray-800 text-center leading-tight group-hover:text-primary-500 transition-colors duration-200 px-2 line-clamp-2 flex items-center justify-center flex-1">
+                        <span className="text-[10px] sm:text-xs font-semibold text-gray-800 text-center leading-tight group-hover:text-primary-500 transition-colors duration-200 px-1.5 sm:px-2 line-clamp-2">
                           {category.name}
                         </span>
                       </div>
@@ -198,10 +191,10 @@ const PopularCategories = () => {
                 })}
               </div>
             )}
-            
+
             {/* Enhanced Scroll Arrow with Gradient */}
-            <button className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-primary-400 to-blue-500 text-white rounded-full p-3 shadow hover:shadow-md hover:scale-105 transition-all duration-200 group">
-              <ChevronRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+            <button className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-primary-400 to-blue-500 text-white rounded-full p-2 sm:p-3 shadow hover:shadow-md hover:scale-105 transition-all duration-200 group">
+              <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform duration-200" />
             </button>
           </div>
         </div>

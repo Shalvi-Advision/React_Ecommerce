@@ -485,25 +485,25 @@ const CheckoutPageNew = () => {
                     to { transform: rotate(360deg); }
                 }
             `}</style>
-            <div className={`min-h-screen flex flex-col overflow-hidden w-full max-w-full mx-auto ${
-                isMobile 
-                    ? 'bg-gradient-to-br from-primary-500 to-primary-600' 
-                    : 'max-w-[900px] px-5 sm:px-8 py-8 bg-gray-50'
+            <div className={`min-h-screen flex flex-col w-full max-w-full mx-auto ${
+                isMobile
+                    ? 'bg-white overflow-x-hidden'
+                    : 'max-w-[900px] px-5 sm:px-8 py-8 bg-gray-50 overflow-hidden'
             }`}>
             {/* Header with Step Progress */}
-            <div 
+            <div
                 className={`flex flex-col gap-2 sm:gap-3 flex-shrink-0 ${
-                    isMobile 
-                        ? 'fixed top-[148px] left-0 right-0 z-[60] px-3 py-3 bg-gradient-to-br from-primary-500 to-primary-600 shadow-md' 
+                    isMobile
+                        ? 'sticky top-0 z-[60] px-4 py-3 bg-white border-b border-gray-100 shadow-sm'
                         : 'relative px-4 py-4 bg-white rounded-2xl shadow-sm border border-gray-200 mb-4'
                 }`}
             >
                 {/* Top Row: Back Button, Title, Timer */}
                 <div className="flex items-center justify-between w-full">
-                    <button 
-                        className={`flex items-center justify-center rounded-lg transition-all duration-200 ${
-                            isMobile 
-                                ? 'p-1.5 bg-white/10 text-white hover:bg-white/20 hover:scale-105' 
+                    <button
+                        className={`flex items-center justify-center rounded-full transition-all duration-200 ${
+                            isMobile
+                                ? 'p-2 text-gray-700 hover:bg-gray-100'
                                 : 'p-2 text-gray-900 hover:bg-gray-100'
                         }`}
                         onClick={handleBack}
@@ -513,22 +513,22 @@ const CheckoutPageNew = () => {
                         </svg>
                     </button>
                     <h1 className={`font-bold m-0 tracking-tight ${
-                        isMobile 
-                            ? 'text-sm text-white' 
+                        isMobile
+                            ? 'text-base text-gray-900'
                             : 'text-base text-gray-900'
                     }`}>
                         {stepTitles[currentStep - 1]}
                     </h1>
-                    <div className={`flex items-center gap-1 rounded-lg font-semibold ${
-                        isMobile 
-                            ? `px-2.5 py-1 text-[11px] backdrop-blur-md ${
-                                timeRemaining <= 120 
-                                    ? 'bg-red-500/20 text-red-100' 
-                                    : 'bg-white/15 text-white'
-                            }` 
+                    <div className={`flex items-center gap-1 rounded-full font-semibold ${
+                        isMobile
+                            ? `px-3 py-1 text-[11px] ${
+                                timeRemaining <= 120
+                                    ? 'bg-red-50 text-red-600 border border-red-200'
+                                    : 'bg-primary-50 text-primary-700 border border-primary-200'
+                            }`
                             : `px-3 py-1.5 text-xs ${
-                                timeRemaining <= 120 
-                                    ? 'bg-red-100 text-red-700' 
+                                timeRemaining <= 120
+                                    ? 'bg-red-100 text-red-700'
                                     : 'bg-primary-100 text-primary-700'
                             }`
                     }`}>
@@ -541,31 +541,40 @@ const CheckoutPageNew = () => {
                 </div>
 
                 {/* Step Progress Circles */}
-                <div className="flex items-center justify-center gap-1.5 sm:gap-2 w-full pt-2 pb-1">
+                <div className="flex items-center justify-center w-full py-1">
                     {[1, 2, 3, 4].map((step, idx) => {
-                        const isActive = currentStep >= step;
+                        const isCompleted = currentStep > step;
+                        const isCurrent = currentStep === step;
                         return (
-                            <div key={step} className="flex items-center gap-1.5 sm:gap-2">
+                            <div key={step} className="flex items-center">
                                 <div className={`flex items-center justify-center font-bold rounded-full transition-all duration-300 ${
                                     isMobile
-                                        ? `w-7 h-7 text-[11px] ${
-                                            isActive 
-                                                ? 'bg-white text-primary-500 shadow-lg' 
-                                                : 'bg-white/20 text-white'
+                                        ? `w-8 h-8 text-xs ${
+                                            isCompleted
+                                                ? 'bg-primary-500 text-white'
+                                                : isCurrent
+                                                    ? 'bg-primary-500 text-white shadow-md'
+                                                    : 'bg-gray-200 text-gray-400'
                                         }`
                                         : `w-8 h-8 text-xs ${
-                                            isActive 
-                                                ? 'bg-primary-500 text-white shadow-md' 
-                                                : 'bg-gray-100 text-gray-400'
+                                            isCompleted
+                                                ? 'bg-primary-500 text-white shadow-md'
+                                                : isCurrent
+                                                    ? 'bg-primary-500 text-white shadow-md'
+                                                    : 'bg-gray-100 text-gray-400'
                                         }`
                                 }`}>
-                                    {currentStep > step ? '✓' : step}
+                                    {isCompleted ? (
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    ) : step}
                                 </div>
                                 {idx < 3 && (
                                     <div className={`h-0.5 transition-all duration-300 ${
                                         isMobile
-                                            ? `w-5 ${isActive ? 'bg-white' : 'bg-white/20'}`
-                                            : `w-7 ${isActive ? 'bg-primary-500' : 'bg-gray-200'}`
+                                            ? `w-10 mx-1 ${isCompleted ? 'bg-primary-500' : 'bg-gray-200'}`
+                                            : `w-7 mx-1 ${isCompleted ? 'bg-primary-500' : 'bg-gray-200'}`
                                     }`} />
                                 )}
                             </div>
@@ -575,9 +584,9 @@ const CheckoutPageNew = () => {
             </div>
 
             {/* Content */}
-            <div className={`bg-white flex-1 overflow-y-auto overflow-x-hidden relative z-10 w-full max-w-full ${
-                isMobile 
-                    ? 'rounded-t-[20px] px-3 pt-[150px] pb-[100px]' 
+            <div className={`bg-white flex-1 overflow-x-hidden relative z-10 w-full max-w-full ${
+                isMobile
+                    ? 'px-4 pt-4 pb-[130px]'
                     : 'rounded-2xl p-4 shadow-lg border border-gray-200'
             }`}>
                 {/* Step 1: Delivery Method */}

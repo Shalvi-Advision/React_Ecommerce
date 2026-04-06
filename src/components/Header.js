@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContextOptimized';
 import { useCart } from '../context/CartContext';
 import { useCartDrawer } from '../context/CartDrawerContext';
@@ -52,6 +52,7 @@ const Header = () => {
   } = usePincode();
   const { isMobile, isTablet, isDesktop } = useResponsive();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Local UI state
@@ -338,6 +339,10 @@ const Header = () => {
     }
   };
 
+  // Hide header on mobile for checkout page (checkout has its own header)
+  if (isMobile && location.pathname === '/checkout') {
+    return null;
+  }
 
   return (
     <header

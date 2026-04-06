@@ -167,15 +167,15 @@ const BestsellerProductCard = ({ product }) => {
 
   return (
     <div 
-      className="rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col w-[180px] sm:w-[200px] flex-shrink-0"
+      className="rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col w-[150px] sm:w-[200px] flex-shrink-0"
       style={{ backgroundColor: COLORS.white }}
     >
       {/* Product Image Container */}
-      <div className="relative flex items-center justify-center p-3 pt-4" style={{ backgroundColor: COLORS.white }}>
+      <div className="relative flex items-center justify-center p-2 sm:p-3 pt-3 sm:pt-4" style={{ backgroundColor: COLORS.white }}>
         {/* Favorite Icon - Top Left */}
         <button
           onClick={handleFavoriteToggle}
-          className="absolute top-2 left-2 z-20 p-1.5 rounded-full shadow-sm hover:shadow-md transition-all duration-200"
+          className="absolute top-2 left-2 z-20 p-1 sm:p-1.5 rounded-full shadow-sm hover:shadow-md transition-all duration-200"
           style={{
             backgroundColor: hexToRgba(COLORS.white, 0.9)
           }}
@@ -214,7 +214,7 @@ const BestsellerProductCard = ({ product }) => {
           <img
             src={displayImage}
             alt={displayName}
-            className="w-24 h-24 object-contain mb-2"
+            className="w-20 h-20 sm:w-24 sm:h-24 object-contain mb-2"
             onError={(e) => {
               e.target.src = '/images/default_image.jpg';
             }}
@@ -224,7 +224,7 @@ const BestsellerProductCard = ({ product }) => {
       </div>
 
       {/* Product Info */}
-      <div className="p-3 flex-grow flex flex-col">
+      <div className="p-2 sm:p-3 flex-grow flex flex-col">
         {/* Product Name */}
         <Link
           to={`/product/${productId}?dept_id=${product.dept_id || '2'}&category_id=${product.category_id || '72'}&sub_category_id=${product.sub_category_id || '391'}`}

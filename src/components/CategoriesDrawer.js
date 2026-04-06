@@ -205,7 +205,7 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
           <div 
             className="absolute inset-0"
             style={{
-              background: `linear-gradient(to right, ${hexToRgba(COLORS.primary[500], 0.1)}, ${hexToRgba(COLORS.success[500], 0.1)}, ${hexToRgba(COLORS.primary[400], 0.1)})`
+              background: hexToRgba(COLORS.primary[500], 0.05)
             }}
           ></div>
           
@@ -238,22 +238,16 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
                   />
                 </button>
               )}
-              <div 
+              <div
                 className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
-                style={{
-                  background: `linear-gradient(to bottom right, ${COLORS.primary[500]}, ${COLORS.success[500]})`
-                }}
+                style={{ backgroundColor: COLORS.primary[500] }}
               >
                 <span className="text-2xl">🛒</span>
               </div>
               <div>
-                <h2 
-                  className="text-lg sm:text-xl font-bold bg-clip-text text-transparent"
-                  style={{
-                    background: `linear-gradient(to right, ${COLORS.primary[600]}, ${COLORS.success[600]}, ${COLORS.primary[500]})`,
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent'
-                  }}
+                <h2
+                  className="text-lg sm:text-xl font-bold"
+                  style={{ color: COLORS.primary[600] }}
                 >
                   Shop by Category
                 </h2>
@@ -305,7 +299,7 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
                   <div 
                     className="absolute inset-0 w-16 h-16 rounded-full blur-lg animate-pulse"
                     style={{
-                      background: `linear-gradient(to right, ${hexToRgba(COLORS.primary[400], 0.2)}, ${hexToRgba(COLORS.success[400], 0.2)})`
+                      background: hexToRgba(COLORS.primary[400], 0.2)
                     }}
                   ></div>
                 </div>
@@ -313,9 +307,7 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
                   className="mt-4 text-base font-semibold bg-clip-text text-transparent"
                   style={{
                     color: COLORS.gray[600],
-                    background: `linear-gradient(to right, ${COLORS.primary[600]}, ${COLORS.success[600]})`,
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent'
+                    color: COLORS.primary[600]
                   }}
                 >
                   Loading categories...
@@ -388,7 +380,7 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
                     onClick={() => window.location.reload()}
                     className="px-6 py-3 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300"
                     style={{
-                      background: `linear-gradient(to right, ${COLORS.primary[500]}, ${COLORS.success[500]})`
+                      background: COLORS.primary[500]
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'scale(1.05)';
@@ -405,29 +397,25 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
           ) : viewMode === 'departments' || (viewMode === 'departments' && isMobile) ? (
             /* Mobile: Split Screen | Desktop: Departments View */
             isMobile ? (
-              /* Mobile Split Screen Layout */
-              <div 
-                className="flex h-full"
-                style={{
-                  background: `linear-gradient(to bottom right, ${COLORS.gray[50]}, ${COLORS.white})`
-                }}
-              >
+              /* Mobile Split Screen Layout - Patel R Mart style */
+              <div className="flex h-full" style={{ background: COLORS.gray[50] }}>
                 {/* Left Side - Departments List */}
-                <div 
-                  className="w-2/5 border-r overflow-y-auto custom-scrollbar"
+                <div
+                  className="w-[30%] overflow-y-auto border-r"
                   style={{
                     borderColor: COLORS.gray[200],
-                    background: COLORS.white
+                    background: COLORS.white,
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none'
                   }}
                 >
-                  <div className="p-2 space-y-1">
+                  <div className="py-1">
                     {departments.map((department, index) => {
                       const departmentId = department.department_id;
                       const departmentName = department.department_name;
                       const departmentImage = department.image_link || getDefaultImage();
                       const isSelected = selectedDepartment?.department_id === departmentId;
 
-                      // Load categories if not already loaded
                       if (!categories[departmentId] && !categoriesLoading[departmentId]) {
                         loadCategoriesForDepartment(departmentId);
                       }
@@ -436,82 +424,45 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
                         <button
                           key={index}
                           onClick={() => handleDepartmentClick(department)}
-                          className={`w-full rounded-lg transition-all duration-200 border p-2.5 flex flex-col items-center gap-1.5 group ${
-                            isSelected ? 'shadow-md' : 'shadow-sm'
-                          }`}
+                          className="w-full flex flex-col items-center py-2 px-1 transition-all duration-200"
                           style={{
-                            borderColor: isSelected ? COLORS.primary[300] : COLORS.gray[200],
-                            backgroundColor: isSelected ? COLORS.primary[50] : COLORS.white,
-                            minHeight: '70px'
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!isSelected) {
-                              e.currentTarget.style.borderColor = COLORS.primary[300];
-                              e.currentTarget.style.backgroundColor = COLORS.primary[50];
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!isSelected) {
-                              e.currentTarget.style.borderColor = COLORS.gray[200];
-                              e.currentTarget.style.backgroundColor = COLORS.white;
-                            }
+                            backgroundColor: isSelected ? COLORS.primary[50] : 'transparent',
+                            borderLeft: isSelected ? `3px solid ${COLORS.primary[500]}` : '3px solid transparent'
                           }}
                         >
-                          {/* Department Icon/Image */}
-                          <div 
-                            className={`flex-shrink-0 bg-white rounded-lg flex items-center justify-center shadow-sm border transition-all duration-300 ease-in-out ${
-                              isSelected ? 'scale-110' : ''
-                            }`}
+                          <div
+                            className="w-14 h-14 rounded-xl overflow-hidden flex items-center justify-center mb-1"
                             style={{
-                              width: isSelected ? '72px' : '56px',
-                              height: isSelected ? '72px' : '56px',
-                              borderColor: isSelected ? COLORS.primary[300] : COLORS.gray[200],
-                              boxShadow: isSelected ? `0 4px 12px ${hexToRgba(COLORS.primary[300], 0.3)}` : '0 1px 3px rgba(0, 0, 0, 0.1)'
+                              backgroundColor: COLORS.gray[50],
+                              border: `1px solid ${isSelected ? COLORS.primary[200] : COLORS.gray[200]}`
                             }}
                           >
-                            {department.image_link ? (
-                              <img
-                                src={departmentImage}
-                                alt={departmentName}
-                                className="w-full h-full object-contain p-1 transition-transform duration-300"
-                                style={{
-                                  transform: isSelected ? 'scale(1.1)' : 'scale(1)'
-                                }}
-                                onError={(e) => {
-                                  e.target.style.display = 'none';
-                                  const iconElement = e.target.parentElement.querySelector('.fallback-icon');
-                                  if (iconElement) iconElement.style.display = 'flex';
-                                }}
-                              />
-                            ) : null}
-                            <div
-                              className={`fallback-icon ${department.image_link ? 'hidden' : 'flex'} items-center justify-center transition-all duration-300`}
-                            >
-                              <span className={`transition-all duration-300 ${isSelected ? 'text-3xl' : 'text-2xl'}`}>
-                                {getDepartmentIcon(departmentName)}
-                              </span>
-                            </div>
+                            <img
+                              src={departmentImage}
+                              alt={departmentName}
+                              className="w-full h-full object-contain p-0.5"
+                              onError={(e) => { e.target.src = getDefaultImage(); }}
+                            />
                           </div>
-
-                          {/* Department Name */}
-                          <div className="w-full text-center">
-                            <h3 
-                              className="text-[10px] font-semibold text-gray-900 line-clamp-2 leading-tight"
-                            >
-                              {departmentName}
-                            </h3>
-                          </div>
+                          <span
+                            className="text-[9px] font-semibold text-center leading-tight line-clamp-2 w-full px-0.5"
+                            style={{ color: isSelected ? COLORS.primary[700] : COLORS.gray[700] }}
+                          >
+                            {departmentName}
+                          </span>
                         </button>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* Right Side - Categories Grid (2 columns) */}
-                <div 
-                  className="flex-1 overflow-y-auto custom-scrollbar p-2"
+                {/* Right Side - Categories Grid */}
+                <div
+                  className="flex-1 overflow-y-auto px-2 pb-4"
                   style={{
-                    background: `linear-gradient(to bottom right, ${COLORS.gray[50]}, ${COLORS.white})`
+                    background: COLORS.gray[50],
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none'
                   }}
                 >
                   {selectedDepartment ? (() => {
@@ -523,15 +474,10 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
                     if (isLoadingCategories) {
                       return (
                         <div className="flex items-center justify-center py-12">
-                          <div className="text-center">
-                            <div 
-                              className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin mx-auto"
-                              style={{
-                                borderColor: COLORS.primary[500]
-                              }}
-                            ></div>
-                            <p className="mt-4 text-xs" style={{ color: COLORS.gray[600] }}>Loading categories...</p>
-                          </div>
+                          <div
+                            className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin mx-auto"
+                            style={{ borderColor: COLORS.primary[500] }}
+                          ></div>
                         </div>
                       );
                     }
@@ -539,53 +485,67 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
                     if (departmentCategories.length === 0) {
                       return (
                         <div className="flex items-center justify-center py-12">
-                          <div className="text-center">
-                            <p className="text-xs" style={{ color: COLORS.gray[500] }}>No categories available</p>
-                          </div>
+                          <p className="text-xs" style={{ color: COLORS.gray[500] }}>No categories available</p>
                         </div>
                       );
                     }
 
-                    // Filter out duplicate categories
-                    const uniqueCategories = departmentCategories.filter((category, index, self) => {
+                    const uniqueCategories = departmentCategories.filter((category, idx, self) => {
                       const identifier = category.idcategory_master || category.category_name;
-                      return index === self.findIndex(c =>
+                      return idx === self.findIndex(c =>
                         (c.idcategory_master || c.category_name) === identifier
                       );
                     });
 
                     return (
-                      <div className="grid grid-cols-2 gap-2">
-                        {uniqueCategories.map((category) => (
-                          <button
-                            key={category.idcategory_master || category.category_name}
-                            onClick={() => handleCategoryClick(category.category_name, departmentName, category)}
-                            className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border p-2.5 flex flex-col items-center justify-center gap-1.5 text-center group"
+                      <>
+                        {/* Department Name Header Pill */}
+                        <div className="py-2 sticky top-0 z-10" style={{ background: COLORS.gray[50] }}>
+                          <div
+                            className="text-center py-2 px-4 rounded-full text-xs font-semibold mx-auto"
                             style={{
-                              borderColor: COLORS.gray[200],
-                              minHeight: '80px'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.borderColor = COLORS.primary[300];
-                              e.currentTarget.style.backgroundColor = COLORS.primary[50];
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.borderColor = COLORS.gray[200];
-                              e.currentTarget.style.backgroundColor = COLORS.white;
+                              backgroundColor: hexToRgba(COLORS.primary[100], 0.6),
+                              color: COLORS.primary[700],
+                              maxWidth: 'fit-content'
                             }}
                           >
-                            <span className="text-xs font-medium text-gray-900 line-clamp-2 leading-tight">
-                              {category.category_name || 'Not Available'}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
+                            {departmentName}
+                          </div>
+                        </div>
+
+                        {/* Category Cards Grid */}
+                        <div className="grid grid-cols-2 gap-2.5">
+                          {uniqueCategories.map((category) => {
+                            const categoryImage = category.image_link || null;
+                            return (
+                              <button
+                                key={category.idcategory_master || category.category_name}
+                                onClick={() => handleCategoryClick(category.category_name, departmentName, category)}
+                                className="bg-white rounded-2xl shadow-sm active:scale-95 transition-all duration-200 flex flex-col items-center overflow-hidden"
+                                style={{
+                                  border: `1px solid ${COLORS.gray[200]}`
+                                }}
+                              >
+                                <div className="w-full flex items-center justify-center p-2 pt-3">
+                                  <img
+                                    src={categoryImage || getDefaultImage()}
+                                    alt={category.category_name || 'Category'}
+                                    className="w-16 h-16 object-contain"
+                                    onError={(e) => { e.target.src = getDefaultImage(); }}
+                                  />
+                                </div>
+                                <p className="text-[10px] font-medium text-center leading-tight line-clamp-2 px-1.5 pb-2" style={{ color: COLORS.gray[800] }}>
+                                  {category.category_name || 'Not Available'}
+                                </p>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
                     );
                   })() : (
                     <div className="flex items-center justify-center h-full">
-                      <div className="text-center">
-                        <p className="text-xs" style={{ color: COLORS.gray[500] }}>Select a department to view categories</p>
-                      </div>
+                      <p className="text-xs" style={{ color: COLORS.gray[500] }}>Select a department</p>
                     </div>
                   )}
                 </div>
@@ -645,28 +605,17 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
                             e.currentTarget.style.borderColor = COLORS.gray[200];
                           }}
                         >
-                          {department.image_link ? (
-                            <img
-                              src={departmentImage}
-                              alt={departmentName}
-                              className="w-full h-full object-contain p-1 transition-transform duration-300"
-                              style={{
-                                transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                              }}
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                                const iconElement = e.target.parentElement.querySelector('.fallback-icon');
-                                if (iconElement) iconElement.style.display = 'flex';
-                              }}
-                            />
-                          ) : null}
-                          <div
-                            className={`fallback-icon ${department.image_link ? 'hidden' : 'flex'} items-center justify-center transition-all duration-300`}
-                          >
-                            <span className="text-3xl transition-all duration-300 group-hover:text-4xl">
-                              {getDepartmentIcon(departmentName)}
-                            </span>
-                          </div>
+                          <img
+                            src={departmentImage}
+                            alt={departmentName}
+                            className="w-full h-full object-contain p-1 transition-transform duration-300"
+                            style={{
+                              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                            }}
+                            onError={(e) => {
+                              e.target.src = getDefaultImage();
+                            }}
+                          />
                         </div>
 
                         {/* Department Name */}
@@ -812,11 +761,11 @@ const CategoriesDrawer = ({ isOpen, onClose }) => {
           border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, ${COLORS.primary[500]}, ${COLORS.success[500]});
+          background: ${COLORS.primary[500]};
           border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(to bottom, ${COLORS.primary[600]}, ${COLORS.success[600]});
+          background: ${COLORS.primary[600]};
         }
         .hover\:scale-102:hover {
           transform: scale(1.02);

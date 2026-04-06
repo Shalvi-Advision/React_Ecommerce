@@ -172,23 +172,23 @@ const AdvertisementCarousel = () => {
         </div>
       ) : (
         advertisements.map((ad, adIndex) => (
-          <div key={ad._id || adIndex} className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
+          <div key={ad._id || adIndex} className="relative overflow-hidden py-2 sm:py-6 lg:py-8">
       {/* Purple/Indigo Gradient Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 via-fuchsia-50/50 to-pink-50/50"></div>
       <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-fuchsia-400/20 rounded-full blur-3xl -translate-x-1/4 -translate-y-1/4"></div>
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-fuchsia-400/20 to-pink-400/20 rounded-full blur-3xl translate-x-1/4 translate-y-1/4"></div>
-      
-      <div className="relative container mx-auto px-2 sm:px-4 lg:px-6">
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl border border-white/60 hover:shadow-2xl transition-all duration-300">
-          
+
+      <div className="relative container mx-auto px-3 sm:px-4 lg:px-6">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-3 sm:p-6 lg:p-8 shadow-xl border border-white/60 hover:shadow-2xl transition-all duration-300">
+
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-3 sm:mb-6">
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 bg-gradient-to-r from-purple-500 to-fuchsia-500 rounded-full animate-pulse"></div>
-                <span className="text-xs sm:text-sm font-semibold text-purple-600 uppercase tracking-wider">Special Offers</span>
+              <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2">
+                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gradient-to-r from-purple-500 to-fuchsia-500 rounded-full animate-pulse"></div>
+                <span className="text-[10px] sm:text-sm font-semibold text-purple-600 uppercase tracking-wider">Special Offers</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold">
+              <h2 className="text-lg sm:text-3xl lg:text-4xl font-bold">
                 <span className="bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 bg-clip-text text-transparent">
                   {ad.title || 'Featured Promotions'}
                 </span>
@@ -199,8 +199,8 @@ const AdvertisementCarousel = () => {
           {/* Advertisement Container */}
           <div className="relative">
             {/* Banner Section */}
-            <div 
-              className="relative w-full h-[200px] sm:h-[250px] lg:h-[300px] rounded-2xl overflow-hidden shadow-lg mb-6 cursor-pointer group"
+            <div
+              className="relative w-full h-[140px] sm:h-[250px] lg:h-[300px] rounded-xl sm:rounded-2xl overflow-hidden shadow-lg mb-3 sm:mb-6 cursor-pointer group"
               onClick={() => handleBannerClick(ad)}
             >
               <img
@@ -213,12 +213,12 @@ const AdvertisementCarousel = () => {
               />
 
               {/* Overlay with Title and Description */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex flex-col justify-end p-4 sm:p-6 lg:p-8">
-                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2 drop-shadow-lg">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex flex-col justify-end p-3 sm:p-6 lg:p-8">
+                <h3 className="text-sm sm:text-2xl lg:text-3xl font-bold text-white mb-1 sm:mb-2 drop-shadow-lg">
                   {ad.title}
                 </h3>
                 {ad.description && (
-                  <p className="text-sm sm:text-base text-white/90 mb-4 line-clamp-2 drop-shadow-md">
+                  <p className="text-xs sm:text-base text-white/90 mb-2 sm:mb-4 line-clamp-2 drop-shadow-md hidden sm:block">
                     {ad.description}
                   </p>
                 )}
@@ -227,7 +227,7 @@ const AdvertisementCarousel = () => {
                     e.stopPropagation();
                     handleBannerClick(ad);
                   }}
-                  className="self-start bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white px-6 py-2.5 rounded-full font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+                  className="self-start bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white px-4 py-1.5 sm:px-6 sm:py-2.5 rounded-full font-semibold text-xs sm:text-base shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
                 >
                   View All Products
                 </button>
@@ -237,13 +237,13 @@ const AdvertisementCarousel = () => {
             {/* Products Section */}
             {ad.products && ad.products.length > 0 && (
               <div>
-                <h4 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <span className="w-1 h-6 bg-gradient-to-b from-purple-500 to-fuchsia-500 rounded-full"></span>
+                <h4 className="text-sm sm:text-xl font-bold text-gray-800 mb-2 sm:mb-4 flex items-center gap-2">
+                  <span className="w-1 h-4 sm:h-6 bg-gradient-to-b from-purple-500 to-fuchsia-500 rounded-full"></span>
                   Featured Products
                 </h4>
                 <div className="relative">
-                  <div className="overflow-x-auto scrollbar-hide pb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                    <div className="flex gap-4 sm:gap-6" style={{ width: 'max-content' }}>
+                  <div className="overflow-x-auto scrollbar-hide pb-2 sm:pb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    <div className="flex gap-3 sm:gap-6" style={{ width: 'max-content' }}>
                       {ad.products.map((product, index) => {
                         const productData = {
                           id: product.p_code || product.product_details?.p_code,

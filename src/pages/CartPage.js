@@ -437,79 +437,70 @@ const CartPage = () => {
                         )}
                         {/* Mobile Layout */}
                         <div className="sm:hidden">
-                          <div className="flex gap-3 mb-3">
+                          <div className="flex gap-3">
+                            {/* Product Image */}
                             <img
                               src={item.image || '/images/default_image.jpg'}
                               alt={item.title}
-                              className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                              className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
                               style={{ borderColor: COLORS.gray[200], borderWidth: '1px', borderStyle: 'solid' }}
                               onError={(e) => {
                                 e.target.src = '/images/default_image.jpg';
                               }}
                             />
+                            {/* Product Details */}
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-sm leading-tight mb-1" style={{ color: COLORS.gray[900] }}>
-                                {item.title}
-                              </h3>
-                              <p className="text-xs mb-2" style={{ color: COLORS.gray[500] }}>
-                                Variant: <span className="font-bold">{variant}</span>
-                              </p>
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <span className="text-sm font-semibold" style={{ color: COLORS.gray[900] }}>
-                                    ₹{itemPrice}
-                                  </span>
-                                  <span className="text-xs ml-2" style={{ color: COLORS.success[600] }}>
-                                    Save ₹{itemSavings}
-                                  </span>
-                                </div>
+                              <div className="flex items-start justify-between gap-2">
+                                <h3 className="font-semibold text-sm leading-tight" style={{ color: COLORS.gray[900] }}>
+                                  {item.title}
+                                </h3>
                                 <button
                                   onClick={() => handleRemoveItem(item.id)}
-                                  className="p-1 transition-colors"
-                                  style={{ color: COLORS.gray[600] }}
-                                  onMouseEnter={(e) => e.target.style.color = COLORS.error[600]}
-                                  onMouseLeave={(e) => e.target.style.color = COLORS.gray[600]}
+                                  className="p-1.5 rounded-md flex-shrink-0 transition-colors"
+                                  style={{ color: COLORS.error[400], backgroundColor: COLORS.error[50] }}
                                   title="Remove item"
                                 >
                                   <TrashIcon className="w-4 h-4" />
                                 </button>
                               </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-center">
-                            <div className="flex items-center rounded-lg" style={{ borderColor: COLORS.gray[300], borderWidth: '1px', borderStyle: 'solid' }}>
-                              <button
-                                onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                                className="w-8 h-8 text-white rounded-l-lg flex items-center justify-center transition-colors"
-                                style={{
-                                  backgroundColor: item.quantity <= 0 ? COLORS.gray[400] : COLORS.primary[600]
-                                }}
-                                onMouseEnter={(e) => {
-                                  if (item.quantity > 0) {
-                                    e.target.style.backgroundColor = COLORS.primary[700];
-                                  }
-                                }}
-                                onMouseLeave={(e) => {
-                                  if (item.quantity > 0) {
-                                    e.target.style.backgroundColor = COLORS.primary[600];
-                                  }
-                                }}
-                                disabled={item.quantity <= 0}
-                              >
-                                <MinusIcon className="w-4 h-4" />
-                              </button>
-                              <span className="px-3 py-1 text-sm font-medium min-w-[2rem] text-center" style={{ backgroundColor: COLORS.white }}>
-                                {item.quantity}
-                              </span>
-                              <button
-                                onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                                className="w-8 h-8 text-white rounded-r-lg flex items-center justify-center transition-colors"
-                                style={{ backgroundColor: COLORS.primary[600] }}
-                                onMouseEnter={(e) => e.target.style.backgroundColor = COLORS.primary[700]}
-                                onMouseLeave={(e) => e.target.style.backgroundColor = COLORS.primary[600]}
-                              >
-                                <PlusIcon className="w-4 h-4" />
-                              </button>
+                              <p className="text-xs mt-0.5" style={{ color: COLORS.gray[500] }}>
+                                {item.packageSize || variant}
+                              </p>
+                              <div className="flex items-center justify-between mt-2">
+                                <div>
+                                  <span className="text-sm font-bold" style={{ color: COLORS.gray[900] }}>
+                                    You Pay ₹{itemPrice}
+                                  </span>
+                                  <p className="text-xs mt-0.5" style={{ color: COLORS.success[600] }}>
+                                    You Save ₹{itemSavings}
+                                  </p>
+                                </div>
+                                <div className="flex flex-col items-end">
+                                  <div className="flex items-center rounded-lg" style={{ borderColor: COLORS.gray[300], borderWidth: '1px', borderStyle: 'solid' }}>
+                                    <button
+                                      onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                                      className="w-8 h-8 text-white rounded-l-lg flex items-center justify-center transition-colors"
+                                      style={{
+                                        backgroundColor: item.quantity <= 0 ? COLORS.gray[400] : COLORS.primary[600]
+                                      }}
+                                      disabled={item.quantity <= 0}
+                                    >
+                                      <MinusIcon className="w-4 h-4" />
+                                    </button>
+                                    <span className="px-3 py-1 text-sm font-medium min-w-[2rem] text-center" style={{ backgroundColor: COLORS.white }}>
+                                      {item.quantity}
+                                    </span>
+                                    <button
+                                      onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                                      className="w-8 h-8 text-white rounded-r-lg flex items-center justify-center transition-colors"
+                                      style={{ backgroundColor: COLORS.primary[600] }}
+                                    >
+                                      <PlusIcon className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                  <span className="text-[10px] mt-1" style={{ color: COLORS.gray[400] }}>Max 10 items</span>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>

@@ -26,7 +26,7 @@ const PersistentCartWidget = () => {
   // - Not on mobile
   // - Cart is empty
   // - Already on cart page
-  if (!isMobile || items.length === 0 || location.pathname === '/cart') {
+  if (!isMobile || items.length === 0 || location.pathname === '/cart' || location.pathname === '/checkout') {
     return null;
   }
 

@@ -833,8 +833,8 @@ const CategoryPage = () => {
     <div className="min-h-screen" style={{ backgroundColor: COLORS.white }}>
       {/* Modern Mobile Header */}
       {isMobile && (
-        <div 
-          className="relative backdrop-blur-sm border-b shadow-sm"
+        <div
+          className="relative backdrop-blur-sm border-b shadow-sm z-40"
           style={{
             backgroundColor: hexToRgba(COLORS.white, 0.9),
             borderColor: hexToRgba(COLORS.gray[200], 0.5)

@@ -410,38 +410,8 @@ const HomePage = () => {
         </div>
       </div>*/}
 
-      {/* Seasonal Offer Banner with Elegant Design */}
-      <div className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
-        <div 
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(to bottom right, ${hexToRgba(COLORS.primary[50], 0.5)}, ${hexToRgba(COLORS.success[50], 0.5)}, ${hexToRgba(COLORS.primary[100], 0.5)})`
-          }}
-        ></div>
-        <div 
-          className="absolute top-0 left-0 w-96 h-96 rounded-full blur-3xl -translate-x-1/4 -translate-y-1/4"
-          style={{
-            background: `linear-gradient(to bottom right, ${hexToRgba(COLORS.primary[400], 0.2)}, ${hexToRgba(COLORS.success[400], 0.2)})`
-          }}
-        ></div>
-        <div 
-          className="absolute bottom-0 right-0 w-96 h-96 rounded-full blur-3xl translate-x-1/4 translate-y-1/4"
-          style={{
-            background: `linear-gradient(to bottom right, ${hexToRgba(COLORS.success[400], 0.2)}, ${hexToRgba(COLORS.primary[500], 0.2)})`
-          }}
-        ></div>
-        <div className="relative container mx-auto px-2 sm:px-4 lg:px-6">
-          <div 
-            className="backdrop-blur-sm rounded-3xl p-2 sm:p-3 lg:p-4 shadow-xl border hover:shadow-2xl transition-all duration-300 overflow-hidden"
-            style={{
-              backgroundColor: hexToRgba(COLORS.white, 0.8),
-              borderColor: hexToRgba(COLORS.white, 0.6)
-            }}
-          >
-            <SeasonalOfferBanner />
-          </div>
-        </div>
-      </div>
+      {/* Seasonal Offer Banner */}
+      <SeasonalOfferBanner />
 
       {/* Advertisement Carousel */}
       <AdvertisementCarousel />

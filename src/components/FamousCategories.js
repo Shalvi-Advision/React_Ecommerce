@@ -222,28 +222,19 @@ const FamousCategories = () => {
         </div>
       ) : (
         sections.map((section, sectionIndex) => (
-          <div key={section._id || sectionIndex} className="relative overflow-hidden py-4 sm:py-6 lg:py-8">
+          <div key={section._id || sectionIndex} className="relative overflow-hidden py-2 sm:py-6 lg:py-8">
             {/* Modern Gradient Background */}
             <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 via-violet-50/50 to-fuchsia-50/50"></div>
             <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-violet-400/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
 
-            <div className="relative container mx-auto px-4">
-              <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 sm:p-8 lg:p-10 shadow-md transition-all duration-300">
-                <div className="flex items-center justify-between mb-8">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      
-                      <span className="text-xs sm:text-sm font-semibold text-purple-600 uppercase tracking-wider"></span>
-                    </div>
-                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
-                      <span className="bg-gradient-to-r from-purple-600 via-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
-                        {section.title || 'Famous Categories'}
-                      </span>
-                    </h2>
-                    {section.description && (
-                      <p className="text-gray-600 text-sm sm:text-base">{section.description}</p>
-                    )}
-                  </div>
+            <div className="relative container mx-auto px-3 sm:px-4">
+              <div className="bg-white/90 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-3 sm:p-8 lg:p-10 shadow-md transition-all duration-300">
+                <div className="flex items-center justify-between mb-3 sm:mb-8">
+                  <h2 className="text-lg sm:text-3xl lg:text-4xl font-bold">
+                    <span className="bg-gradient-to-r from-purple-600 via-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+                      {section.title || 'Famous Categories'}
+                    </span>
+                  </h2>
                   <div className="hidden md:flex items-center gap-2 bg-gradient-to-r from-purple-500 to-violet-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow">
                     <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
                     <span>Trending Now</span>
@@ -252,39 +243,34 @@ const FamousCategories = () => {
 
                 <div className="relative">
                   {section.categoriesList && section.categoriesList.length > 0 ? (
-                    <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    <div className="flex gap-3 sm:gap-6 overflow-x-auto scrollbar-hide pb-2 sm:pb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                       {section.categoriesList.map((category, index) => {
-                      // Handle redirect URLs
                       const handleClick = (e) => {
                         if (category.redirect_url && category.redirect_url !== '#') {
-                          // Check if it's a deep link
                           if (category.redirect_url.startsWith('app://')) {
                             e.preventDefault();
-                            // Handle deep link
                           } else if (category.redirect_url.startsWith('http')) {
-                            // External link
                             e.preventDefault();
                             window.location.href = category.redirect_url;
                           }
-                          // Otherwise let the Link component handle it
                         }
                       };
 
                       const CategoryComponent = category.redirect_url && !category.redirect_url.startsWith('app://') && !category.redirect_url.startsWith('http') ? Link : 'div';
                       const categoryProps = CategoryComponent === Link ? { to: category.redirect_url } : {};
-                      
+
                       return (
                         <CategoryComponent
                           key={category.id || index}
                           {...categoryProps}
                           onClick={handleClick}
-                          className="flex-shrink-0 w-32 h-56 bg-transparent transition-all duration-300 cursor-pointer group overflow-visible"
+                          className="flex-shrink-0 w-24 sm:w-32 bg-transparent transition-all duration-300 cursor-pointer group overflow-visible"
                         >
-                          <div className="flex flex-col items-center justify-center h-full pt-4 pb-2">
-                            <div className={`w-32 h-32 flex-shrink-0 ${category.color} flex items-center justify-center mb-3 transition-all duration-300 relative overflow-hidden rounded-xl`}>
+                          <div className="flex flex-col items-center pt-2 sm:pt-4 pb-2">
+                            <div className={`w-20 h-20 sm:w-32 sm:h-32 flex-shrink-0 ${category.color} flex items-center justify-center mb-2 sm:mb-3 transition-all duration-300 relative overflow-hidden rounded-lg sm:rounded-xl`}>
                               {category.image_link ? (
-                                <img 
-                                  src={category.image_link} 
+                                <img
+                                  src={category.image_link}
                                   alt={category.name}
                                   className="w-full h-full object-cover drop-shadow transition-transform duration-300"
                                   onError={(e) => {
@@ -294,15 +280,15 @@ const FamousCategories = () => {
                                   }}
                                 />
                               ) : null}
-                              <div 
-                                className={`fallback-icon absolute inset-0 z-10 bg-gradient-to-br from-white to-gray-100 flex items-center justify-center transition-transform duration-300 rounded-xl ${category.image_link ? 'hidden' : 'flex'}`}
+                              <div
+                                className={`fallback-icon absolute inset-0 z-10 bg-gradient-to-br from-white to-gray-100 flex items-center justify-center transition-transform duration-300 rounded-lg sm:rounded-xl ${category.image_link ? 'hidden' : 'flex'}`}
                               >
-                                <span className={`text-5xl ${category.iconColor} w-full h-full flex items-center justify-center`}>
+                                <span className={`text-3xl sm:text-5xl ${category.iconColor} w-full h-full flex items-center justify-center`}>
                                   {category.icon}
                                 </span>
                               </div>
                             </div>
-                            <span className="text-xs font-semibold text-gray-800 text-center leading-tight group-hover:text-purple-600 transition-colors duration-200 px-2 line-clamp-2 flex items-center justify-center flex-1">
+                            <span className="text-[10px] sm:text-xs font-semibold text-gray-800 text-center leading-tight group-hover:text-purple-600 transition-colors duration-200 px-1.5 sm:px-2 line-clamp-2">
                               {category.name}
                             </span>
                           </div>
@@ -318,8 +304,8 @@ const FamousCategories = () => {
 
                   {/* Enhanced Scroll Arrow with Gradient */}
                   {section.categoriesList && section.categoriesList.length > 0 && (
-                    <button className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-purple-500 to-violet-500 text-white rounded-full p-3 shadow hover:shadow-md hover:scale-105 transition-all duration-200 group">
-                      <ChevronRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                    <button className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-purple-500 to-violet-500 text-white rounded-full p-2 sm:p-3 shadow hover:shadow-md hover:scale-105 transition-all duration-200 group">
+                      <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform duration-200" />
                     </button>
                   )}
                 </div>
