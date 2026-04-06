@@ -87,7 +87,7 @@ export const transformPaymentModeFromAPI = (apiPaymentMode) => {
     id: apiPaymentMode.id,
     idpayment_mode: apiPaymentMode.idpayment_mode,
     name: apiPaymentMode.payment_mode_name,
-    isEnabled: apiPaymentMode.is_enabled === 'Yes'
+    isEnabled: apiPaymentMode.is_enabled === 'Yes' || apiPaymentMode.is_enabled === 'Enabled'
   };
 };
 

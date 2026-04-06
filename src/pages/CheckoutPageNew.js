@@ -586,7 +586,7 @@ const CheckoutPageNew = () => {
             {/* Content */}
             <div className={`bg-white flex-1 overflow-x-hidden relative z-10 w-full max-w-full ${
                 isMobile
-                    ? 'px-4 pt-4 pb-[130px]'
+                    ? 'px-4 pt-4 pb-[130px] flex flex-col'
                     : 'rounded-2xl p-4 shadow-lg border border-gray-200'
             }`}>
                 {/* Step 1: Delivery Method */}
@@ -596,11 +596,11 @@ const CheckoutPageNew = () => {
                     return (
                         <>
                             {homeDelivery && !selfPickup && (
-                                <div className="bg-gradient-to-br from-primary-100 to-primary-200 border border-primary-500 rounded-xl p-3 sm:p-4 flex items-center gap-2 sm:gap-3 mb-4 shadow-sm">
-                                    <div className="w-7 h-2 sm:w-8 sm:h-6 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm sm:text-base font-bold flex-shrink-0">ℹ</div>
+                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 sm:p-4 flex items-center gap-2 sm:gap-3 mb-4">
+                                    <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-sm sm:text-base font-bold flex-shrink-0">ℹ</div>
                                     <div className="flex-1">
-                                        <h4 className="text-primary-700 text-xs sm:text-sm font-bold mb-0.5">Home Delivery Only</h4>
-                                        <p className="text-primary-600 text-xs sm:text-[13px] m-0">Only Home Delivery is available</p>
+                                        <h4 className="text-blue-700 text-xs sm:text-sm font-bold mb-0.5">Home Delivery Only</h4>
+                                        <p className="text-blue-600 text-xs sm:text-[13px] m-0">Only Home Delivery is available</p>
                                     </div>
                                 </div>
                             )}
@@ -618,16 +618,16 @@ const CheckoutPageNew = () => {
 
                             {homeDelivery && (
                                 <div
-                                    className={`rounded-2xl cursor-pointer transition-all duration-300 mb-2 w-full ${
+                                    className={`rounded-2xl cursor-pointer transition-all duration-200 mb-2 w-full flex flex-row items-center ${
                                         checkoutData.deliveryMode === 'home'
-                                            ? 'bg-gradient-to-br from-primary-50 to-white border-2 border-primary-500 shadow-lg -translate-y-0.5'
-                                            : 'bg-white border-2 border-gray-200 shadow-sm hover:border-primary-500 hover:shadow-md hover:-translate-y-0.5'
+                                            ? 'bg-white border-2 border-primary-500'
+                                            : 'bg-white border-2 border-gray-200 hover:border-primary-300'
                                     } ${
-                                        isMobile ? 'flex-col items-start p-2' : 'flex-row items-center p-3'
-                                    } flex gap-1 sm:gap-2`}
+                                        isMobile ? 'p-3 gap-3' : 'p-3 gap-2'
+                                    }`}
                                     onClick={() => setCheckoutData(prev => ({ ...prev, deliveryMode: 'home' }))}
                                 >
-                                    <div className="w-12 h-12 sm:w-[52px] sm:h-[52px] bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center text-white text-xl sm:text-[22px] shadow-lg flex-shrink-0">🏠</div>
+                                    <div className="w-12 h-12 sm:w-[52px] sm:h-[52px] bg-primary-500 rounded-xl flex items-center justify-center text-white text-xl sm:text-[22px] flex-shrink-0">🏠</div>
                                     <div className="flex-1 min-w-0">
                                         <h4 className={`font-bold text-gray-900 mb-1 tracking-tight ${
                                             isMobile ? 'text-[15px]' : 'text-base'
@@ -658,16 +658,16 @@ const CheckoutPageNew = () => {
 
                             {selfPickup && (
                                 <div
-                                    className={`rounded-2xl cursor-pointer transition-all duration-300 mb-2 w-full ${
+                                    className={`rounded-2xl cursor-pointer transition-all duration-200 mb-2 w-full flex flex-row items-center ${
                                         checkoutData.deliveryMode === 'pickup'
-                                            ? 'bg-gradient-to-br from-primary-50 to-white border-2 border-primary-500 shadow-lg -translate-y-0.5'
-                                            : 'bg-white border-2 border-gray-200 shadow-sm hover:border-primary-500 hover:shadow-md hover:-translate-y-0.5'
+                                            ? 'bg-white border-2 border-primary-500'
+                                            : 'bg-white border-2 border-gray-200 hover:border-primary-300'
                                     } ${
-                                        isMobile ? 'flex-col items-start p-3' : 'flex-row items-center p-4'
-                                    } flex gap-2 sm:gap-3`}
+                                        isMobile ? 'p-3 gap-3' : 'p-4 gap-3'
+                                    }`}
                                     onClick={() => setCheckoutData(prev => ({ ...prev, deliveryMode: 'pickup' }))}
                                 >
-                                    <div className="w-12 h-12 sm:w-[52px] sm:h-[52px] bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center text-white text-xl sm:text-[22px] shadow-lg flex-shrink-0">🏪</div>
+                                    <div className="w-12 h-12 sm:w-[52px] sm:h-[52px] bg-primary-500 rounded-xl flex items-center justify-center text-white text-xl sm:text-[22px] flex-shrink-0">🏪</div>
                                     <div className="flex-1 min-w-0">
                                         <h4 className={`font-bold text-gray-900 mb-1 tracking-tight ${
                                             isMobile ? 'text-[15px]' : 'text-base'
@@ -766,7 +766,7 @@ const CheckoutPageNew = () => {
                                                 key={store.id}
                                                 className={`rounded-2xl cursor-pointer transition-all duration-300 mb-2 ${
                                                     isSelected
-                                                        ? 'bg-gradient-to-br from-primary-50 to-white border-2 border-primary-500 shadow-lg -translate-y-0.5'
+                                                        ? 'bg-white border-2 border-primary-500'
                                                         : 'bg-white border-2 border-gray-200 shadow-sm hover:border-primary-500 hover:shadow-md hover:-translate-y-0.5'
                                                 } ${
                                                     isMobile ? 'p-3' : 'p-4'
@@ -777,7 +777,7 @@ const CheckoutPageNew = () => {
                                                 }))}
                                             >
                                                 <div className="flex items-start gap-3 sm:gap-4">
-                                                    <div className={`bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-lg ${
+                                                    <div className={`bg-primary-500 rounded-xl flex items-center justify-center text-white flex-shrink-0 ${
                                                         isMobile ? 'w-10 h-10 text-lg' : 'w-11 h-11 text-xl'
                                                     }`}>
                                                         🏪
@@ -799,7 +799,7 @@ const CheckoutPageNew = () => {
                                                             {store.timings}
                                                         </p>
                                                         {store.distance && (
-                                                            <span className="inline-block bg-gradient-to-br from-primary-100 to-primary-200 text-primary-700 text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded-md mt-1 uppercase tracking-wider">
+                                                            <span className="inline-block bg-primary-100 text-primary-700 text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded mt-1 uppercase tracking-wider">
                                                                 {store.distance}
                                                             </span>
                                                         )}
@@ -871,7 +871,7 @@ const CheckoutPageNew = () => {
                                                 key={addr.id}
                                                 className={`rounded-2xl cursor-pointer transition-all duration-300 mb-2 ${
                                                     isSelected
-                                                        ? 'bg-gradient-to-br from-primary-50 to-white border-2 border-primary-500 shadow-lg -translate-y-0.5'
+                                                        ? 'bg-white border-2 border-primary-500'
                                                         : 'bg-white border-2 border-gray-200 shadow-sm hover:border-primary-500 hover:shadow-md hover:-translate-y-0.5'
                                                 } ${
                                                     isMobile ? 'p-3' : 'p-4'
@@ -882,7 +882,7 @@ const CheckoutPageNew = () => {
                                                 }))}
                                             >
                                                 <div className="flex items-start gap-3 sm:gap-4">
-                                                    <div className={`bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-lg ${
+                                                    <div className={`bg-primary-500 rounded-xl flex items-center justify-center text-white flex-shrink-0 ${
                                                         isMobile ? 'w-10 h-10 text-lg' : 'w-11 h-11 text-xl'
                                                     }`}>
                                                         📍
@@ -904,7 +904,7 @@ const CheckoutPageNew = () => {
                                                             PIN: {addr.pinCode}
                                                         </p>
                                                         {addr.isDefault && (
-                                                            <span className="inline-block bg-gradient-to-br from-primary-100 to-primary-200 text-primary-700 text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded-md mt-1 uppercase tracking-wider">
+                                                            <span className="inline-block bg-primary-100 text-primary-700 text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded mt-1 uppercase tracking-wider">
                                                                 Default Address
                                                             </span>
                                                         )}
@@ -983,19 +983,19 @@ const CheckoutPageNew = () => {
                         ) : (
                             <>
                                 <div className={`flex gap-2 sm:gap-3 mb-4 sm:mb-5 pb-1 ${
-                                    isMobile ? 'flex-col' : 'flex-row overflow-x-auto'
-                                }`}>
+                                    isMobile ? 'flex-row overflow-x-auto' : 'flex-row overflow-x-auto'
+                                }`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                                     {timeSlots.map((dateSlot, idx) => {
                                         const isActive = selectedDateTab === idx;
                                         return (
                                             <button
                                                 key={idx}
-                                                className={`rounded-xl font-bold cursor-pointer whitespace-nowrap transition-all duration-300 border-2 ${
+                                                className={`rounded-xl font-semibold cursor-pointer whitespace-nowrap transition-all duration-200 border ${
                                                     isActive
-                                                        ? 'bg-gradient-to-br from-primary-500 to-primary-600 border-primary-500 text-white shadow-lg'
-                                                        : 'bg-white border-gray-200 text-gray-600 shadow-sm hover:border-primary-500'
+                                                        ? 'bg-primary-600 border-primary-600 text-white'
+                                                        : 'bg-white border-gray-200 text-gray-600 hover:border-primary-300'
                                                 } ${
-                                                    isMobile ? 'px-2 py-1.5 text-xs' : 'px-3 sm:px-4 py-2 text-[13px]'
+                                                    isMobile ? 'px-4 py-2 text-xs flex-shrink-0' : 'px-3 sm:px-4 py-2 text-[13px]'
                                                 }`}
                                                 onClick={() => setSelectedDateTab(idx)}
                                             >
@@ -1018,7 +1018,7 @@ const CheckoutPageNew = () => {
                                             key={slot.id}
                                             className={`rounded-xl w-full flex flex-row items-center justify-between transition-all duration-300 mb-1 ${
                                                 isSelected
-                                                    ? 'bg-gradient-to-br from-primary-50 to-white border-2 border-primary-500 shadow-lg -translate-y-0.5'
+                                                    ? 'bg-white border-2 border-primary-500'
                                                     : slot.available
                                                         ? 'bg-white border-2 border-gray-200 shadow-sm hover:border-primary-500 hover:shadow-md hover:-translate-y-0.5 cursor-pointer'
                                                         : 'bg-gray-50 border-2 border-gray-200 opacity-50 cursor-not-allowed'
@@ -1190,7 +1190,7 @@ const CheckoutPageNew = () => {
                                                 key={mode.id}
                                                 className={`rounded-2xl cursor-pointer transition-all duration-300 flex items-center gap-2 sm:gap-3 ${
                                                     isSelected
-                                                        ? 'bg-gradient-to-br from-primary-50 to-white border-2 border-primary-500 shadow-lg -translate-y-0.5'
+                                                        ? 'bg-white border-2 border-primary-500'
                                                         : 'bg-white border-2 border-gray-200 shadow-sm hover:border-primary-500 hover:shadow-md'
                                                 } ${
                                                     isMobile ? 'p-3' : 'p-4'
@@ -1238,7 +1238,7 @@ const CheckoutPageNew = () => {
 
                 {/* Order Summary Panel (Steps 1-3) */}
                 {currentStep < 4 && (
-                    <div className="bg-white rounded-2xl p-3 sm:p-4 shadow-lg mt-4 border border-gray-200">
+                    <div className={`rounded-xl p-3 sm:p-4 ${isMobile ? 'bg-gray-50 border border-gray-100 mt-auto' : 'bg-white shadow-lg border border-gray-200 rounded-2xl mt-4'}`}>
                         <div className="flex justify-between items-center py-1">
                             <span className={`text-gray-600 ${
                                 isMobile ? 'text-xs' : 'text-[13px]'
@@ -1295,18 +1295,24 @@ const CheckoutPageNew = () => {
 
             {/* Bottom Action Bar */}
             <div className={`bg-white ${
-                isMobile 
-                    ? 'fixed bottom-0 left-0 right-0 z-[100] px-3 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]' 
+                isMobile
+                    ? 'fixed bottom-0 left-0 right-0 z-[100] px-4 py-3 border-t border-gray-100 shadow-[0_-2px_10px_rgba(0,0,0,0.06)]'
                     : 'sticky max-w-[900px] mx-auto mt-4 px-4 py-4 shadow-lg border-t border-gray-200 rounded-b-2xl'
             }`}>
+                {isMobile && (
+                    <div className="flex items-center justify-between mb-2 px-1">
+                        <span className="text-xs text-gray-500">{totalItems} items</span>
+                        <span className="text-sm font-bold text-gray-900">₹{totalPrice.toFixed(2)}</span>
+                    </div>
+                )}
                 <button
-                    className={`rounded-xl text-white font-bold transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 tracking-tight ${
+                    className={`rounded-xl text-white font-bold transition-all duration-200 flex items-center justify-center gap-2 sm:gap-3 tracking-tight ${
                         (!canContinue() || loading)
                             ? 'bg-gray-300 cursor-not-allowed'
-                            : 'bg-gradient-to-br from-primary-500 to-primary-600 cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5'
+                            : 'bg-primary-600 cursor-pointer shadow-md hover:bg-primary-700'
                     } ${
-                        isMobile 
-                            ? 'w-full py-3 text-sm' 
+                        isMobile
+                            ? 'w-full py-3.5 text-sm'
                             : 'w-full max-w-8xl mx-auto py-4 text-base px-20'
                     }`}
                     disabled={!canContinue() || loading}

@@ -5,11 +5,12 @@ import Button from '../components/Button';
 import SuccessToast from '../components/SuccessToast';
 import Loading from '../components/Loading';
 import { COLORS } from '../constants/theme';
+import { otpAuth } from '../services/api';
 
 const ProfilePage = () => {
   const {
     user,
-    updateProfile,
+    updateUser,
     loading: authLoading,
     error: authError,
     successMessage: authSuccessMessage,
@@ -62,9 +63,17 @@ const ProfilePage = () => {
       email: formData.email
     };
 
-    const result = await updateProfile(profileData);
-    if (result.success) {
-      setIsEditMode(false);
+    try {
+      const result = await otpAuth.updateProfile(profileData);
+      if (result.success) {
+        // Update local user state with new data
+        updateUser({ ...user, ...profileData });
+        setSuccessMessage('Profile updated successfully');
+        setIsEditMode(false);
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      setSuccessMessage('');
     }
   };
 
