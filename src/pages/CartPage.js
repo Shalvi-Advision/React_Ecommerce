@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { usePincode } from '../context/PincodeContext';
@@ -8,6 +8,7 @@ import Button from '../components/Button';
 import Modal from '../components/Modal';
 import Loading from '../components/Loading';
 import { COLORS } from '../constants/theme';
+import OffersSection from '../components/OffersSection';
 import {
   TrashIcon,
   MinusIcon,
@@ -19,13 +20,14 @@ import {
   CloudArrowUpIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
-import { CheckCircleIcon as CheckCircleSolid } from '@heroicons/react/24/solid';
+import { CheckCircleIcon as CheckCircleSolid, TagIcon } from '@heroicons/react/24/solid';
 
 const CartPage = () => {
   const {
     items,
     totalItems,
     totalPrice,
+    addItem,
     removeItem,
     updateQuantity,
     clearCart,
@@ -57,16 +59,44 @@ const CartPage = () => {
   const [isUpdatingCart, setIsUpdatingCart] = useState(false);
   const isUpdatingCartRef = useRef(false);
 
-  // Calculate savings (assuming 20% discount for demo purposes)
-  const calculateSavings = (price) => {
-    const validPrice = Number(price) || 0;
-    return Math.round(validPrice * 0.2);
-  };
+  // Offers state
+  const [selectedOffer, setSelectedOffer] = useState(null);
+  const [dealItemsInCart, setDealItemsInCart] = useState([]);
 
+  // Calculate discount from selected offer
+  const offerDiscount = selectedOffer?.unlocked ? (selectedOffer.effective_discount || 0) : 0;
+
+  // Calculate savings from MRP vs selling price
   const totalSavings = items.reduce((total, item) => {
-    const validPrice = Number(item.price) || 0;
-    return total + (calculateSavings(validPrice) * item.quantity);
+    const mrp = Number(item.product_mrp || item.mrp || 0);
+    const price = Number(item.price || item.our_price || 0);
+    const saving = mrp > price ? (mrp - price) * item.quantity : 0;
+    return total + saving;
   }, 0);
+
+  const handleOfferSelect = useCallback((offer) => {
+    setSelectedOffer(offer);
+  }, []);
+
+  const handleDealAdd = (dealProduct, offerId) => {
+    // Add deal product to cart at deal price
+    const cartItem = {
+      id: dealProduct.p_code,
+      p_code: dealProduct.p_code,
+      title: dealProduct.product_name,
+      product_name: dealProduct.product_name,
+      price: dealProduct.deal_price,
+      unit_price: dealProduct.deal_price,
+      our_price: dealProduct.deal_price,
+      product_mrp: dealProduct.original_price,
+      mrp: dealProduct.original_price,
+      quantity: 1,
+      image: dealProduct.pcode_img,
+      pcode_img: dealProduct.pcode_img,
+    };
+    addItem(cartItem, 1);
+    setDealItemsInCart(prev => [...prev, { offer_id: offerId, p_code: dealProduct.p_code, quantity: 1 }]);
+  };
 
   const handleQuantityChange = (itemId, newQuantity) => {
     if (newQuantity < 0) return;
@@ -216,7 +246,22 @@ const CartPage = () => {
         return;
       }
 
-      // Step 3: Navigate to checkout
+      // Step 3: Store offer data for checkout
+      if (selectedOffer?.unlocked) {
+        sessionStorage.setItem('checkout_offer', JSON.stringify({
+          offer_id: selectedOffer._id,
+          discount: selectedOffer.effective_discount,
+        }));
+      } else {
+        sessionStorage.removeItem('checkout_offer');
+      }
+      if (dealItemsInCart.length > 0) {
+        sessionStorage.setItem('checkout_deal_items', JSON.stringify(dealItemsInCart));
+      } else {
+        sessionStorage.removeItem('checkout_deal_items');
+      }
+
+      // Step 4: Navigate to checkout
       navigate('/checkout');
 
     } catch (error) {
@@ -243,7 +288,7 @@ const CartPage = () => {
   };
 
   // Render checkout section (reusable for mobile fixed and desktop sticky)
-  const renderCheckoutSection = (isMobile = false) => {
+  const renderCheckoutSection = (isMobile = false, hideButton = false) => {
     const store = confirmedLocation?.store;
     const minAmountRaw = store?.minOrderAmount || store?.min_order_amount;
     const minOrderAmount = parseFloat(minAmountRaw || 0);
@@ -271,10 +316,23 @@ const CartPage = () => {
             </div>
 
             {/* Savings */}
-            <div className={`flex justify-between items-center ${isMobile ? "py-1" : "py-2"}`}>
-              <span className={`${isMobile ? "text-xs" : "text-sm sm:text-base"}`} style={{ color: COLORS.gray[700] }}>Savings</span>
-              <span className={`font-semibold ${isMobile ? "text-xs" : "text-sm sm:text-base"}`} style={{ color: COLORS.success[600] }}>₹{totalSavings}</span>
-            </div>
+            {totalSavings > 0 && (
+              <div className={`flex justify-between items-center ${isMobile ? "py-1" : "py-2"} border-b`} style={{ borderColor: COLORS.gray[200] }}>
+                <span className={`${isMobile ? "text-xs" : "text-sm sm:text-base"}`} style={{ color: COLORS.gray[700] }}>Savings</span>
+                <span className={`font-semibold ${isMobile ? "text-xs" : "text-sm sm:text-base"}`} style={{ color: COLORS.success[600] }}>-₹{totalSavings}</span>
+              </div>
+            )}
+
+            {/* Offer Discount */}
+            {offerDiscount > 0 && (
+              <div className={`flex justify-between items-center ${isMobile ? "py-1" : "py-2"}`}>
+                <div className="flex items-center gap-1">
+                  <TagIcon className={`${isMobile ? "w-3 h-3" : "w-4 h-4"}`} style={{ color: COLORS.success[600] }} />
+                  <span className={`${isMobile ? "text-xs" : "text-sm sm:text-base"}`} style={{ color: COLORS.success[700] }}>Offer Discount</span>
+                </div>
+                <span className={`font-semibold ${isMobile ? "text-xs" : "text-sm sm:text-base"}`} style={{ color: COLORS.success[600] }}>-₹{offerDiscount}</span>
+              </div>
+            )}
           </div>
 
           {/* Minimum Order Warning */}
@@ -291,7 +349,7 @@ const CartPage = () => {
           )}
 
           {/* Checkout Button */}
-          <button
+          {!hideButton && <button
             onClick={handleProceedToCheckout}
             disabled={processingCheckout || isBelowMinOrder}
             className={`w-full ${isMobile ? "mt-2 py-2" : "mt-4 sm:mt-6 py-2.5 sm:py-3"} px-3 sm:px-4 text-white font-bold rounded-lg transition-colors ${isMobile ? "text-sm" : "text-sm sm:text-base"} flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-70`}
@@ -322,7 +380,7 @@ const CartPage = () => {
                 <span className="sm:hidden">CHECKOUT</span>
               </>
             )}
-          </button>
+          </button>}
       </div>
     );
   };
@@ -367,9 +425,9 @@ const CartPage = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: COLORS.gray[50] }}>
-      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 pb-24 lg:pb-8" style={{ 
-        paddingBottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))'
+    <div style={{ backgroundColor: COLORS.gray[50] }}>
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8" style={{
+        paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))'
       }}>
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
@@ -387,6 +445,13 @@ const CartPage = () => {
                   </h1>
                 </div>
               </div>
+
+              {/* Offers Section */}
+              <OffersSection
+                onOfferSelect={handleOfferSelect}
+                onDealAdd={handleDealAdd}
+                selectedOfferId={selectedOffer?._id}
+              />
 
               {/* Column Headers - Hidden on mobile */}
               <div className="rounded-lg shadow-sm overflow-hidden" style={{ backgroundColor: COLORS.white, borderColor: COLORS.gray[200], borderWidth: '1px', borderStyle: 'solid' }}>
@@ -408,7 +473,7 @@ const CartPage = () => {
 
                 {/* Cart Items - Scrollable on mobile */}
                 <div 
-                  className="divide-y lg:divide-y max-h-[calc(100vh-280px)] lg:max-h-none overflow-y-auto lg:overflow-visible" 
+                  className="divide-y lg:divide-y lg:max-h-none lg:overflow-visible" 
                   style={{ 
                     borderColor: COLORS.gray[200],
                     WebkitOverflowScrolling: 'touch'
@@ -416,7 +481,8 @@ const CartPage = () => {
                 >
                   {items.map((item, index) => {
                     const itemPrice = Number(item.price) || 0;
-                    const itemSavings = calculateSavings(itemPrice);
+                    const itemMrp = Number(item.product_mrp || item.mrp || 0);
+                    const itemSavings = itemMrp > itemPrice ? Math.round(itemMrp - itemPrice) : 0;
                     const variant = item.quantity > 1 ? `${item.quantity} units` : '1 unit';
 
                     return (
@@ -625,19 +691,36 @@ const CartPage = () => {
               </div>
             </div>
           </div>
+
+          {/* Inline Price Summary (Mobile Only) */}
+          <div className="lg:hidden mt-4 bg-white rounded-lg shadow-sm border border-gray-200">
+            {renderCheckoutSection(true, true)}
+          </div>
         </div>
       </div>
 
-      {/* Fixed Checkout Section (Mobile Only) */}
-      <div 
-        className="fixed bottom-0 left-0 right-0 lg:hidden z-40 bg-white border-t border-gray-200 shadow-lg" 
-        style={{ 
+      {/* Fixed Checkout Button (Mobile Only) */}
+      <div
+        className="fixed bottom-0 left-0 right-0 lg:hidden z-40 bg-white border-t border-gray-200 shadow-lg px-4 py-3"
+        style={{
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-          WebkitBackfaceVisibility: 'hidden',
-          backfaceVisibility: 'hidden'
         }}
       >
-        {renderCheckoutSection(true)}
+        <button
+          onClick={handleProceedToCheckout}
+          disabled={processingCheckout}
+          className="w-full py-3 px-4 text-white font-bold rounded-lg text-sm flex items-center justify-center gap-2 disabled:opacity-70"
+          style={{ backgroundColor: processingCheckout ? COLORS.gray[400] : COLORS.primary[600] }}
+        >
+          {processingCheckout ? (
+            <>
+              <ArrowPathIcon className="w-4 h-4 animate-spin" />
+              <span>Processing...</span>
+            </>
+          ) : (
+            <span>CHECKOUT</span>
+          )}
+        </button>
       </div>
 
       {/* Clear Cart Confirmation Modal */}

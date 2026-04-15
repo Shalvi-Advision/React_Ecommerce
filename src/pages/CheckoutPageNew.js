@@ -493,6 +493,7 @@ const CheckoutPageNew = () => {
                 };
             }
 
+            // Build order payload
             const orderPayload = {
                 store_code: storeCode,
                 project_code: PROJECT_CODE,
@@ -507,6 +508,21 @@ const CheckoutPageNew = () => {
                 delivery_distance: deliveryChargeData.distance_km || 0,
             };
 
+            // Add offer data if available
+            try {
+                const offerData = sessionStorage.getItem('checkout_offer');
+                if (offerData) {
+                    const parsed = JSON.parse(offerData);
+                    if (parsed.offer_id) orderPayload.offer_id = parsed.offer_id;
+                }
+                const dealItems = sessionStorage.getItem('checkout_deal_items');
+                if (dealItems) {
+                    orderPayload.deal_items = JSON.parse(dealItems);
+                }
+            } catch (e) {
+                // Ignore parsing errors
+            }
+
             const response = await apiPost('/orders/place-order', orderPayload);
             
             if (response.success) {
@@ -515,6 +531,8 @@ const CheckoutPageNew = () => {
                 
                 // Clear session storage immediately
                 sessionStorage.removeItem('checkout_session_start');
+                sessionStorage.removeItem('checkout_offer');
+                sessionStorage.removeItem('checkout_deal_items');
                 
                 // Set order number and show modal
                 setOrderNumber(orderNum);

@@ -186,11 +186,19 @@ export const CartProvider = ({ children }) => {
   const [state, dispatch] = useReducer(cartReducer, initialCartState);
   const [currentUserId, setCurrentUserId] = React.useState(null);
   const debouncedSyncRef = useRef(null);
+  const syncCartRef = useRef(null);
 
-  // Initialize debounced sync function
+  // Keep syncCartRef always pointing to the latest syncCart
+  useEffect(() => {
+    syncCartRef.current = syncCart;
+  });
+
+  // Initialize debounced sync function — uses ref so it always calls latest syncCart
   useEffect(() => {
     debouncedSyncRef.current = debounce(async () => {
-      await syncCart();
+      if (syncCartRef.current) {
+        await syncCartRef.current();
+      }
     }, 800);
   }, []);
 
