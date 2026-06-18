@@ -27,6 +27,7 @@ import {
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { useFavorite } from '../context/FavoriteContext';
+import { useBranding } from '../context/TenantConfigContext';
 import { COLORS } from '../constants/theme';
 
 // Helper function to convert hex color to rgba with opacity
@@ -40,6 +41,8 @@ const hexToRgba = (hex, opacity = 1) => {
 };
 
 const Header = () => {
+  const branding = useBranding();
+  const appName = branding.appName || 'Grahak Peth';
   const { isAuthenticated, user, logout } = useAuth();
   const { totalItems } = useCart();
   const { openDrawer } = useCartDrawer();
@@ -385,7 +388,7 @@ const Header = () => {
               <Link to="/" className="flex items-center flex-shrink-0">
                 <img
                   src={`${process.env.PUBLIC_URL}/images/Main_Logo%20copy.jpg`}
-                  alt="Grahak Peth"
+                  alt={appName}
                   className="h-12 sm:h-14 w-auto object-contain"
                   style={{
                     maxHeight: '60px',
@@ -857,7 +860,7 @@ const Header = () => {
               <Link to="/" className="flex items-center">
                 <img
                   src={`${process.env.PUBLIC_URL}/images/Main_Logo%20copy.jpg`}
-                  alt="Grahak Peth"
+                  alt={appName}
                   className="h-10 sm:h-10 lg:h-14 w-auto object-contain"
                   style={{
                     maxHeight: '50px',

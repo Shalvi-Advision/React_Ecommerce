@@ -231,4 +231,59 @@ export const THEME = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// Runtime theming (plan §7)
+//
+// The static COLORS above are the DEFAULT (Grahak Peth orange/tan) and double as
+// the fallback. At boot, applyTheme(branding) overrides the brand hues with the
+// active tenant's colors by writing CSS custom properties on :root. Components/
+// CSS that read var(--color-primary) etc. then re-skin with no rebuild.
+// One build, every brand.
+
+// Lighten/darken a hex color by mixing toward white/black (amount 0..1).
+function shade(hex, amount) {
+  if (!hex || hex[0] !== '#' || (hex.length !== 7 && hex.length !== 4)) return hex;
+  let h = hex.slice(1);
+  if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+  const num = parseInt(h, 16);
+  let r = (num >> 16) & 0xff, g = (num >> 8) & 0xff, b = num & 0xff;
+  const target = amount >= 0 ? 255 : 0;
+  const a = Math.abs(amount);
+  r = Math.round(r + (target - r) * a);
+  g = Math.round(g + (target - g) * a);
+  b = Math.round(b + (target - b) * a);
+  return '#' + [r, g, b].map((c) => c.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Build a 50..900 ramp around a base 500 color.
+ */
+function ramp(base) {
+  return {
+    50: shade(base, 0.92), 100: shade(base, 0.8), 200: shade(base, 0.6),
+    300: shade(base, 0.4), 400: shade(base, 0.2), 500: base,
+    600: shade(base, -0.12), 700: shade(base, -0.24),
+    800: shade(base, -0.36), 900: shade(base, -0.48),
+  };
+}
+
+/**
+ * Apply the tenant's branding colors as CSS variables on :root.
+ * Falls back to the static COLORS palette when a color isn't provided.
+ * @param {{primaryColor?:string, secondaryColor?:string}} branding
+ */
+export function applyTheme(branding = {}) {
+  if (typeof document === 'undefined') return;
+  const primary = branding.primaryColor || COLORS.primary[500];
+  const secondary = branding.secondaryColor || COLORS.secondary[500];
+  const pRamp = branding.primaryColor ? ramp(primary) : COLORS.primary;
+  const sRamp = branding.secondaryColor ? ramp(secondary) : COLORS.secondary;
+
+  const root = document.documentElement;
+  Object.entries(pRamp).forEach(([k, v]) => root.style.setProperty(`--color-primary-${k}`, v));
+  Object.entries(sRamp).forEach(([k, v]) => root.style.setProperty(`--color-secondary-${k}`, v));
+  root.style.setProperty('--color-primary', pRamp[500]);
+  root.style.setProperty('--color-secondary', sRamp[500]);
+}
+
 export default THEME;

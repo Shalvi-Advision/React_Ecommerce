@@ -1,6 +1,5 @@
 // Firebase Cloud Messaging helper functions
-import { messaging, getToken, onMessage } from './firebase';
-import { FIREBASE_VAPID_KEY } from './constants';
+import { getMessagingInstance, getVapidKey, getToken, onMessage } from './firebase';
 
 // FCM initialization state tracking
 let fcmInitialized = false;
@@ -91,9 +90,17 @@ export const getFcmToken = async () => {
 
         debugLog('token', 'FCM service worker found:', registration.scope);
 
+        // Push is per-tenant and optional — bail cleanly if this store has it off.
+        const messaging = getMessagingInstance();
+        const vapidKey = getVapidKey();
+        if (!messaging || !vapidKey) {
+            debugLog('token', 'Push not configured for this tenant');
+            return null;
+        }
+
         // Get FCM token with timeout to prevent hanging
         const tokenPromise = getToken(messaging, {
-            vapidKey: FIREBASE_VAPID_KEY,
+            vapidKey,
             serviceWorkerRegistration: registration,
         });
 
@@ -126,6 +133,12 @@ export const subscribeForegroundMessages = (callback) => {
     // Clean up previous subscription if exists
     if (foregroundMessageUnsubscribe) {
         foregroundMessageUnsubscribe();
+    }
+
+    const messaging = getMessagingInstance();
+    if (!messaging) {
+        debugLog('message', 'Push not configured for this tenant; skipping foreground subscription');
+        return () => {};
     }
 
     foregroundMessageUnsubscribe = onMessage(messaging, (payload) => {
@@ -171,6 +184,11 @@ export const onTokenRefresh = (callback) => {
             debugError('token-refresh', 'Error during token refresh:', err);
         }
     };
+
+    const messaging = getMessagingInstance();
+    if (!messaging) {
+        return () => {};
+    }
 
     messaging.onTokenRefresh = handleTokenRefresh;
 

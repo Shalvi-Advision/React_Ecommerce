@@ -9,6 +9,7 @@ import {
   clearAuthToken,
   getConfirmedLocation as getPersistentLocation
 } from '../utils/persistentStorage';
+import { devTenantSlug, tenantHeaders } from '../config/runtimeConfig';
 
 // OTP Authentication Configuration
 const API_BASE_URL = APP_CONSTANTS.API_BASE_URL;
@@ -32,7 +33,16 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Add store_code from persistent storage to all API requests
+    // Tenant resolution: in production the Host header is authoritative, so we
+    // send nothing. On localhost (dev) there is no per-tenant Host, so attach
+    // X-Tenant from REACT_APP_TENANT_SLUG. (plan §7)
+    const tenantSlug = devTenantSlug();
+    if (tenantSlug) {
+      config.headers['X-Tenant'] = tenantSlug;
+    }
+
+    // Add store_code from persistent storage to all API requests. store_code is
+    // now OPTIONAL — single-outlet tenants and Host-pinned context work without it.
     const locationData = getPersistentLocation();
     if (locationData) {
       try {
@@ -492,7 +502,7 @@ export const getProductDetails = async (p_code, dept_id, category_id, sub_catego
 
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...tenantHeaders() },
       body: JSON.stringify(requestBody)
     });
 

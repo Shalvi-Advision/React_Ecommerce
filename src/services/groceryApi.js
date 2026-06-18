@@ -1,14 +1,18 @@
 // Grocery API Service
 // This service handles all grocery-related API calls
 
+import { tenantHeaders } from '../config/runtimeConfig';
+
 // Utility function to make API calls with timeout
 const fetchWithTimeout = async (url, options = {}, timeout = 10000) => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
-  
+
   try {
     const response = await fetch(url, {
       ...options,
+      // Inject X-Tenant on localhost (dev); prod resolves by Host. (plan §7)
+      headers: { ...(options.headers || {}), ...tenantHeaders() },
       signal: controller.signal
     });
     clearTimeout(timeoutId);

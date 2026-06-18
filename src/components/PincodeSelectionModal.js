@@ -8,6 +8,7 @@ import {
   SparklesIcon
 } from '@heroicons/react/24/outline';
 import { usePincode } from '../context/PincodeContext';
+import { useBranding } from '../context/TenantConfigContext';
 import { COLORS } from '../constants/theme';
 
 // Helper function to convert hex color to rgba with opacity
@@ -21,6 +22,8 @@ const hexToRgba = (hex, opacity = 1) => {
 };
 
 const PincodeSelectionModal = ({ isOpen, onClose, onPincodeSelect, isRequired }) => {
+  const branding = useBranding();
+  const appName = branding.appName || 'Grahak Peth';
   const [pincodeInput, setPincodeInput] = useState('');
 
   const {
@@ -342,7 +345,7 @@ const PincodeSelectionModal = ({ isOpen, onClose, onPincodeSelect, isRequired })
                   style={{ color: COLORS.white }}
                 />
                 <p className="text-sm font-extrabold tracking-wide" style={{ color: COLORS.white }}>
-                  Grahak Peth
+                  {appName}
                 </p>
               </div>
 

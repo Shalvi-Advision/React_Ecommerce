@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon, DevicePhoneMobileIcon, ComputerDesktopIcon } from '@heroicons/react/24/outline';
+import { useBranding } from '../context/TenantConfigContext';
 
 const PWAInstallPrompt = () => {
+  const branding = useBranding();
+  const appName = branding.appName || 'Grahak Peth';
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
@@ -92,7 +95,7 @@ const PWAInstallPrompt = () => {
             </div>
             <div className="flex-1">
               <h3 className="text-sm font-medium text-gray-900">
-                Install Grahak Peth
+                Install {appName}
               </h3>
               <p className="text-sm text-gray-500 mt-1">
                 Install our app for a better shopping experience with offline access.

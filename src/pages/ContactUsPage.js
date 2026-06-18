@@ -2,9 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getStoresByPincode } from '../services/api';
 import { usePincode } from '../context/PincodeContext';
+import { useBranding } from '../context/TenantConfigContext';
 import Loading from '../components/Loading';
 
 const ContactUsPage = () => {
+  const branding = useBranding();
+  const appName = branding.appName || 'Grahak Peth';
   const { confirmedLocation } = usePincode();
   const [storeInfo, setStoreInfo] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -230,7 +233,7 @@ const ContactUsPage = () => {
                 {storeInfo.contact?.whatsapp && storeInfo.contact.whatsapp !== 'undefined' && (
                   <button
                     onClick={() => {
-                      const message = encodeURIComponent("Hello, I have a query regarding Grahak Peth.");
+                      const message = encodeURIComponent(`Hello, I have a query regarding ${appName}.`);
                       window.open(`https://wa.me/${storeInfo.contact.whatsapp.replace(/[^0-9]/g, '')}?text=${message}`, '_blank');
                     }}
                     className="w-full flex items-center justify-between p-4 rounded-xl bg-gray-50 hover:bg-white hover:shadow-md border border-transparent hover:border-gray-200 transition-all duration-300 group"

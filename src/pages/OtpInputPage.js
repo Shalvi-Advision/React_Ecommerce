@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContextOptimized';
+import { useBranding } from '../context/TenantConfigContext';
 import { XMarkIcon, PhoneIcon } from '@heroicons/react/24/outline';
 import { COLORS } from '../constants/theme';
 
@@ -15,6 +16,8 @@ const hexToRgba = (hex, opacity = 1) => {
 };
 
 const OtpInputPage = () => {
+  const branding = useBranding();
+  const appName = branding.appName || 'Grahak Peth';
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
@@ -178,7 +181,7 @@ const OtpInputPage = () => {
 
             {/* Message */}
             <h3 className="text-2xl font-bold mb-4" style={{ color: COLORS.gray[800] }}>
-              {isRegistration ? 'Welcome to Grahak Peth!' : 'Secure Verification'}
+              {isRegistration ? `Welcome to ${appName}!` : 'Secure Verification'}
             </h3>
             <p className="text-lg" style={{ color: COLORS.gray[600] }}>
               {isRegistration 
@@ -236,7 +239,7 @@ const OtpInputPage = () => {
             ) : (
               <img
                 src={`${process.env.PUBLIC_URL}/images/Main_Logo%20copy.jpg?v=2`}
-                alt="Grahak Peth"
+                alt={appName}
                 className="h-12 w-auto object-contain"
                 style={{
                   maxHeight: '60px',

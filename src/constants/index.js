@@ -1,6 +1,8 @@
 // Main constants export file
 // Central hub for all application constants
 
+import { getBranding, getFirebaseConfig } from '../config/runtimeConfig';
+
 export { default as THEME } from './theme';
 export { default as TYPOGRAPHY } from './typography';
 export { default as RESPONSIVE } from './responsive';
@@ -48,7 +50,8 @@ export {
 
 // Common constant combinations for easy use
 export const APP_CONSTANTS = {
-  // App-wide constants
+  // App-wide constants. APP_NAME is the build-time fallback only — at runtime the
+  // app name comes from the tenant config (use getAppName() / useBranding()).
   APP_NAME: 'Grahak Peth',
   APP_VERSION: '1.0.0',
   DEFAULT_CURRENCY: 'USD',
@@ -112,17 +115,20 @@ export const APP_CONSTANTS = {
   },
 };
 
-// Firebase Cloud Messaging configuration
-export const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyDwp6-vtdtbLzgYpChpXcxrD6h9d6rkA6M",
-  authDomain: "shalviecomweb.firebaseapp.com",
-  projectId: "shalviecomweb",
-  storageBucket: "shalviecomweb.firebasestorage.app",
-  messagingSenderId: "1096736732418",
-  appId: "1:1096736732418:web:5e0042db39062cad79fe1b",
-  measurementId: "G-ZJ0VDCCHQE"
-};
-export const FIREBASE_VAPID_KEY = "BKUdXFtph_LHKjzTI3SQAHRmWwQpxNlkI-bVPp8IOdkaFEqQfqLojTxw5gkqKJkMl-qM4IyHey2hEMmXuMcBu5k";
+// Firebase Cloud Messaging configuration — now PER-TENANT, sourced at runtime
+// from the tenant config (GET /api/tenant/config -> firebase.{config,vapidKey}).
+// These getters return null when the active tenant has push disabled. Call them
+// AFTER bootstrap (firebase.js inits lazily). No credentials are baked into the
+// build any more.
+export function getAppName() {
+  return getBranding().appName || APP_CONSTANTS.APP_NAME;
+}
+export function getFirebaseWebConfig() {
+  return getFirebaseConfig()?.config || null;
+}
+export function getFirebaseVapidKey() {
+  return getFirebaseConfig()?.vapidKey || null;
+}
 
 // Export commonly used API constants for convenience
 export const { API_BASE_URL, PROJECT_CODE, DEFAULT_STORE_CODE, IMAGE_BASE_URL } = APP_CONSTANTS;

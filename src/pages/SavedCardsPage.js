@@ -2,8 +2,11 @@ import React from 'react';
 import AccountSidebar from '../components/AccountSidebar';
 import SavedCardIllustration from '../components/SavedCardIllustration';
 import { useResponsive } from '../hooks/useResponsive';
+import { useBranding } from '../context/TenantConfigContext';
 
 const SavedCardsPage = () => {
+  const branding = useBranding();
+  const appName = branding.appName || 'Grahak Peth';
   const { isMobile, isTablet, isDesktop } = useResponsive();
   
   // Future state: When saved cards exist, display them here
@@ -30,7 +33,7 @@ const SavedCardsPage = () => {
               <h1 className={`font-bold text-gray-900 mb-12 text-left ${
                 isMobile ? 'text-2xl' : isTablet ? 'text-3xl' : 'text-4xl md:text-5xl'
               }`}>
-                Card(s) saved with Grahak Peth
+                Card(s) saved with {appName}
               </h1>
               
               {/* Illustration - centered below heading */}

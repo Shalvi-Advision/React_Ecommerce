@@ -1,14 +1,18 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useBranding } from '../context/TenantConfigContext';
 
 const Footer = () => {
+  const branding = useBranding();
+  const appName = branding.appName || 'Grahak Peth';
+  const footerText = branding.footerText || '© 2025 Shalvi Advison Ltd. All rights reserved.';
   return (
     <footer className="hidden lg:block bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 py-6 sm:py-8 lg:py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           {/* Company Info */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <h3 className="text-base sm:text-lg lg:text-xl font-semibold mb-2 sm:mb-3 lg:mb-4">Grahak Peth</h3>
+            <h3 className="text-base sm:text-lg lg:text-xl font-semibold mb-2 sm:mb-3 lg:mb-4">{appName}</h3>
             <p className="text-gray-400 text-xs sm:text-sm leading-relaxed">
               Your one-stop destination for quality products at great prices.
               Shop with confidence and enjoy fast, reliable delivery.
@@ -54,7 +58,7 @@ const Footer = () => {
 
         <div className="border-t border-gray-800 mt-4 sm:mt-6 lg:mt-8 pt-4 sm:pt-6 lg:pt-8 text-center">
           <p className="text-gray-400 text-[10px] sm:text-xs lg:text-sm">
-            © 2025 Shalvi Advison Ltd. All rights reserved.
+            {footerText}
           </p>
         </div>
       </div>

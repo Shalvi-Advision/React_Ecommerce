@@ -5,6 +5,8 @@
  * to optimize API usage and prevent "Too many requests" errors.
  */
 
+import { tenantHeaders } from '../config/runtimeConfig';
+
 // Cache storage for responses with size limit
 const responseCache = new Map();
 const inFlightRequests = new Map();
@@ -175,12 +177,13 @@ export const optimizedFetch = async (
   maxRetries = 3,
   retryDelay = 1000
 ) => {
-  // Default options
+  // Default options. Inject X-Tenant on localhost (dev) so these raw-fetch GETs
+  // resolve to the right tenant just like the axios path. (plan §7)
   const defaultOptions = {
     method: 'GET',
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json', ...tenantHeaders() }
   };
-  
+
   const fetchOptions = { ...defaultOptions, ...options };
   const params = fetchOptions.body ? JSON.parse(fetchOptions.body) : {};
   const method = fetchOptions.method;

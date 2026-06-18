@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContextOptimized';
+import { useBranding } from '../context/TenantConfigContext';
 import { XMarkIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 import { COLORS } from '../constants/theme';
 
@@ -15,6 +16,8 @@ const hexToRgba = (hex, opacity = 1) => {
 };
 
 const LoginPage = () => {
+  const branding = useBranding();
+  const appName = branding.appName || 'Grahak Peth';
   const [loginMethod, setLoginMethod] = useState('otp'); // Only OTP authentication now
   const [formData, setFormData] = useState({
     email: '',
@@ -187,13 +190,13 @@ const LoginPage = () => {
                 }}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold" style={{ color: COLORS.primary[600] }}>Grahak Peth</span>
+                  <span className="text-lg font-bold" style={{ color: COLORS.primary[600] }}>{appName}</span>
                 </div>
               </div>
             ) : (
               <img
                 src={`${process.env.PUBLIC_URL}/images/Main_Logo%20copy.jpg?v=2`}
-                alt="Grahak Peth"
+                alt={appName}
                 className="h-12 w-auto object-contain"
                 style={{
                   maxHeight: '60px',

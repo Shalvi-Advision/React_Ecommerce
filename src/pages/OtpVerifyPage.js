@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContextOptimized';
+import { useBranding } from '../context/TenantConfigContext';
 import { XMarkIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { COLORS } from '../constants/theme';
 
@@ -15,6 +16,8 @@ const hexToRgba = (hex, opacity = 1) => {
 };
 
 const OtpVerifyPage = () => {
+  const branding = useBranding();
+  const appName = branding.appName || 'Grahak Peth';
   const [otp, setOtp] = useState('');
   const [errors, setErrors] = useState({});
   const [countdown, setCountdown] = useState(0);
@@ -201,7 +204,7 @@ const OtpVerifyPage = () => {
             </h3>
             <p className="text-lg" style={{ color: COLORS.gray[600] }}>
               {isRegistration 
-                ? 'Just one more step to complete your Grahak Peth registration'
+                ? `Just one more step to complete your ${appName} registration`
                 : 'Enter the verification code we sent to your mobile number'}
             </p>
           </div>
@@ -255,7 +258,7 @@ const OtpVerifyPage = () => {
             ) : (
               <img
                 src={`${process.env.PUBLIC_URL}/images/Main_Logo%20copy.jpg?v=2`}
-                alt="Grahak Peth"
+                alt={appName}
                 className="h-12 w-auto object-contain"
                 style={{
                   maxHeight: '60px',

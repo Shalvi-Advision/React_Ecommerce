@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContextOptimized';
+import { useBranding } from '../context/TenantConfigContext';
 import { XMarkIcon, UserPlusIcon } from '@heroicons/react/24/outline';
 import { COLORS } from '../constants/theme';
 
@@ -15,6 +16,8 @@ const hexToRgba = (hex, opacity = 1) => {
 };
 
 const RegisterPage = () => {
+  const branding = useBranding();
+  const appName = branding.appName || 'Grahak Peth';
   const [formData, setFormData] = useState({
     mobileNo: '',
   });
@@ -117,7 +120,7 @@ const RegisterPage = () => {
 
             {/* Message */}
             <h3 className="text-2xl font-bold mb-4" style={{ color: COLORS.gray[800] }}>
-              Join Grahak Peth!
+              Join {appName}!
             </h3>
             <p className="text-lg mb-4" style={{ color: COLORS.gray[600] }}>
               Create your account in seconds and start shopping for fresh groceries
@@ -193,13 +196,13 @@ const RegisterPage = () => {
                 }}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold" style={{ color: COLORS.primary[600] }}>Grahak Peth</span>
+                  <span className="text-2xl font-bold" style={{ color: COLORS.primary[600] }}>{appName}</span>
                 </div>
               </div>
             ) : (
               <img
                 src={`${process.env.PUBLIC_URL}/images/Main_Logo%20copy.jpg?v=2`}
-                alt="Grahak Peth"
+                alt={appName}
                 className="h-12 w-auto object-contain"
                 style={{
                   maxHeight: '60px',
