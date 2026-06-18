@@ -250,10 +250,7 @@ const OtpVerifyPage = () => {
                   background: `linear-gradient(to bottom right, ${COLORS.primary[50]}, ${COLORS.success[50]})`
                 }}
               >
-                <span className="text-2xl font-bold" style={{ color: COLORS.primary[600] }}>Grahak</span>
-                <div className="flex flex-col items-start">
-                  <span className="text-lg font-bold leading-none" style={{ color: COLORS.gray[800] }}>Peth</span>
-                </div>
+                <span className="text-2xl font-bold" style={{ color: COLORS.primary[600] }}>{appName}</span>
               </div>
             ) : (
               <img

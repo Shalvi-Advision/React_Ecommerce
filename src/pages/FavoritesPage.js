@@ -8,11 +8,7 @@ import { getFavorites } from '../api/favoritesApi';
 import { getProductDetailsByPcode } from '../api/productsApi';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
-import { useBranding } from '../context/TenantConfigContext';
-
 const FavoritesPage = () => {
-  const branding = useBranding();
-  const appName = branding.appName || 'Grahak Peth';
   const { isFavorite, toggleFavorite } = useFavorite();
   const { isAuthenticated, user } = useAuth();
   const { addItem } = useCart();
@@ -254,11 +250,11 @@ const FavoritesPage = () => {
               <div className="p-3 border-t border-gray-100">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 mb-1">MRP <span className="text-gray-400">{appName}</span></p>
+                    <p className="text-xs text-gray-500 mb-1">MRP</p>
                     <p className="text-xs text-gray-400 line-through">₹ {product.product_mrp}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-gray-500 mb-1">MRP <span className="text-gray-400">{appName}</span></p>
+                    <p className="text-xs text-gray-500 mb-1">Price</p>
                     <p className="text-base font-bold text-gray-900">₹ {product.our_price}</p>
                   </div>
                 </div>
