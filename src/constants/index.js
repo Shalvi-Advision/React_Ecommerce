@@ -57,11 +57,15 @@ export const APP_CONSTANTS = {
   DEFAULT_CURRENCY: 'USD',
   DEFAULT_LANGUAGE: 'en',
 
-  // API constants
-  API_BASE_URL: process.env.REACT_APP_API_URL || "https://ecommerceapi-web.onrender.com/api",
+  // API constants.
+  // Default is SAME-ORIGIN ('/api', '/uploads') so ONE multi-tenant build serves
+  // every Host: the browser calls the domain that served it, nginx proxies /api to
+  // the API, and the API resolves the tenant from the Host header. Only override
+  // REACT_APP_API_URL for localhost dev (e.g. http://localhost:5009/api).
+  API_BASE_URL: process.env.REACT_APP_API_URL || '/api',
   PROJECT_CODE: process.env.REACT_APP_PROJECT_CODE || 'RET9575',
   DEFAULT_STORE_CODE: process.env.REACT_APP_DEFAULT_STORE_CODE || 'GRK001',
-  IMAGE_BASE_URL: process.env.REACT_APP_IMAGE_URL || 'https://ecommerceapi-web.onrender.com/uploads',
+  IMAGE_BASE_URL: process.env.REACT_APP_IMAGE_URL || '/uploads',
 
   // Pagination defaults
   DEFAULT_PAGE_SIZE: 20,
